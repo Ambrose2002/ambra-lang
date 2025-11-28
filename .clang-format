@@ -1,0 +1,38 @@
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Braces in compiler code are VERY important — use Allman
+BreakBeforeBraces: Allman
+
+# Prevent compressed code
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: False
+
+# Nice, clean spacing for functions and classes
+SpaceBeforeParens: ControlStatements
+SpaceAfterTemplateKeyword: true
+
+# Pointers & references
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Includes grouped cleanly
+IncludeBlocks: Regroup
+SortIncludes: true
+
+# Namespace indentation = keep flat
+NamespaceIndentation: None
+
+# Line wrapping
+ColumnLimit: 100
+
+# Align consecutive declarations (good for AST node classes)
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: None
+AlignOperands: true
+AlignAfterOpenBracket: Align
