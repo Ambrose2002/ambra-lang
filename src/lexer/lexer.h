@@ -76,15 +76,8 @@ class Lexer
      * treated as read-only throughout lexing.
      */
     std::unordered_map<std::string, TokenType> keywordMap = {
-        {"summon", SUMMON},
-        {"should", SHOULD},
-        {"otherwise", OTHERWISE},
-        {"aslongas", ASLONGAS},
-        {"say", SAY},
-        {"not", NOT}, 
-        {"affirmative", BOOL},
-        {"negative", BOOL}
-    };
+        {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
+        {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};
 
     /**
      * @brief Advances the scanner by one character and returns it.
@@ -116,6 +109,28 @@ class Lexer
      * @brief Checks whether the end of the source text has been reached.
      */
     bool isAtEnd();
+
+    Token scanNumber();
+
+    Token scanIdentifierOrKeyword();
+
+    Token scanString();
+
+    Token scanMultiLineString();
+
+    Token scanSlashOrComment();
+
+    Token scanOperator();
+
+    Token scanPunctuation();
+
+    Token
+    makeToken(std::string lexeme, TokenType                                            type,
+              std::variant<std::monostate, int, bool, std::string> literalValue = std::monostate{});
+
+    Token errorToken(std::string message);
+
+    bool isMultilineString();
 
   public:
     /**
