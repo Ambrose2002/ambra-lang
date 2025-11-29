@@ -75,7 +75,16 @@ class Lexer
      * This table is initialized once (typically in the constructor) and is
      * treated as read-only throughout lexing.
      */
-    std::unordered_map<std::string, TokenType> keywordMap;
+    std::unordered_map<std::string, TokenType> keywordMap = {
+        {"summon", SUMMON},
+        {"should", SHOULD},
+        {"otherwise", OTHERWISE},
+        {"aslongas", ASLONGAS},
+        {"say", SAY},
+        {"not", NOT}, 
+        {"affirmative", BOOL},
+        {"negative", BOOL}
+    };
 
     /**
      * @brief Advances the scanner by one character and returns it.
