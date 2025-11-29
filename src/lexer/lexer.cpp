@@ -43,6 +43,15 @@ char Lexer::peekNext()
     return source.at(current + 1);
 }
 
+char Lexer::peekAhead(int pos)
+{
+    if (current + pos >= source.length())
+    {
+        return '\0';
+    }
+    return source.at(current + pos);
+}
+
 bool Lexer::match(char expected)
 {
     if (isAtEnd())
@@ -73,65 +82,144 @@ bool Lexer::isAtEnd()
     return current >= source.length();
 }
 
-Token Lexer::scanNumber()
+Token Lexer::scanNumber(int startLine, int startColumn)
 {
-    while (std::isdigit(peek()))
+    while (!isAtEnd() && std::isdigit(peek()))
     {
         advance();
     }
-    std::string lexeme = source.substr(start, (current - start) + 1);
+    std::string lexeme = source.substr(start, current - start);
     int         number = std::stoi(lexeme);
-    start = current;
-    return makeToken(lexeme, TokenType::INTEGER, number);
+    return makeToken(TokenType::INTEGER, startLine, startColumn, number);
 }
 
-Token Lexer::scanIdentifierOrKeyword()
+Token Lexer::scanIdentifierOrKeyword(int startLine, int startColumn)
 {
-    while (std::isalnum(peek()) || peek() == '_')
+    while (!isAtEnd() && (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_'))
     {
         advance();
     }
-    std::string lexeme = source.substr(start, (current - start) + 1);
-    start = current;
+
+    std::string lexeme = source.substr(start, current - start);
+
     auto it = keywordMap.find(lexeme);
     if (it != keywordMap.end())
     {
         TokenType type = it->second;
+
         if (lexeme == "affirmative")
         {
-            return makeToken(lexeme, type, true);
+            return makeToken(type, startLine, startColumn, true);
         }
         else if (lexeme == "negative")
         {
-            return makeToken(lexeme, type, false);
+            return makeToken(type, startLine, startColumn, false);
         }
-        return makeToken(lexeme, type, std::monostate{});
+
+        return makeToken(type, startLine, startColumn, std::monostate{});
     }
-    return makeToken(lexeme, TokenType::IDENTIFIER, std::monostate{});
+
+    return makeToken(TokenType::IDENTIFIER, startLine, startColumn, std::monostate{});
 }
 
-Token Lexer::scanString() {}
+Token Lexer::scanString(int startLine, int startColumn)
+{
+    // Scan until closing quote or error
+    while (true)
+    {
+        if (isAtEnd())
+        {
+            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+        }
 
-Token Lexer::scanMultiLineString() {}
+        char c = peek();
 
-Token Lexer::scanSlashOrComment() {}
+        if (c == '"')
+        {
+            // Found the closing character — stop the loop
+            break;
+        }
 
-Token Lexer::scanOperator() {}
+        if (c == '\n')
+        {
+            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+        }
 
-Token Lexer::scanPunctuation() {}
+        advance();
 
-Token Lexer::makeToken(std::string lexeme, TokenType type,
+        // Consume the closing quote
+        advance();
+
+        std::string lexeme = source.substr(start + 1, (current - start - 2));
+        return makeToken(STRING, startLine, startColumn, lexeme);
+    }
+}
+
+Token Lexer::scanMultiLineString(int startLine, int startColumn)
+{
+    // Consume the opening triple quotes: """
+    advance();
+    advance();
+    advance();
+    start = current;
+
+    while (true)
+    {
+        if (isAtEnd())
+        {
+            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+        }
+
+        // Found closing triple quote
+        if (peek() == '"' && peekNext() == '"' && peekAhead(2) == '"')
+        {
+            break;
+        }
+
+        advance();
+    }
+
+    // Extract string content (excluding """ at end)
+    std::string lexeme = source.substr(start, current - start);
+
+    // Consume closing triple quotes
+    advance();
+    advance();
+    advance();
+
+    return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
+}
+
+Token Lexer::scanSlashOrComment(int startLine, int startColumn) {}
+
+Token Lexer::scanOperator(int startLine, int startColumn) {}
+
+Token Lexer::scanPunctuation(int startLine, int startColumn) {}
+
+Token Lexer::makeToken(TokenType type, int startLine, int startColumn,
                        std::variant<std::monostate, int, bool, std::string> literalValue)
 {
-    return Token(lexeme, type, literalValue, line, column);
+    std::string lexeme = source.substr(start, current - start);
+    return Token(lexeme, type, literalValue, startLine, startColumn);
 }
 
 Token Lexer::errorToken(std::string message) {}
 
-bool Lexer::isMultilineString() {}
+bool Lexer::isMultilineString()
+{
+    return (peek() == '"') && (peekNext() == '"') && (peekAhead(2) == '"');
+}
 
 Token Lexer::scanToken()
 {
+    int startLine = line;
+    int startColumn = column;
+    start = current;
+    if (isAtEnd())
+    {
+        return makeToken(EOF_TOKEN, startLine, startColumn, std::monostate{});
+    }
+
     char c = advance();
 
     switch (c)
@@ -140,20 +228,23 @@ Token Lexer::scanToken()
     case ' ':
     case '\r':
     case '\t':
-        return errorToken("");
     case '\n':
-        return errorToken("");
+        return makeToken(SKIP, startLine, startColumn, std::monostate{});
     case '"':
         if (isMultilineString())
         {
-            return scanMultiLineString();
+            return scanMultiLineString(startLine, startColumn);
         }
         else
         {
-            return scanString();
+            return scanString(startLine, startColumn);
         }
     case '<':
-        return scanSlashOrComment();
+        if (peek() == '/')
+        {
+            return scanSlashOrComment(startLine, startColumn);
+        }
+        return scanOperator(startLine, startColumn);
     case '=':
     case '>':
     case '+':
@@ -161,20 +252,24 @@ Token Lexer::scanToken()
     case '-':
     case '/':
     case '!':
-        return scanOperator();
+        return scanOperator(startLine, startColumn);
     case ';':
-        return scanPunctuation();
-    case '_':
-        return scanIdentifierOrKeyword();
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case ',':
+        return scanPunctuation(startLine, startColumn);
     default:
-        if (std::isdigit(c))
+        if (std::isdigit(static_cast<unsigned char>(c)))
         {
-            return scanNumber();
+            return scanNumber(startLine, startColumn);
         }
-        if (std::isalpha(c))
+        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_')
         {
-            return scanIdentifierOrKeyword();
+            return scanIdentifierOrKeyword(startLine, startColumn);
         }
+
         return errorToken("Unexpected character");
     }
 }
