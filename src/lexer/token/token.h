@@ -1,5 +1,5 @@
-#include <variant>
 #include <string>
+#include <variant>
 
 enum TokenType
 {
@@ -42,7 +42,8 @@ enum TokenType
     ERROR
 };
 
-struct SourceLocation {
+struct SourceLocation
+{
     int line;
     int column;
 };
@@ -50,13 +51,21 @@ struct SourceLocation {
 class Token
 {
 
-    public:
-    
-    Token (std::string lexeme, TokenType type, std::variant<int, bool, std::string> value, int line, int column);
+  public:
+    Token(std::string lexeme, TokenType type,
+          std::variant<std::monostate, int, bool, std::string> value, int line, int column);
 
-    private:
-    TokenType type;
-    std::string lexeme;
-    std::variant<int, bool, std::string> value;
-    SourceLocation location;
+    TokenType getType() const;
+
+    std::string getLexeme() const;
+
+    std::variant<std::monostate, int, bool, std::string> getValue() const;
+
+    SourceLocation getLocation() const;
+
+  private:
+    TokenType                                            type;
+    std::string                                          lexeme;
+    std::variant<std::monostate, int, bool, std::string> value;
+    SourceLocation                                       location;
 };
