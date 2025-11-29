@@ -39,7 +39,9 @@ enum TokenType
     SEMI_COLON,
 
     EOF_TOKEN,
-    ERROR
+    ERROR,
+
+    SKIP
 };
 
 struct SourceLocation
