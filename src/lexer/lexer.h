@@ -98,6 +98,8 @@ class Lexer
      */
     char peekNext();
 
+    char peekAhead(int pos);
+
     /**
      * @brief Consumes the next character only if it matches `expected`.
      *
@@ -110,22 +112,22 @@ class Lexer
      */
     bool isAtEnd();
 
-    Token scanNumber();
+    Token scanNumber(int startLine, int startColumn);
 
-    Token scanIdentifierOrKeyword();
+    Token scanIdentifierOrKeyword(int startLine, int startColumn);
 
-    Token scanString();
+    Token scanString(int startLine, int startColumn);
 
-    Token scanMultiLineString();
+    Token scanMultiLineString(int startLine, int startColumn);
 
-    Token scanSlashOrComment();
+    Token scanSlashOrComment(int startLine, int startColumn);
 
-    Token scanOperator();
+    Token scanOperator(int startLine, int startColumn);
 
-    Token scanPunctuation();
+    Token scanPunctuation(int startLine, int startColumn);
 
     Token
-    makeToken(std::string lexeme, TokenType                                            type,
+    makeToken(TokenType type, int startLine, int startColumn,
               std::variant<std::monostate, int, bool, std::string> literalValue = std::monostate{});
 
     Token errorToken(std::string message);
