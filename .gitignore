@@ -39,3 +39,35 @@
 
 # debug information files
 *.dwo
+
+# Build directories
+build/
+cmake_build/
+dist/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.user
+*.pro.user
+
+# CMake cache and temporary files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+Testing/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Generated files
+*.o
+compile_commands.json

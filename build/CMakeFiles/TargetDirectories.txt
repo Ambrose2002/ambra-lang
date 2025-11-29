@@ -1,2 +1,0 @@
-/Users/ambroseblay/Developer/mylang/build/CMakeFiles/edit_cache.dir
-/Users/ambroseblay/Developer/mylang/build/CMakeFiles/rebuild_cache.dir
