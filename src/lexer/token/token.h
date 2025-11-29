@@ -1,4 +1,3 @@
-#include <iostream>
 #include <variant>
 #include <string>
 
@@ -34,6 +33,8 @@ enum TokenType
     RIGHT_PAREN,
     LEFT_BRACE,
     RIGHT_BRACE,
+    INTERP_START,
+    INTERP_END,
     COMMA,
     SEMI_COLON,
 
@@ -41,16 +42,21 @@ enum TokenType
     ERROR
 };
 
+struct SourceLocation {
+    int line;
+    int column;
+};
+
 class Token
 {
 
     public:
     
-    Token ();
+    Token (std::string lexeme, TokenType type, std::variant<int, bool, std::string> value, int line, int column);
 
     private:
     TokenType type;
     std::string lexeme;
     std::variant<int, bool, std::string> value;
-
+    SourceLocation location;
 };
