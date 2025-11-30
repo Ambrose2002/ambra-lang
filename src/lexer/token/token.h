@@ -17,6 +17,7 @@ enum TokenType
     SAY,
     NOT,
 
+    // Operators
     PLUS,
     MINUS,
     STAR,

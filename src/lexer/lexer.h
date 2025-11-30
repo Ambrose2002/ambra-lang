@@ -122,15 +122,15 @@ class Lexer
 
     Token scanSlashOrComment(int startLine, int startColumn);
 
-    Token scanOperator(int startLine, int startColumn);
+    Token scanOperator(char c, int startLine, int startColumn);
 
-    Token scanPunctuation(int startLine, int startColumn);
+    Token scanPunctuation(char c, int startLine, int startColumn);
 
     Token
     makeToken(TokenType type, int startLine, int startColumn,
               std::variant<std::monostate, int, bool, std::string> literalValue = std::monostate{});
 
-    Token errorToken(std::string message);
+    Token makeErrorToken(std::string message, int startLine, int startColumn);
 
     bool isMultilineString();
 

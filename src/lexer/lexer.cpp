@@ -129,7 +129,7 @@ Token Lexer::scanString(int startLine, int startColumn)
     {
         if (isAtEnd())
         {
-            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+            return makeErrorToken("Unterminated string", line, column);
         }
 
         char c = peek();
@@ -142,7 +142,7 @@ Token Lexer::scanString(int startLine, int startColumn)
 
         if (c == '\n')
         {
-            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+            return makeErrorToken("Unterminated string", line, column);
         }
 
         advance();
@@ -166,7 +166,7 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
     {
         if (isAtEnd())
         {
-            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+            return makeErrorToken("Unterminated string", line, column);
         }
 
         // Found closing triple quote
@@ -217,7 +217,7 @@ Token Lexer::scanSlashOrComment(int startLine, int startColumn)
         if (isAtEnd())
         {
             // Unterminated multi-line comment
-            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+            return makeErrorToken("Unterminated multi-line comment", line, column);
         }
 
         if (peek() == '/' && peekNext() == '>')
@@ -234,9 +234,74 @@ Token Lexer::scanSlashOrComment(int startLine, int startColumn)
     return makeToken(SKIP, startLine, startColumn, std::monostate{});
 }
 
-Token Lexer::scanOperator(int startLine, int startColumn) {}
+Token Lexer::scanOperator(char c, int startLine, int startColumn)
+{
 
-Token Lexer::scanPunctuation(int startLine, int startColumn) {}
+    switch (c)
+    {
+    case '+':
+        return makeToken(PLUS, startLine, startColumn, std::monostate{});
+    case '-':
+        return makeToken(MINUS, startLine, startColumn, std::monostate{});
+    case '*':
+        return makeToken(STAR, startLine, startColumn, std::monostate{});
+    case '/':
+        return makeToken(SLASH, startLine, startColumn, std::monostate{});
+    case '=':
+        if (!isAtEnd() && peek() == '=')
+        {
+            advance();
+            return makeToken(EQUAL_EQUAL, startLine, startColumn, std::monostate{});
+        }
+        return makeToken(EQUAL, startLine, startColumn, std::monostate{});
+
+    case '!':
+        if (!isAtEnd() && peek() == '=')
+        {
+            advance();
+            return makeToken(BANG_EQUAL, startLine, startColumn, std::monostate{});
+        }
+        return makeErrorToken("We lack support for unary bang", line, column);
+
+    case '<':
+        if (!isAtEnd() && peek() == '=')
+        {
+            advance();
+            return makeToken(LESS_EQUAL, startLine, startColumn, std::monostate{});
+        }
+        return makeToken(LESS, startLine, startColumn, std::monostate{});
+    case '>':
+        if (!isAtEnd() && peek() == '=')
+        {
+            advance();
+            return makeToken(GREATER_EQUAL, startLine, startColumn, std::monostate{});
+        }
+        return makeToken(GREATER, startLine, startColumn, std::monostate{});
+    default:
+        return makeErrorToken("Unexpected character", line, column);
+    }
+}
+
+Token Lexer::scanPunctuation(char c, int startLine, int startColumn)
+{
+    switch (c)
+    {
+    case ';':
+        return makeToken(SEMI_COLON, startLine, startColumn);
+    case '(':
+    return makeToken(LEFT_PAREN, startLine, startColumn);
+    case ')':
+    return makeToken(RIGHT_PAREN, startLine, startColumn);
+    case '{':
+    return makeToken(LEFT_BRACE, startLine, startColumn);
+    case '}':
+    return makeToken(RIGHT_BRACE, startLine, startColumn);
+    case ',':
+    return makeToken(COMMA, startLine, startColumn);
+    default:
+    return makeErrorToken("Unexpected character", line, column);
+    }
+}
 
 Token Lexer::makeToken(TokenType type, int startLine, int startColumn,
                        std::variant<std::monostate, int, bool, std::string> literalValue)
@@ -245,7 +310,11 @@ Token Lexer::makeToken(TokenType type, int startLine, int startColumn,
     return Token(lexeme, type, literalValue, startLine, startColumn);
 }
 
-Token Lexer::errorToken(std::string message) {}
+Token Lexer::makeErrorToken(std::string message, int startLine, int startColumn)
+{
+    std::string lexeme = source.substr(start, current - start);
+    return Token(lexeme, ERROR, message, startLine, startColumn);
+}
 
 bool Lexer::isMultilineString()
 {
@@ -286,7 +355,7 @@ Token Lexer::scanToken()
         {
             return scanSlashOrComment(startLine, startColumn);
         }
-        return scanOperator(startLine, startColumn);
+        return scanOperator(c, startLine, startColumn);
     case '=':
     case '>':
     case '+':
@@ -294,14 +363,14 @@ Token Lexer::scanToken()
     case '-':
     case '/':
     case '!':
-        return scanOperator(startLine, startColumn);
+        return scanOperator(c, startLine, startColumn);
     case ';':
     case '(':
     case ')':
     case '{':
     case '}':
     case ',':
-        return scanPunctuation(startLine, startColumn);
+        return scanPunctuation(c, startLine, startColumn);
     default:
         if (std::isdigit(static_cast<unsigned char>(c)))
         {
@@ -312,6 +381,6 @@ Token Lexer::scanToken()
             return scanIdentifierOrKeyword(startLine, startColumn);
         }
 
-        return errorToken("Unexpected character");
+        return makeErrorToken("Unexpected character", line, column);
     }
 }
