@@ -1,5 +1,4 @@
 #include "lexer.h"
-
 #include <cctype>
 #include <variant>
 

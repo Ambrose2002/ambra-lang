@@ -40,31 +40,34 @@ set(CORE_HEADERS
 )
 
 # Create core library
-add_library(ambra_core ${CORE_SOURCES} ${CORE_HEADERS})
-target_include_directories(ambra_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_library(ambra_lang ${CORE_SOURCES} ${CORE_HEADERS})
+target_include_directories(ambra_lang PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Compiler executable
 add_executable(ambra_compiler src/cli/compiler_main.cpp)
-target_link_libraries(ambra_compiler ambra_core)
+target_link_libraries(ambra_compiler ambra_lang)
 
 # VM executable
 add_executable(ambra_vm src/cli/vm_main.cpp)
-target_link_libraries(ambra_vm ambra_core)
+target_link_libraries(ambra_vm ambra_lang)
+
+# Google Test setup (must come before add_subdirectory(tests))
+include(FetchContent)
+
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP ON
+)
+
+FetchContent_MakeAvailable(googletest)
+
+# For macOS: avoid overriding your project compiler flags
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Tests
 enable_testing()
-
-add_executable(lexer_tests tests/lexer_tests.cpp)
-target_link_libraries(lexer_tests ambra_core)
-add_test(NAME LexerTests COMMAND lexer_tests)
-
-add_executable(parser_tests tests/parser_tests.cpp)
-target_link_libraries(parser_tests ambra_core)
-add_test(NAME ParserTests COMMAND parser_tests)
-
-add_executable(vm_tests tests/vm_tests.cpp)
-target_link_libraries(vm_tests ambra_core)
-add_test(NAME VMTests COMMAND vm_tests)
+add_subdirectory(tests)
 
 # Optional: Print build configuration
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
