@@ -444,3 +444,23 @@ Token Lexer::scanToken()
         return makeErrorToken("Unexpected character", line, column);
     }
 }
+
+
+std::vector<Token> Lexer::scanTokens() {
+
+    std::vector<Token> tokens;
+
+    while (true) {
+        Token token = scanToken();
+
+        if (token.getType() == SKIP) {
+            continue;
+        }
+
+        tokens.push_back(token);
+
+        if (token.getType() == ERROR || token.getType() == EOF_TOKEN) {
+            return tokens;
+        }
+    }
+}
