@@ -7,6 +7,7 @@ Lexer::Lexer(std::string source) : source(source)
 {
     start = 0;
     current = 0;
+    mode = NORMAL_MODE;
 };
 
 char Lexer::advance()
@@ -124,69 +125,87 @@ Token Lexer::scanIdentifierOrKeyword(int startLine, int startColumn)
 
 Token Lexer::scanString(int startLine, int startColumn)
 {
-    // Scan until closing quote or error
+    mode = STRING_MODE;
+
+    // Scan until closing quote OR interpolation
     while (true)
     {
         if (isAtEnd())
         {
-            return makeErrorToken("Unterminated string", line, column);
+            return makeErrorToken("Unterminated string", startLine, startColumn);
         }
 
         char c = peek();
 
+        // 1. End of string
         if (c == '"')
         {
-            // Found the closing character — stop the loop
-            break;
+            advance(); // consume closing quote
+            mode = NORMAL_MODE;
+            std::string lexeme = source.substr(start + 1, (current - start - 2));
+            return makeToken(STRING, startLine, startColumn, lexeme);
         }
 
+        // 2. Start of interpolation
+        if (c == '{')
+        {
+            // Do NOT consume '{'
+            std::string lexeme = source.substr(start + 1, (current - start - 1));
+            mode = INTERP_EXPR_MODE;
+            return makeToken(STRING, startLine, startColumn, lexeme);
+        }
         if (c == '\n')
         {
-            return makeErrorToken("Unterminated string", line, column);
+            return makeErrorToken("Unterminated string", startLine, startColumn);
         }
-
         advance();
-
-        // Consume the closing quote
-        advance();
-
-        std::string lexeme = source.substr(start + 1, (current - start - 2));
-        return makeToken(STRING, startLine, startColumn, lexeme);
     }
 }
 
 Token Lexer::scanMultiLineString(int startLine, int startColumn)
 {
-    // Consume the opening triple quotes: """
+    // Enter multiline string mode
+    mode = STRING_MODE;
+
     advance();
     advance();
     advance();
+    start = current; // content starts after """
 
     while (true)
     {
         if (isAtEnd())
         {
-            return makeErrorToken("Unterminated string", line, column);
+            return makeErrorToken("Unterminated multiline string", startLine, startColumn);
         }
 
-        // Found closing triple quote
+        // Check for interpolation start
+        if (peek() == '{')
+        {
+            // Do NOT consume '{'
+            std::string lexeme = source.substr(start, current - start);
+            mode = INTERP_EXPR_MODE;
+            return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
+        }
+
+        // Check for closing triple quotes
         if (peek() == '"' && peekNext() == '"' && peekAhead(2) == '"')
         {
-            break;
+            // Produce the final multiline string chunk *before* consuming """
+            std::string lexeme = source.substr(start, current - start);
+
+            // Consume the closing triple quotes
+            advance(); // "
+            advance(); // "
+            advance(); // "
+
+            mode = NORMAL_MODE;
+            return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
         }
 
+        // Otherwise: consume a character (newline allowed)
         advance();
     }
-
-    // Extract string content (excluding """ at end)
-    std::string lexeme = source.substr(start, current - start);
-
-    // Consume closing triple quotes
-    advance();
-    advance();
-    advance();
-
-    return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
 }
 
 Token Lexer::scanSlashOrComment(int startLine, int startColumn)
@@ -289,17 +308,45 @@ Token Lexer::scanPunctuation(char c, int startLine, int startColumn)
     case ';':
         return makeToken(SEMI_COLON, startLine, startColumn);
     case '(':
-    return makeToken(LEFT_PAREN, startLine, startColumn);
+        return makeToken(LEFT_PAREN, startLine, startColumn);
     case ')':
-    return makeToken(RIGHT_PAREN, startLine, startColumn);
+        return makeToken(RIGHT_PAREN, startLine, startColumn);
     case '{':
-    return makeToken(LEFT_BRACE, startLine, startColumn);
+        if (mode == STRING_MODE)
+        {
+            // Begin interpolation
+            mode = INTERP_EXPR_MODE;
+            return makeToken(INTERP_START, startLine, startColumn);
+        }
+        else
+        {
+            // Normal brace (in NORMAL_MODE or INTERP_EXPR_MODE)
+            return makeToken(LEFT_BRACE, startLine, startColumn);
+        }
+
     case '}':
-    return makeToken(RIGHT_BRACE, startLine, startColumn);
+        if (mode == STRING_MODE)
+        {
+            // Cannot close a block inside a raw string section
+            return makeErrorToken("Cannot close block inside string", startLine, startColumn);
+        }
+        else if (mode == INTERP_EXPR_MODE)
+        {
+            // End interpolation
+            mode = STRING_MODE;
+            return makeToken(INTERP_END, startLine, startColumn);
+        }
+        else
+        {
+            // Normal RIGHT_BRACE in NORMAL_MODE
+            return makeToken(RIGHT_BRACE, startLine, startColumn);
+        }
+
     case ',':
-    return makeToken(COMMA, startLine, startColumn);
+        return makeToken(COMMA, startLine, startColumn);
+
     default:
-    return makeErrorToken("Unexpected character", line, column);
+        return makeErrorToken("Unexpected punctuation character", startLine, startColumn);
     }
 }
 
@@ -331,7 +378,20 @@ Token Lexer::scanToken()
         return makeToken(EOF_TOKEN, startLine, startColumn, std::monostate{});
     }
 
+    if (mode == STRING_MODE)
+        return scanString(startLine, startColumn);
+
     char c = advance();
+
+    // We are inside interpolation expression
+    if (mode == INTERP_EXPR_MODE)
+    {
+        if (c == '}')
+        {
+            mode = STRING_MODE;
+            return makeToken(INTERP_END, startLine, startColumn);
+        }
+    }
 
     switch (c)
     {

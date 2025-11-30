@@ -85,6 +85,7 @@ class Lexer
         {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
         {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};
 
+    LexerMode mode;
     /**
      * @brief Advances the scanner by one character and returns it.
      *
