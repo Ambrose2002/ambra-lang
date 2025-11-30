@@ -161,7 +161,6 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
     advance();
     advance();
     advance();
-    start = current;
 
     while (true)
     {
@@ -190,7 +189,50 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
     return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
 }
 
-Token Lexer::scanSlashOrComment(int startLine, int startColumn) {}
+Token Lexer::scanSlashOrComment(int startLine, int startColumn)
+{
+    advance(); // consume the '/'
+
+    bool isMultiLine = false;
+
+    if (!isAtEnd() && peek() == '\n')
+    {
+        // Multi-line comment begins with "</\n"
+        isMultiLine = true;
+        advance();
+    }
+
+    if (!isMultiLine)
+    {
+        // Eat until newline or EOF
+        while (!isAtEnd() && peek() != '\n')
+        {
+            advance();
+        }
+        return makeToken(SKIP, startLine, startColumn, std::monostate{});
+    }
+
+    while (true)
+    {
+        if (isAtEnd())
+        {
+            // Unterminated multi-line comment
+            return makeToken(ERROR, startLine, startColumn, std::monostate{});
+        }
+
+        if (peek() == '/' && peekNext() == '>')
+        {
+            break;
+        }
+
+        advance();
+    }
+    // Consume clusing '/' and '>'
+    advance();
+    advance();
+
+    return makeToken(SKIP, startLine, startColumn, std::monostate{});
+}
 
 Token Lexer::scanOperator(int startLine, int startColumn) {}
 
