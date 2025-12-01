@@ -27,14 +27,14 @@ void printExpectedVsActual(std::vector<Token> expected, std::vector<Token> actua
     };
 
     std::cout << "EXPECTED TOKENS:\n";
-    for (auto& t : actual)
+    for (auto& t : expected)
     {
         std::cout << "  lexeme='" << t.getLexeme() << "' type=" << t.getType() << " value='"
                   << valToStr(t.getValue()) << "' loc=" << t.getLocation().line << ","
                   << t.getLocation().column << "\n";
     }
     std::cout << "ACTUAL TOKENS:\n";
-    for (auto& t : expected)
+    for (auto& t : actual)
     {
         std::cout << "  lexeme='" << t.getLexeme() << "' type=" << t.getType() << " value='"
                   << valToStr(t.getValue()) << "' loc=" << t.getLocation().line << ","
@@ -546,20 +546,22 @@ TEST(SingleToken, MultiLineStringWithQuotes)
 
 TEST(SingleToken, MultiLineStringInterpolationStart)
 {
-    // When encountering '{' inside a multiline string, lexer should return
-    // a MULTILINE_STRING token for the content before '{' and switch modes.
+    // Expect full token stream: MULTILINE_STRING("hello"), INTERP_START("{"), EOF
     Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
-    std::vector<Token> actual = {token};
+    Token              interp("{", LEFT_BRACE, std::monostate{}, 1, 9);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 10);
+    std::vector<Token> actual = {token, interp, eof_token};
 
     std::string source = "\"\"\"hello{"; // """hello{
     Lexer       lexer(source);
 
     std::vector<Token> expected = lexer.scanTokens();
 
-    // We only assert that the first token matches (before interpolation)
-    ASSERT_FALSE(expected.empty());
-    ASSERT_EQ(expected[0].getType(), MULTILINE_STRING);
-    ASSERT_EQ(std::get<std::string>(expected[0].getValue()), "hello");
+    if (!equalTokenVectors(actual, expected))
+    {
+        printExpectedVsActual(actual, expected);
+    }
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
 
 TEST(IgnoredToken, Whitespace)
