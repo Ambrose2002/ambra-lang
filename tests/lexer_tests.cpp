@@ -368,3 +368,31 @@ TEST(SingleToken, Identifier)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+TEST(SingleToken, BoolAffirmative)
+{
+    Token              token("affirmative", BOOL, true, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 12);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "affirmative";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, BoolNegative)
+{
+    Token              token("negative", BOOL, false, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 9);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "negative";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
