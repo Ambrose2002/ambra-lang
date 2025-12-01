@@ -3,6 +3,7 @@
 
 enum TokenType
 {
+    // data types
     INTEGER,
     STRING,
     MULTILINE_STRING,

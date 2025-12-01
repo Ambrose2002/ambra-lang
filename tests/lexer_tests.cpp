@@ -396,3 +396,31 @@ TEST(SingleToken, BoolNegative)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+TEST(SingleToken, IntegerSingleDigit)
+{
+    Token              token("7", INTEGER, 7, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "7";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, IntegerMultiDigit)
+{
+    Token              token("123", INTEGER, 123, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "123";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
