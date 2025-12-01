@@ -10,6 +10,7 @@ enum TokenType
 
     IDENTIFIER,
 
+    // Keywords
     SUMMON,
     SHOULD,
     OTHERWISE,

@@ -269,3 +269,88 @@ TEST(SingleToken, Comma)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+// Keyword single-token tests
+TEST(SingleToken, Summon)
+{
+    Token              token("summon", SUMMON, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "summon";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, Should)
+{
+    Token              token("should", SHOULD, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "should";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, Otherwise)
+{
+    Token              token("otherwise", OTHERWISE, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 10);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "otherwise";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, AsLongAs)
+{
+    Token              token("aslongas", ASLONGAS, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 9);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "aslongas";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, Say)
+{
+    Token              token("say", SAY, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "say";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, Not)
+{
+    Token              token("not", NOT, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "not";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
