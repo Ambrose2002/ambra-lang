@@ -424,3 +424,30 @@ TEST(SingleToken, IntegerMultiDigit)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+TEST(SingleToken, StringSimple)
+{
+    Token              token("\"hello\"", STRING, std::string("hello"), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 8);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "\"hello\"";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, UnterminatedString)
+{
+    Token              token("\"hello", ERROR, std::string("Unterminated string"), 1, 1);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\"hello";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
