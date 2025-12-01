@@ -546,7 +546,7 @@ TEST(SingleToken, MultiLineStringWithQuotes)
 
 TEST(SingleToken, MultiLineStringInterpolationStart)
 {
-    // Expect full token stream: MULTILINE_STRING("hello"), INTERP_START("{"), EOF
+    // Expect full token stream: MULTILINE_STRING("hello"), LEFT_BRACE("{"), EOF
     Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
     Token              interp("{", LEFT_BRACE, std::monostate{}, 1, 9);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 10);
@@ -571,6 +571,66 @@ TEST(IgnoredToken, Whitespace)
     std::vector<Token> actual = {token};
 
     std::string source = " ";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(IgnoredToken, EndOfLine)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 2, 1);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\n";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(IgnoredToken, SingleLineComment)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 1, 14);
+    std::vector<Token> actual = {token};
+
+    std::string source = "</Hello World";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(IgnoredToken, MultiLineComment)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 4, 3);
+    std::vector<Token> actual = {token};
+
+    std::string source = "</\nhello how are you \n I hope you're fine\n/>";
     Lexer       lexer(source);
 
     std::vector<Token> expected = lexer.scanTokens();
