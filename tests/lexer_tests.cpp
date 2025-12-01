@@ -64,238 +64,238 @@ TEST(SingleToken, Plus)
 {
     Token              token("+", PLUS, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "+";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Minus)
 {
     Token              token("-", MINUS, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "-";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, LeftParen)
 {
     Token              token("(", LEFT_PAREN, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "(";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, RightParen)
 {
     Token              token(")", RIGHT_PAREN, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = ")";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, LeftBrace)
 {
     Token              token("{", LEFT_BRACE, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "{";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, RightBrace)
 {
     Token              token("}", RIGHT_BRACE, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "}";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, SemiColon)
 {
     Token              token(";", SEMI_COLON, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = ";";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Star)
 {
     Token              token("*", STAR, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "*";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Slash)
 {
     Token              token("/", SLASH, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "/";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Equal)
 {
     Token              token("=", EQUAL, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "=";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, EqualEqual)
 {
     Token              token("==", EQUAL_EQUAL, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 3);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "==";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, BangEqual)
 {
     Token              token("!=", BANG_EQUAL, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 3);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "!=";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Less)
 {
     Token              token("<", LESS, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "<";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, LessEqual)
 {
     Token              token("<=", LESS_EQUAL, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 3);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "<=";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Greater)
 {
     Token              token(">", GREATER, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = ">";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, GreaterEqual)
 {
     Token              token(">=", GREATER_EQUAL, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 3);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = ">=";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Comma)
 {
     Token              token(",", COMMA, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = ",";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 // Keyword single-token tests
@@ -303,181 +303,181 @@ TEST(SingleToken, Summon)
 {
     Token              token("summon", SUMMON, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "summon";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Should)
 {
     Token              token("should", SHOULD, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "should";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Otherwise)
 {
     Token              token("otherwise", OTHERWISE, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 10);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "otherwise";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, AsLongAs)
 {
     Token              token("aslongas", ASLONGAS, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 9);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "aslongas";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Say)
 {
     Token              token("say", SAY, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "say";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Not)
 {
     Token              token("not", NOT, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "not";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, Identifier)
 {
     Token              token("foo", IDENTIFIER, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "foo";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, BoolAffirmative)
 {
     Token              token("affirmative", BOOL, true, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 12);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "affirmative";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, BoolNegative)
 {
     Token              token("negative", BOOL, false, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 9);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "negative";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, IntegerSingleDigit)
 {
     Token              token("7", INTEGER, 7, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "7";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, IntegerMultiDigit)
 {
     Token              token("123", INTEGER, 123, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "123";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, StringSimple)
 {
     Token              token("\"hello\"", STRING, std::string("hello"), 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 8);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "\"hello\"";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, UnterminatedString)
 {
     Token              token("\"hello", ERROR, std::string("Unterminated string"), 1, 1);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "\"hello";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, MultiLineStringSimple)
@@ -485,43 +485,43 @@ TEST(SingleToken, MultiLineStringSimple)
     // source contains opening and closing triple quotes with content "hello"
     Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 12);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "\"\"\"hello\"\"\""; // """hello"""
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, UnterminatedMultiLineString)
 {
     // opening triple quotes but no closing sequence
     Token              token("hello", ERROR, std::string("Unterminated multiline string"), 1, 1);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "\"\"\"hello"; // """hello
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, MultiLineStringEmpty)
 {
     Token              token("", MULTILINE_STRING, std::string(""), 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source =
         "\"\"\"\"\"\""; // 6 quotes: """ (opening) + """ (closing) with empty content
     Lexer lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool res = equalTokenVectors(actual, expected);
+    bool res = equalTokenVectors(expected, actual);
 
     if (!res)
     {
@@ -534,14 +534,14 @@ TEST(SingleToken, MultiLineStringWithQuotes)
 {
     Token              token("he\"llo", MULTILINE_STRING, std::string("he\"llo"), 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 13);
-    std::vector<Token> actual = {token, eof_token};
+    std::vector<Token> expected = {token, eof_token};
 
     std::string source = "\"\"\"he\"llo\"\"\""; // """he"llo"""
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(SingleToken, MultiLineStringInterpolationStart)
@@ -550,32 +550,32 @@ TEST(SingleToken, MultiLineStringInterpolationStart)
     Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
     Token              interp("{", LEFT_BRACE, std::monostate{}, 1, 9);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 10);
-    std::vector<Token> actual = {token, interp, eof_token};
+    std::vector<Token> expected = {token, interp, eof_token};
 
     std::string source = "\"\"\"hello{"; // """hello{
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    if (!equalTokenVectors(actual, expected))
+    if (!equalTokenVectors(expected, actual))
     {
-        printExpectedVsActual(actual, expected);
+        printExpectedVsActual(expected, actual);
     }
-    ASSERT_TRUE(equalTokenVectors(actual, expected));
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
 TEST(IgnoredToken, Whitespace)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = " ";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -588,14 +588,14 @@ TEST(IgnoredToken, EndOfLine)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 2, 1);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "\n";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -608,14 +608,14 @@ TEST(IgnoredToken, HorizontalTab)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "\t";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -628,14 +628,14 @@ TEST(IgnoredToken, CarriageReturnEscape)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "\r";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -648,14 +648,14 @@ TEST(IgnoredToken, SingleLineComment)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 1, 14);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "</Hello World";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -668,14 +668,14 @@ TEST(IgnoredToken, MultiLineComment)
 {
 
     Token              token("", EOF_TOKEN, std::monostate{}, 4, 3);
-    std::vector<Token> actual = {token};
+    std::vector<Token> expected = {token};
 
     std::string source = "</\nhello how are you \n I hope you're fine\n/>";
     Lexer       lexer(source);
 
-    std::vector<Token> expected = lexer.scanTokens();
+    std::vector<Token> actual = lexer.scanTokens();
 
-    bool testResults = equalTokenVectors(actual, expected);
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
