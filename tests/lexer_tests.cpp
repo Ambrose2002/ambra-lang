@@ -42,3 +42,18 @@ TEST(SingleToken, Plus)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+
+TEST(SingleToken, Minus)
+{
+    Token              token("-", PLUS, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
