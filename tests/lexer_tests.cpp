@@ -1,9 +1,44 @@
-#include <iostream>
+#include "lexer/lexer.h"
+
 #include <gtest/gtest.h>
+#include <iostream>
+#include <variant>
 
-int main() {
-    std::cout << "Running lexer tests...\n";
+bool equalTokens(Token a, Token b)
+{
+    return a.getType() == b.getType() && a.getLexeme() == b.getLexeme() &&
+           a.getLocation().line == b.getLocation().line && a.getValue() == b.getValue() &&
+           a.getLocation().column == b.getLocation().column;
+}
 
-    // TODO: Add test assertions
-    return 0;
+bool equalTokenVectors(std::vector<Token> a, std::vector<Token> b)
+{
+    if (a.size() != b.size())
+    {
+        return false;
+    }
+
+    for (int i = 0; i < a.size(); i++)
+    {
+        if (!equalTokens(a[i], b[i]))
+        {
+            std::cout << "failed with lexeme " << a[i].getLexeme();
+            return false;
+        }
+    }
+    return true;
+}
+
+TEST(SingleToken, Plus)
+{
+    Token              token("+", PLUS, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "+";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
