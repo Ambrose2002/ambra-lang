@@ -354,3 +354,17 @@ TEST(SingleToken, Not)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
+
+TEST(SingleToken, Identifier)
+{
+    Token              token("foo", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "foo";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
