@@ -46,11 +46,11 @@ TEST(SingleToken, Plus)
 
 TEST(SingleToken, Minus)
 {
-    Token              token("-", PLUS, std::monostate{}, 1, 1);
+    Token              token("-", MINUS, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
-    std::string source = "";
+    std::string source = "-";
     Lexer       lexer(source);
 
     std::vector<Token> expected = lexer.scanTokens();
@@ -61,7 +61,7 @@ TEST(SingleToken, Minus)
 
 TEST(SingleToken, LeftParen)
 {
-    Token              token("(", PLUS, std::monostate{}, 1, 1);
+    Token              token("(", LEFT_PAREN, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
@@ -75,7 +75,7 @@ TEST(SingleToken, LeftParen)
 
 TEST(SingleToken, RightParen)
 {
-    Token              token(")", PLUS, std::monostate{}, 1, 1);
+    Token              token(")", RIGHT_PAREN, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
@@ -90,7 +90,7 @@ TEST(SingleToken, RightParen)
 
 TEST(SingleToken, LeftBrace)
 {
-    Token              token("{", PLUS, std::monostate{}, 1, 1);
+    Token              token("{", LEFT_BRACE, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
@@ -104,7 +104,7 @@ TEST(SingleToken, LeftBrace)
 
 TEST(SingleToken, RightBrace)
 {
-    Token              token("}", PLUS, std::monostate{}, 1, 1);
+    Token              token("}", RIGHT_BRACE, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
@@ -118,7 +118,7 @@ TEST(SingleToken, RightBrace)
 
 TEST(SingleToken, SemiColon)
 {
-    Token              token(";", PLUS, std::monostate{}, 1, 1);
+    Token              token(";", SEMI_COLON, std::monostate{}, 1, 1);
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 2);
     std::vector<Token> actual = {token, eof_token};
 
