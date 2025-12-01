@@ -63,28 +63,6 @@ class Lexer
      */
     int column = 1;
 
-    /**
-     * @brief Mapping of language keywords to their corresponding token types.
-     *
-     * During identifier scanning, the lexer must determine whether a scanned
-     * lexeme is a user-defined identifier or a reserved keyword with special
-     * syntactic meaning. All reserved words of the Ambra language are stored
-     * in this table, allowing the lexer to perform an O(1) lookup after
-     * scanning an identifier.
-     *
-     * When an identifier lexeme matches an entry in this table, the lexer
-     * emits the associated keyword TokenType instead of IDENTIFIER. Boolean
-     * keywords ("affirmative" and "negative") are also included here and are
-     * handled specially by the identifier-scanning routine to produce BOOL
-     * literal tokens with the appropriate boolean value.
-     *
-     * This table is initialized once (typically in the constructor) and is
-     * treated as read-only throughout lexing.
-     */
-    std::unordered_map<std::string, TokenType> keywordMap = {
-        {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
-        {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};
-
     LexerMode mode;
     /**
      * @brief Advances the scanner by one character and returns it.
@@ -182,4 +160,24 @@ class Lexer
      * @return A Token representing the next meaningful unit in the source.
      */
     Token scanToken();
+
+    /**
+     * @brief Mapping of language keywords to their corresponding token types.
+     *
+     * During identifier scanning, the lexer must determine whether a scanned
+     * lexeme is a user-defined identifier or a reserved keyword with special
+     * syntactic meaning. All reserved words of the Ambra language are stored
+     * in this table, allowing the lexer to perform an O(1) lookup after
+     * scanning an identifier.
+     *
+     * When an identifier lexeme matches an entry in this table, the lexer
+     * emits the associated keyword TokenType instead of IDENTIFIER. Boolean
+     * keywords ("affirmative" and "negative") are also included here and are
+     * handled specially by the identifier-scanning routine to produce BOOL
+     * literal tokens with the appropriate boolean value.
+     *
+     * This table is initialized once (typically in the constructor) and is
+     * treated as read-only throughout lexing.
+     */
+    static std::unordered_map<std::string, TokenType> keywordMap;
 };

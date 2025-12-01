@@ -1,4 +1,5 @@
 #include "lexer.h"
+
 #include <cctype>
 #include <variant>
 
@@ -8,6 +9,10 @@ Lexer::Lexer(std::string source) : source(source)
     current = 0;
     mode = NORMAL_MODE;
 };
+
+std::unordered_map<std::string, TokenType> Lexer::keywordMap = {
+    {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
+    {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};
 
 char Lexer::advance()
 {
@@ -451,21 +456,24 @@ Token Lexer::scanToken()
     }
 }
 
-
-std::vector<Token> Lexer::scanTokens() {
+std::vector<Token> Lexer::scanTokens()
+{
 
     std::vector<Token> tokens;
 
-    while (true) {
+    while (true)
+    {
         Token token = scanToken();
 
-        if (token.getType() == SKIP) {
+        if (token.getType() == SKIP)
+        {
             continue;
         }
 
         tokens.push_back(token);
 
-        if (token.getType() == ERROR || token.getType() == EOF_TOKEN) {
+        if (token.getType() == ERROR || token.getType() == EOF_TOKEN)
+        {
             return tokens;
         }
     }
