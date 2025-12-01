@@ -397,6 +397,48 @@ TEST(SingleToken, Identifier)
     ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
+TEST(SingleToken, IdentifierWithUnderscoreAtStart)
+{
+    Token              token("_foo", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 5);
+    std::vector<Token> expected = {token, eof_token};
+
+    std::string source = "_foo";
+    Lexer       lexer(source);
+
+    std::vector<Token> actual = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
+}
+
+TEST(SingleToken, IdentifierWithUnderscoreInMiddle)
+{
+    Token              token("fo_o", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 5);
+    std::vector<Token> expected = {token, eof_token};
+
+    std::string source = "fo_o";
+    Lexer       lexer(source);
+
+    std::vector<Token> actual = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
+}
+
+TEST(SingleToken, IdentifierWithUnderscoreAtEnd)
+{
+    Token              token("foo_", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 5);
+    std::vector<Token> expected = {token, eof_token};
+
+    std::string source = "foo_";
+    Lexer       lexer(source);
+
+    std::vector<Token> actual = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
+}
+
 TEST(SingleToken, BoolAffirmative)
 {
     Token              token("affirmative", BOOL, true, 1, 1);
