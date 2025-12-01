@@ -515,14 +515,16 @@ TEST(SingleToken, MultiLineStringEmpty)
     Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
     std::vector<Token> actual = {token, eof_token};
 
-    std::string source = "\"\"\"\"\"\"";  // 6 quotes: """ (opening) + """ (closing) with empty content
-    Lexer       lexer(source);
+    std::string source =
+        "\"\"\"\"\"\""; // 6 quotes: """ (opening) + """ (closing) with empty content
+    Lexer lexer(source);
 
     std::vector<Token> expected = lexer.scanTokens();
 
     bool res = equalTokenVectors(actual, expected);
 
-    if (!res) {
+    if (!res)
+    {
         printExpectedVsActual(expected, actual);
     }
     ASSERT_TRUE(res);
@@ -558,4 +560,24 @@ TEST(SingleToken, MultiLineStringInterpolationStart)
     ASSERT_FALSE(expected.empty());
     ASSERT_EQ(expected[0].getType(), MULTILINE_STRING);
     ASSERT_EQ(std::get<std::string>(expected[0].getValue()), "hello");
+}
+
+TEST(IgnoredToken, Whitespace)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token};
+
+    std::string source = " ";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
 }
