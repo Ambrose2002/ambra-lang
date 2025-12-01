@@ -3,12 +3,43 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <variant>
+#include <vector>
 
 bool equalTokens(Token a, Token b)
 {
     return a.getType() == b.getType() && a.getLexeme() == b.getLexeme() &&
            a.getLocation().line == b.getLocation().line && a.getValue() == b.getValue() &&
            a.getLocation().column == b.getLocation().column;
+}
+
+void printExpectedVsActual(std::vector<Token> expected, std::vector<Token> actual)
+{
+
+    auto valToStr = [](const std::variant<std::monostate, int, bool, std::string>& v)
+    {
+        if (std::holds_alternative<int>(v))
+            return std::to_string(std::get<int>(v));
+        if (std::holds_alternative<bool>(v))
+            return std::string(std::get<bool>(v) ? "true" : "false");
+        if (std::holds_alternative<std::string>(v))
+            return std::get<std::string>(v);
+        return std::string("<none>");
+    };
+
+    std::cout << "EXPECTED TOKENS:\n";
+    for (auto& t : actual)
+    {
+        std::cout << "  lexeme='" << t.getLexeme() << "' type=" << t.getType() << " value='"
+                  << valToStr(t.getValue()) << "' loc=" << t.getLocation().line << ","
+                  << t.getLocation().column << "\n";
+    }
+    std::cout << "ACTUAL TOKENS:\n";
+    for (auto& t : expected)
+    {
+        std::cout << "  lexeme='" << t.getLexeme() << "' type=" << t.getType() << " value='"
+                  << valToStr(t.getValue()) << "' loc=" << t.getLocation().line << ","
+                  << t.getLocation().column << "\n";
+    }
 }
 
 bool equalTokenVectors(std::vector<Token> a, std::vector<Token> b)
@@ -22,7 +53,7 @@ bool equalTokenVectors(std::vector<Token> a, std::vector<Token> b)
     {
         if (!equalTokens(a[i], b[i]))
         {
-            std::cout << "failed with lexeme " << a[i].getLexeme();
+            std::cout << "failed with lexeme " << a[i].getLexeme() << std::endl;
             return false;
         }
     }
@@ -43,7 +74,6 @@ TEST(SingleToken, Plus)
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
 
-
 TEST(SingleToken, Minus)
 {
     Token              token("-", MINUS, std::monostate{}, 1, 1);
@@ -57,7 +87,6 @@ TEST(SingleToken, Minus)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
-
 
 TEST(SingleToken, LeftParen)
 {
@@ -86,7 +115,6 @@ TEST(SingleToken, RightParen)
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
 }
-
 
 TEST(SingleToken, LeftBrace)
 {
@@ -450,4 +478,84 @@ TEST(SingleToken, UnterminatedString)
     std::vector<Token> expected = lexer.scanTokens();
 
     ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, MultiLineStringSimple)
+{
+    // source contains opening and closing triple quotes with content "hello"
+    Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 12);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "\"\"\"hello\"\"\""; // """hello"""
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, UnterminatedMultiLineString)
+{
+    // opening triple quotes but no closing sequence
+    Token              token("hello", ERROR, std::string("Unterminated multiline string"), 1, 1);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\"\"\"hello"; // """hello
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, MultiLineStringEmpty)
+{
+    Token              token("", MULTILINE_STRING, std::string(""), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "\"\"\"\"\"\"";  // 6 quotes: """ (opening) + """ (closing) with empty content
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool res = equalTokenVectors(actual, expected);
+
+    if (!res) {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(res);
+}
+
+TEST(SingleToken, MultiLineStringWithQuotes)
+{
+    Token              token("he\"llo", MULTILINE_STRING, std::string("he\"llo"), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 13);
+    std::vector<Token> actual = {token, eof_token};
+
+    std::string source = "\"\"\"he\"llo\"\"\""; // """he"llo"""
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(actual, expected));
+}
+
+TEST(SingleToken, MultiLineStringInterpolationStart)
+{
+    // When encountering '{' inside a multiline string, lexer should return
+    // a MULTILINE_STRING token for the content before '{' and switch modes.
+    Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\"\"\"hello{"; // """hello{
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    // We only assert that the first token matches (before interpolation)
+    ASSERT_FALSE(expected.empty());
+    ASSERT_EQ(expected[0].getType(), MULTILINE_STRING);
+    ASSERT_EQ(std::get<std::string>(expected[0].getValue()), "hello");
 }
