@@ -165,8 +165,9 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
 {
     // Enter multiline string mode
     mode = STRING_MODE;
-
-    advance();
+    // We have already consumed the first '"' in scanToken(), so consume
+    // the remaining two quotes to position `current` at the first character
+    // of the multiline content.
     advance();
     advance();
     start = current; // content starts after """
@@ -190,8 +191,12 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
         // Check for closing triple quotes
         if (peek() == '"' && peekNext() == '"' && peekAhead(2) == '"')
         {
-            // Produce the final multiline string chunk *before* consuming """
+            // Produce the final multiline string chunk *before* consuming """.
             std::string lexeme = source.substr(start, current - start);
+
+            // Create the token now (uses current/start as the bounds),
+            // then consume the closing quotes so scanning continues after them.
+            Token t = makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
 
             // Consume the closing triple quotes
             advance(); // "
@@ -199,7 +204,7 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
             advance(); // "
 
             mode = NORMAL_MODE;
-            return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
+            return t;
         }
 
         // Otherwise: consume a character (newline allowed)
@@ -364,7 +369,9 @@ Token Lexer::makeErrorToken(std::string message, int startLine, int startColumn)
 
 bool Lexer::isMultilineString()
 {
-    return (peek() == '"') && (peekNext() == '"') && (peekAhead(2) == '"');
+    // After consuming the first '"' in scanToken(), check whether the
+    // next two characters are '"' to detect a opening triple-quote.
+    return (peek() == '"') && (peekNext() == '"');
 }
 
 Token Lexer::scanToken()
