@@ -604,6 +604,46 @@ TEST(IgnoredToken, EndOfLine)
     ASSERT_TRUE(testResults);
 }
 
+TEST(IgnoredToken, HorizontalTab)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\t";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(IgnoredToken, CarriageReturnEscape)
+{
+
+    Token              token("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> actual = {token};
+
+    std::string source = "\r";
+    Lexer       lexer(source);
+
+    std::vector<Token> expected = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(actual, expected);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
 TEST(IgnoredToken, SingleLineComment)
 {
 
