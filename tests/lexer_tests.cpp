@@ -740,3 +740,25 @@ TEST(IgnoredToken, MultiLineComment)
     }
     ASSERT_TRUE(testResults);
 }
+
+TEST(MultiTokens, ShouldIgnoreWhiteSpaceBetweenTokens)
+{
+    Token summonToken("summon", SUMMON, std::monostate{}, 1, 1);
+    Token xToken("x", IDENTIFIER, std::monostate{}, 1, 14);
+    Token eofToken("", EOF_TOKEN, std::monostate{}, 1, 15);
+
+    std::vector<Token> expected = {summonToken, xToken, eofToken};
+
+    std::string source = "summon       x";
+    Lexer       lexer(source);
+
+    std::vector<Token> actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
