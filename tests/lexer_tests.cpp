@@ -440,6 +440,20 @@ TEST(SingleToken, IdentifierWithUnderscoreAtEnd)
     ASSERT_TRUE(equalTokenVectors(expected, actual));
 }
 
+TEST(SingleToken, IdentiferWithNumbers)
+{
+    Token              token("foo123", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
+    std::vector<Token> expected = {token, eof_token};
+
+    std::string source = "foo123";
+    Lexer       lexer(source);
+
+    std::vector<Token> actual = lexer.scanTokens();
+
+    ASSERT_TRUE(equalTokenVectors(expected, actual));
+}
+
 TEST(SingleToken, BoolAffirmative)
 {
     Token              token("affirmative", BOOL, true, 1, 1);
