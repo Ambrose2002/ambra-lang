@@ -540,16 +540,22 @@ TEST(SingleToken, UnterminatedString)
 TEST(SingleToken, MultiLineStringSimple)
 {
     // source contains opening and closing triple quotes with content "hello"
-    Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
-    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 12);
+    Token              token("\nhello\n", MULTILINE_STRING, std::string("\nhello\n"), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 3, 4);
     std::vector<Token> expected = {token, eof_token};
 
-    std::string source = "\"\"\"hello\"\"\""; // """hello"""
+    std::string source = "\"\"\"\nhello\n\"\"\""; // """hello"""
     Lexer       lexer(source);
 
     std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(expected, actual));
+    bool res = equalTokenVectors(expected, actual);
+
+    if (!res)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(res);
 }
 
 TEST(SingleToken, UnterminatedMultiLineString)
@@ -563,17 +569,23 @@ TEST(SingleToken, UnterminatedMultiLineString)
 
     std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(expected, actual));
+    bool res = equalTokenVectors(expected, actual);
+
+    if (!res)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(res);
 }
 
 TEST(SingleToken, MultiLineStringEmpty)
 {
-    Token              token("", MULTILINE_STRING, std::string(""), 1, 1);
-    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 7);
+    Token              token("\n", MULTILINE_STRING, std::string("\n"), 1, 1);
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 2, 4);
     std::vector<Token> expected = {token, eof_token};
 
     std::string source =
-        "\"\"\"\"\"\""; // 6 quotes: """ (opening) + """ (closing) with empty content
+        "\"\"\"\n\"\"\""; // 6 quotes: """ (opening) + """ (closing) with empty content
     Lexer lexer(source);
 
     std::vector<Token> actual = lexer.scanTokens();
@@ -598,7 +610,13 @@ TEST(SingleToken, MultiLineStringWithQuotes)
 
     std::vector<Token> actual = lexer.scanTokens();
 
-    ASSERT_TRUE(equalTokenVectors(expected, actual));
+    bool res = equalTokenVectors(expected, actual);
+
+    if (!res)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(res);
 }
 
 TEST(SingleToken, MultiLineStringInterpolationStart)
@@ -618,7 +636,13 @@ TEST(SingleToken, MultiLineStringInterpolationStart)
     {
         printExpectedVsActual(expected, actual);
     }
-    ASSERT_TRUE(equalTokenVectors(expected, actual));
+    bool res = equalTokenVectors(expected, actual);
+
+    if (!res)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(res);
 }
 
 TEST(IgnoredToken, Whitespace)
@@ -753,6 +777,226 @@ TEST(MultiTokens, ShouldIgnoreWhiteSpaceBetweenTokens)
     Lexer       lexer(source);
 
     std::vector<Token> actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+// Simple cases
+TEST(Interpolation_Simple, ExprOnly)
+{
+    // source: "\"{x}\""
+    Token t1("\"\"", STRING, std::string(""), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 2);
+    Token t3("x", IDENTIFIER, std::monostate{}, 1, 3);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 4);
+    Token t5("\"\"", STRING, std::string(""), 1, 5);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 6);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, te};
+
+    std::string source = "\"{x}\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Simple, HelloName)
+{
+    // source: "\"hello {name}\""
+    Token t1("\"hello ", STRING, std::string("hello "), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 8);
+    Token t3("name", IDENTIFIER, std::monostate{}, 1, 9);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 13);
+    Token t5("\"", STRING, std::string(""), 1, 14);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 15);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, te};
+
+    std::string source = "\"hello {name}\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Simple, ExprWithOps)
+{
+    // source: "\"{x + 1}\""
+    Token t1("\"\"", STRING, std::string(""), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 2);
+    Token t3("x", IDENTIFIER, std::monostate{}, 1, 3);
+    Token t4("+", PLUS, std::monostate{}, 1, 5);
+    Token t5("1", INTEGER, 1, 1, 7);
+    Token t6("}", INTERP_END, std::monostate{}, 1, 8);
+    Token t7("\"\"", STRING, std::string(""), 1, 9);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 10);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, t6, t7, te};
+
+    std::string source = "\"{x + 1}\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+// Edge cases
+TEST(Interpolation_Edge, BareInterpInIsolation)
+{
+    // source: "{x}" -> should be treated like empty-string + brace seq + empty-string
+    Token t1("{", LEFT_BRACE, std::monostate{}, 1, 1);
+    Token t2("x", IDENTIFIER, std::monostate{}, 1, 2);
+    Token t3("}", RIGHT_BRACE, std::monostate{}, 1, 3);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> expected = {t1, t2, t3, te};
+
+    std::string source = "{x}";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Edge, BackToBackInterpolations)
+{
+    // source: "\"{x}{y}\""
+    Token t1("\"\"", STRING, std::string(""), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 2);
+    Token t3("x", IDENTIFIER, std::monostate{}, 1, 3);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 4);
+    Token t5("{", INTERP_START, std::monostate{}, 1, 5);
+    Token t6("y", IDENTIFIER, std::monostate{}, 1, 5);
+    Token t7("}", INTERP_END, std::monostate{}, 1, 6);
+    Token t8("\"\"", STRING, std::string(""), 1, 7);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 8);
+    std::vector<Token> expected = {t1,t2,t3,t4,t5,t6,t7,t8,te};
+
+    std::string source = "\"{x}{y}\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Edge, SpacedName)
+{
+    // source: "\"hello { name } world\""
+    Token t1("\"hello ", STRING, std::string("hello "), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 8);
+    Token t3("name", IDENTIFIER, std::monostate{}, 1, 10);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 15);
+    Token t5(" world\"", STRING, std::string(" world"), 1, 16);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 23);
+    std::vector<Token> expected = {t1,t2,t3,t4,t5,te};
+
+    std::string source = "\"hello { name } world\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Edge, UnterminatedStringBeforeInterp)
+{
+    // source: "\"hello {" -> should produce ERROR for unterminated string
+    Token terr("hello {", ERROR, std::string("Unterminated string"), 1, 1);
+    std::vector<Token> expected = {terr};
+
+    std::string source = "\"hello {";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+// Interpolation inside multiline
+TEST(Interpolation_Multiline, SimpleInside)
+{
+    // source: "\"\"\"Hello {name}\"\"\""
+    Token t1("Hello ", MULTILINE_STRING, std::string("Hello "), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 10);
+    Token t3("name", IDENTIFIER, std::monostate{}, 1, 11);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 15);
+    Token t5("", MULTILINE_STRING, std::string(""), 1, 16);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 19);
+    std::vector<Token> expected = {t1,t2,t3,t4,t5,te};
+
+    std::string source = "\"\"\"\nHello {name}\n\"\"\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Multiline, MultipleAdjacent)
+{
+    // source: "\"\"\"{a}{b}\"\"\""
+    Token t1("", MULTILINE_STRING, std::string(""), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 4);
+    Token t3("a", IDENTIFIER, std::monostate{}, 1, 5);
+    Token t4("}", INTERP_END, std::monostate{}, 1, 6);
+    Token t5("{", INTERP_START, std::monostate{}, 1, 7);
+    Token t6("b", IDENTIFIER, std::monostate{}, 1, 8);
+    Token t7("}", INTERP_END, std::monostate{}, 1, 9);
+    Token t8("", MULTILINE_STRING, std::string(""), 1, 10);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 13);
+    std::vector<Token> expected = {t1,t2,t3,t4,t5,t6,t7,t8,te};
+
+    std::string source = "\"\"\"\n{a}{b}\n\"\"\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
 
     bool testResults = equalTokenVectors(expected, actual);
 
