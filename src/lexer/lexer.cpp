@@ -392,17 +392,21 @@ Token Lexer::scanToken()
     if (mode == STRING_MODE)
         return scanString(startLine, startColumn);
 
-    char c = advance();
+    if (mode == INTERP_EXPR_MODE && !isAtEnd() && peek() == '{')
+    {
+        advance();
+        return makeToken(INTERP_START, startLine, startColumn);
+    }
 
     // We are inside interpolation expression
-    if (mode == INTERP_EXPR_MODE)
+    if (mode == INTERP_EXPR_MODE && !isAtEnd() && peek() == '}')
     {
-        if (c == '}')
-        {
-            mode = STRING_MODE;
-            return makeToken(INTERP_END, startLine, startColumn);
-        }
+        advance();
+        mode = STRING_MODE;
+        return makeToken(INTERP_END, startLine, startColumn);
     }
+
+    char c = advance();
 
     switch (c)
     {
