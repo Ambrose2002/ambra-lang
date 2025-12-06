@@ -1026,8 +1026,8 @@ TEST(MultiTokens, SimpleBoolAssignment)
     std::string source = "summon flag = affirmative;";
     Lexer       lexer(source);
 
-    auto        actual = lexer.scanTokens();
-    bool        testResults = equalTokenVectors(expected, actual);
+    auto actual = lexer.scanTokens();
+    bool testResults = equalTokenVectors(expected, actual);
 
     if (!testResults)
     {
@@ -1127,4 +1127,33 @@ TEST(MultiTokens, TokensAroundSingleLineComment)
         printExpectedVsActual(expected, actual);
     }
     ASSERT_TRUE(testResults);
+}
+
+TEST(Errors_Number, NumberFollowedByIdentifier)
+{
+    Token              t1("12foo", ERROR, std::string("Invalid number"), 1, 1);
+    std::vector<Token> expected = {t1};
+
+    std::string source = "12foo";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Errors_Number, UnsupportedHexLiteral)
+{
+    Token t1("0x123", ERROR, std::string("Invalid number"), 1, 1);
+    std::vector<Token> expected = {t1};
+
+    std::string source = "0x123";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
 }
