@@ -1097,3 +1097,34 @@ TEST(Interpolation_Multiline, ComplexExprInside)
     }
     ASSERT_TRUE(testResults);
 }
+
+TEST(MultiTokens, TokensAroundSingleLineComment)
+{
+    // source: "summon x</ this is a comment\nshould y"
+    //
+    // Line 1: "summon x</ this is a comment"
+    //   "summon" = cols 1–6
+    //   'x'      = col 8
+    //   "</..."  = comment (ignored)
+    // Line 2: "should y"
+    //   "should" = cols 1–6
+    //   'y'      = col 8
+
+    Token              t1("summon", SUMMON, std::monostate{}, 1, 1);
+    Token              t2("x", IDENTIFIER, std::monostate{}, 1, 8);
+    Token              t3("should", SHOULD, std::monostate{}, 2, 1);
+    Token              t4("y", IDENTIFIER, std::monostate{}, 2, 8);
+    Token              te("", EOF_TOKEN, std::monostate{}, 2, 9);
+    std::vector<Token> expected = {t1, t2, t3, t4, te};
+
+    std::string source = "summon x</ this is a comment\nshould y";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
