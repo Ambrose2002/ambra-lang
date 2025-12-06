@@ -1011,3 +1011,27 @@ TEST(Interpolation_Multiline, MultipleAdjacent)
     }
     ASSERT_TRUE(testResults);
 }
+
+TEST(MultiTokens, SimpleBoolAssignment)
+{
+    // source: "summon flag = affirmative;"
+    Token              t1("summon", SUMMON, std::monostate{}, 1, 1);
+    Token              t2("flag", IDENTIFIER, std::monostate{}, 1, 8);
+    Token              t3("=", EQUAL, std::monostate{}, 1, 13);
+    Token              t4("affirmative", BOOL, true, 1, 15);
+    Token              t5(";", SEMI_COLON, std::monostate{}, 1, 26);
+    Token              te("", EOF_TOKEN, std::monostate{}, 1, 27);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, te};
+
+    std::string source = "summon flag = affirmative;";
+    Lexer       lexer(source);
+
+    auto        actual = lexer.scanTokens();
+    bool        testResults = equalTokenVectors(expected, actual);
+
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
