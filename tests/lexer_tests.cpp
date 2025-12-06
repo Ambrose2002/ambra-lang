@@ -1035,3 +1035,65 @@ TEST(MultiTokens, SimpleBoolAssignment)
     }
     ASSERT_TRUE(testResults);
 }
+
+TEST(Interpolation_Simple, BoolComparisonInExpr)
+{
+    // source: "\"{affirmative == negative}\""
+    Token              t1("\"", STRING, std::string(""), 1, 1);
+    Token              t2("{", INTERP_START, std::monostate{}, 1, 2);
+    Token              t3("affirmative", BOOL, true, 1, 3);
+    Token              t4("==", EQUAL_EQUAL, std::monostate{}, 1, 15);
+    Token              t5("negative", BOOL, false, 1, 18);
+    Token              t6("}", INTERP_END, std::monostate{}, 1, 26);
+    Token              t7("\"", STRING, std::string(""), 1, 27);
+    Token              te("", EOF_TOKEN, std::monostate{}, 1, 28);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, t6, t7, te};
+
+    std::string source = "\"{affirmative == negative}\"";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
+
+TEST(Interpolation_Multiline, ComplexExprInside)
+{
+    // source: "\"\"\"\nValue: {x + 42}\n\"\"\""
+    //
+    // Line 1: """\n            (columns 1–3 are quotes, 4 is '\n')
+    // Line 2: "Value: {x + 42}\n"
+    //   "Value: " = cols 1–7
+    //   '{'       = col 8
+    //   'x'       = col 9
+    //   '+'       = col 11
+    //   "42"      = cols 13–14
+    //   '}'       = col 15
+    //   '\n'      = col 16
+    // Line 3: """ (cols 1–3), EOF at column 4
+
+    Token              t1("\nValue: ", MULTILINE_STRING, std::string("\nValue: "), 1, 1);
+    Token              t2("{", INTERP_START, std::monostate{}, 2, 8);
+    Token              t3("x", IDENTIFIER, std::monostate{}, 2, 9);
+    Token              t4("+", PLUS, std::monostate{}, 2, 11);
+    Token              t5("42", INTEGER, 42, 2, 13);
+    Token              t6("}", INTERP_END, std::monostate{}, 2, 15);
+    Token              t7("\n", MULTILINE_STRING, std::string("\n"), 2, 16);
+    Token              te("", EOF_TOKEN, std::monostate{}, 3, 4);
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, t6, t7, te};
+
+    std::string source = "\"\"\"\nValue: {x + 42}\n\"\"\"";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool testResults = equalTokenVectors(expected, actual);
+    if (!testResults)
+    {
+        printExpectedVsActual(expected, actual);
+    }
+    ASSERT_TRUE(testResults);
+}
