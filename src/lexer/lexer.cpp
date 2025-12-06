@@ -90,12 +90,26 @@ bool Lexer::isAtEnd()
 
 Token Lexer::scanNumber(int startLine, int startColumn)
 {
+    // Consume leading digits
     while (!isAtEnd() && std::isdigit(peek()))
     {
         advance();
     }
+
+    if (!isAtEnd() && (std::isalpha(static_cast<unsigned char>(peek())) || peek() == '_'))
+    {
+        // The entire lexeme from start → current+rest is invalid.
+        // Consume the rest of the alphanumeric run so the lexeme is correct.
+        while (!isAtEnd() && (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_'))
+        {
+            advance();
+        }
+        return makeErrorToken("Invalid number", startLine, startColumn);
+    }
+
+    // Valid integer
     std::string lexeme = source.substr(start, current - start);
-    int         number = std::stoi(lexeme);
+    int number = std::stoi(lexeme);
     return makeToken(TokenType::INTEGER, startLine, startColumn, number);
 }
 
