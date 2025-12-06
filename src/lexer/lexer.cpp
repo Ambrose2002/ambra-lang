@@ -155,9 +155,15 @@ Token Lexer::scanString(int startLine, int startColumn)
             advance(); // consume closing quote
             mode = NORMAL_MODE;
             // If initial entry, skip the opening quote; if resuming, don't skip
-            int         offset = isInitialEntry ? 1 : 0;
-            std::string lexeme = source.substr(start + offset, (current - start - offset - 1));
-            return makeToken(STRING, startLine, startColumn, lexeme);
+            // Compute literal content correctly (exclude the closing quote)
+            int offset = isInitialEntry ? 1 : 0;
+            int length = (current - start - offset - 1);
+
+            if (length < 0)
+                length = 0;
+            std::string literal = source.substr(start + offset, length);
+
+            return makeToken(STRING, startLine, startColumn, literal);
         }
 
         // 2. Start of interpolation
@@ -174,10 +180,15 @@ Token Lexer::scanString(int startLine, int startColumn)
 
             // Do NOT consume '{'
             // If initial entry, skip the opening quote; if resuming, don't skip
-            int         offset = isInitialEntry ? 1 : 0;
-            std::string lexeme = source.substr(start + offset, (current - start - offset));
+            int offset = isInitialEntry ? 1 : 0;
+            int length = (current - start - offset);
+
+            if (length < 0)
+                length = 0;
+            std::string literal = source.substr(start + offset, length);
+
             mode = INTERP_EXPR_MODE;
-            return makeToken(STRING, startLine, startColumn, lexeme);
+            return makeToken(STRING, startLine, startColumn, literal);
         }
         if (c == '\n')
         {
@@ -424,6 +435,12 @@ Token Lexer::scanToken()
     start = current;
     if (isAtEnd())
     {
+        if (mode == INTERP_EXPR_MODE)
+        {
+            // ERROR should report lexeme "{"
+            std::string lexeme = "{";
+            return Token(lexeme, ERROR, std::string("Unterminated string"), startLine, startColumn);
+        }
         return makeToken(EOF_TOKEN, startLine, startColumn, std::monostate{});
     }
 
