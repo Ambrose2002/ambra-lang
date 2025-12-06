@@ -8,6 +8,7 @@ Lexer::Lexer(std::string source) : source(source)
     start = 0;
     current = 0;
     mode = NORMAL_MODE;
+    insideMultiline = false;
 };
 
 std::unordered_map<std::string, TokenType> Lexer::keywordMap = {
@@ -129,6 +130,13 @@ Token Lexer::scanIdentifierOrKeyword(int startLine, int startColumn)
 
 Token Lexer::scanString(int startLine, int startColumn)
 {
+    // Check if we're starting fresh (mode is not STRING_MODE yet) or resuming (mode is already
+    // STRING_MODE)
+    bool isInitialEntry = (mode != STRING_MODE);
+
+    insideMultiline = false;
+
+    // Now enter STRING_MODE for scanning
     mode = STRING_MODE;
 
     // Scan until closing quote OR interpolation
@@ -146,15 +154,28 @@ Token Lexer::scanString(int startLine, int startColumn)
         {
             advance(); // consume closing quote
             mode = NORMAL_MODE;
-            std::string lexeme = source.substr(start + 1, (current - start - 2));
+            // If initial entry, skip the opening quote; if resuming, don't skip
+            int         offset = isInitialEntry ? 1 : 0;
+            std::string lexeme = source.substr(start + offset, (current - start - offset - 1));
             return makeToken(STRING, startLine, startColumn, lexeme);
         }
 
         // 2. Start of interpolation
         if (c == '{')
         {
+            // If we're resuming (not initial entry) and immediately hit '{',
+            // don't emit an empty STRING token - just switch modes
+            if (!isInitialEntry && current == start)
+            {
+                mode = INTERP_EXPR_MODE;
+                // Return a SKIP token to indicate no string content to emit
+                return makeToken(SKIP, startLine, startColumn, std::monostate{});
+            }
+
             // Do NOT consume '{'
-            std::string lexeme = source.substr(start + 1, (current - start - 1));
+            // If initial entry, skip the opening quote; if resuming, don't skip
+            int         offset = isInitialEntry ? 1 : 0;
+            std::string lexeme = source.substr(start + offset, (current - start - offset));
             mode = INTERP_EXPR_MODE;
             return makeToken(STRING, startLine, startColumn, lexeme);
         }
@@ -169,18 +190,32 @@ Token Lexer::scanString(int startLine, int startColumn)
 Token Lexer::scanMultiLineString(int startLine, int startColumn)
 {
     // Enter multiline string mode
-    mode = STRING_MODE;
-    // We have already consumed the first '"' in scanToken(), so consume
-    // the remaining two quotes to position `current` at the first character
-    // of the multiline content.
-    advance();
-    advance();
-    start = current; // content starts after """
+    mode = MULTILINE_STRING_MODE;
+    insideMultiline = true;
+
+    // If this is the first time we enter after seeing the opening """:
+    //   - scanToken set start = index of first '"'
+    //   - scanToken consumed that first '"', so current == start + 1
+    //   - and source[start..start+2] == "\"\"\""
+    if (current == start + 1 && start + 2 < static_cast<int>(source.length()) &&
+        source[start] == '"' && source[start + 1] == '"' && source[start + 2] == '"')
+    {
+        // Consume the remaining two quotes of the opening """.
+        advance();       // second quote
+        advance();       // third quote
+        start = current; // content starts after """
+    }
+    else
+    {
+        // Resuming after an interpolation: content starts at current.
+        start = current;
+    }
 
     while (true)
     {
         if (isAtEnd())
         {
+            insideMultiline = false;
             return makeErrorToken("Unterminated multiline string", startLine, startColumn);
         }
 
@@ -341,8 +376,12 @@ Token Lexer::scanPunctuation(char c, int startLine, int startColumn)
         }
         else if (mode == INTERP_EXPR_MODE)
         {
-            // End interpolation
-            mode = STRING_MODE;
+            // Fallback: end interpolation here too
+            if (insideMultiline)
+                mode = MULTILINE_STRING_MODE;
+            else
+                mode = STRING_MODE;
+
             return makeToken(INTERP_END, startLine, startColumn);
         }
         else
@@ -350,7 +389,6 @@ Token Lexer::scanPunctuation(char c, int startLine, int startColumn)
             // Normal RIGHT_BRACE in NORMAL_MODE
             return makeToken(RIGHT_BRACE, startLine, startColumn);
         }
-
     case ',':
         return makeToken(COMMA, startLine, startColumn);
 
@@ -389,20 +427,34 @@ Token Lexer::scanToken()
         return makeToken(EOF_TOKEN, startLine, startColumn, std::monostate{});
     }
 
+    // If we are in the middle of a multiline string, always delegate to scanMultiLineString
+    if (mode == MULTILINE_STRING_MODE)
+        return scanMultiLineString(startLine, startColumn);
+
     if (mode == STRING_MODE)
         return scanString(startLine, startColumn);
 
+    // Handle interpolation delimiters BEFORE general tokenization
     if (mode == INTERP_EXPR_MODE && !isAtEnd() && peek() == '{')
     {
-        advance();
+        advance(); // consume '{'
         return makeToken(INTERP_START, startLine, startColumn);
     }
 
-    // We are inside interpolation expression
     if (mode == INTERP_EXPR_MODE && !isAtEnd() && peek() == '}')
     {
-        advance();
-        mode = STRING_MODE;
+        advance(); // consume '}'
+
+        // After an interpolation ends, go back to the right string mode
+        if (insideMultiline)
+        {
+            mode = MULTILINE_STRING_MODE;
+        }
+        else
+        {
+            mode = STRING_MODE;
+        }
+
         return makeToken(INTERP_END, startLine, startColumn);
     }
 

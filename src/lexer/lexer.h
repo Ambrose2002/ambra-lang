@@ -7,7 +7,8 @@
 enum LexerMode {
   NORMAL_MODE,
   STRING_MODE,
-  INTERP_EXPR_MODE
+  INTERP_EXPR_MODE,
+  MULTILINE_STRING_MODE
 };
 /**
  * @brief The Lexer (scanner) for the Ambra language.
@@ -62,6 +63,8 @@ class Lexer
      * Reset after each newline. Tracks horizontal position within a line.
      */
     int column = 1;
+
+    bool insideMultiline;
 
     LexerMode mode;
     /**
