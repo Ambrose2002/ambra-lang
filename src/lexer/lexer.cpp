@@ -1,8 +1,25 @@
+/**
+ * @file lexer.cpp
+ * @brief Implementation of the Lexer class for the Ambra language.
+ *
+ * This file contains the implementation of all lexer methods including
+ * token scanning, string/interpolation handling, comment processing,
+ * and error reporting.
+ */
+
 #include "lexer.h"
 
 #include <cctype>
 #include <variant>
 
+/**
+ * @brief Constructs a new Lexer with the given source code.
+ *
+ * Initializes all scanning state: positions to 0, mode to NORMAL_MODE,
+ * and multiline flag to false.
+ *
+ * @param source The complete source code to tokenize
+ */
 Lexer::Lexer(std::string source) : source(source)
 {
     start = 0;
@@ -11,6 +28,13 @@ Lexer::Lexer(std::string source) : source(source)
     insideMultiline = false;
 };
 
+/**
+ * @brief Static keyword map for the Ambra language.
+ *
+ * Maps reserved word lexemes to their corresponding token types.
+ * Boolean literals "affirmative" and "negative" both map to BOOL
+ * and are handled specially during identifier scanning.
+ */
 std::unordered_map<std::string, TokenType> Lexer::keywordMap = {
     {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
     {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};

@@ -64,14 +64,44 @@ class Lexer
      */
     int column = 1;
 
+    /**
+     * @brief Line number where the current interpolation started.
+     *
+     * Used for error reporting when an interpolation is unterminated.
+     */
     int interpStartLine = 0;
 
+    /**
+     * @brief Column number where the current interpolation started.
+     *
+     * Used for error reporting when an interpolation is unterminated.
+     */
     int interpStartColumn = 0;
 
+    /**
+     * @brief Character position where the current interpolation started.
+     *
+     * Used for error reporting when an interpolation is unterminated.
+     */
     int interpStart = 0;
 
+    /**
+     * @brief Tracks whether we're currently inside a multiline string.
+     *
+     * This flag helps determine whether to resume multiline string mode
+     * after an interpolation ends.
+     */
     bool insideMultiline;
 
+    /**
+     * @brief Current scanning mode of the lexer.
+     *
+     * The lexer operates in different modes depending on context:
+     * - NORMAL_MODE: Regular code tokenization
+     * - STRING_MODE: Inside a string literal, scanning for interpolations or closing quote
+     * - INTERP_EXPR_MODE: Inside an interpolation expression {...}
+     * - MULTILINE_STRING_MODE: Inside a triple-quoted multiline string
+     */
     LexerMode mode;
     /**
      * @brief Advances the scanner by one character and returns it.
@@ -92,6 +122,12 @@ class Lexer
      */
     char peekNext();
 
+    /**
+     * @brief Looks ahead a specified number of positions from current.
+     *
+     * @param pos Number of positions ahead to look
+     * @return The character at current + pos, or '\0' if out of bounds
+     */
     char peekAhead(int pos);
 
     /**
@@ -106,26 +142,138 @@ class Lexer
      */
     bool isAtEnd();
 
+    /**
+     * @brief Scans a numeric literal token.
+     *
+     * Consumes digits until a non-digit is encountered. If followed by
+     * letters or underscores, the entire sequence is consumed and an
+     * error token is returned.
+     *
+     * @param startLine Line where the number started
+     * @param startColumn Column where the number started
+     * @return INTEGER token with the parsed value, or ERROR token
+     */
     Token scanNumber(int startLine, int startColumn);
 
+    /**
+     * @brief Scans an identifier or keyword token.
+     *
+     * Consumes alphanumeric characters and underscores. Checks the
+     * resulting lexeme against the keyword map to determine if it's
+     * a reserved word. Special handling for boolean literals
+     * "affirmative" and "negative".
+     *
+     * @param startLine Line where the identifier started
+     * @param startColumn Column where the identifier started
+     * @return IDENTIFIER token, keyword token, or BOOL token
+     */
     Token scanIdentifierOrKeyword(int startLine, int startColumn);
 
+    /**
+     * @brief Scans a string literal, handling interpolations.
+     *
+     * Processes string content until reaching a closing quote or
+     * interpolation marker '{'. Handles both initial entry (from opening
+     * quote) and resumption (after interpolation ends). Returns SKIP
+     * token when resuming and immediately encountering another interpolation.
+     *
+     * @param startLine Line where the string/segment started
+     * @param startColumn Column where the string/segment started
+     * @return STRING token with literal value, or ERROR if unterminated
+     */
     Token scanString(int startLine, int startColumn);
 
+    /**
+     * @brief Scans a multiline string literal (triple-quoted).
+     *
+     * Processes content within triple quotes ("""), allowing newlines.
+     * Handles interpolations within multiline strings. Can be called
+     * initially or when resuming after an interpolation.
+     *
+     * @param startLine Line where the multiline string/segment started
+     * @param startColumn Column where the multiline string/segment started
+     * @return MULTILINE_STRING token, or ERROR if unterminated
+     */
     Token scanMultiLineString(int startLine, int startColumn);
 
+    /**
+     * @brief Scans a comment (single-line or multi-line).
+     *
+     * Single-line comments start with '</' and continue to end of line.
+     * Multi-line comments start with '</\n' and end with '/>'.
+     *
+     * @param startLine Line where the comment started
+     * @param startColumn Column where the comment started
+     * @return SKIP token, or ERROR if multi-line comment is unterminated
+     */
     Token scanSlashOrComment(int startLine, int startColumn);
 
+    /**
+     * @brief Scans an operator token.
+     *
+     * Handles arithmetic operators (+, -, *, /) and comparison operators
+     * (=, ==, !=, <, <=, >, >=). Multi-character operators are recognized
+     * using lookahead.
+     *
+     * @param c The first character of the operator
+     * @param startLine Line where the operator started
+     * @param startColumn Column where the operator started
+     * @return The corresponding operator token, or ERROR for unary '!'
+     */
     Token scanOperator(char c, int startLine, int startColumn);
 
+    /**
+     * @brief Scans a punctuation token.
+     *
+     * Handles delimiters like parentheses, braces, semicolons, and commas.
+     * Special handling for braces in string/interpolation contexts:
+     * - '{' in STRING_MODE becomes INTERP_START
+     * - '}' in INTERP_EXPR_MODE becomes INTERP_END
+     *
+     * @param c The punctuation character
+     * @param startLine Line where the punctuation started
+     * @param startColumn Column where the punctuation started
+     * @return The corresponding punctuation token or special interpolation token
+     */
     Token scanPunctuation(char c, int startLine, int startColumn);
 
+    /**
+     * @brief Constructs a token from the current lexeme.
+     *
+     * Extracts the lexeme from source[start..current) and creates a Token
+     * with the specified type, location, and optional literal value.
+     *
+     * @param type The token type
+     * @param startLine Line where the token started
+     * @param startColumn Column where the token started
+     * @param literalValue Optional literal value (for integers, bools, strings)
+     * @return The constructed Token
+     */
     Token
     makeToken(TokenType type, int startLine, int startColumn,
               std::variant<std::monostate, int, bool, std::string> literalValue = std::monostate{});
 
+    /**
+     * @brief Creates an error token with a diagnostic message.
+     *
+     * Extracts the problematic lexeme and creates an ERROR token containing
+     * the error message as its value.
+     *
+     * @param message Description of the error
+     * @param startLine Line where the error occurred
+     * @param startColumn Column where the error occurred
+     * @return An ERROR token with the message as its value
+     */
     Token makeErrorToken(std::string message, int startLine, int startColumn);
 
+    /**
+     * @brief Checks if the current position starts a multiline string.
+     *
+     * After consuming the first '"' character, this checks whether the
+     * next two characters are also '"', indicating triple-quote syntax.
+     *
+     * @return true if the next two characters are both '"'
+     */
     bool isMultilineString();
 
   public:
