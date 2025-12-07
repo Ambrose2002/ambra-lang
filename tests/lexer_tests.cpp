@@ -1146,15 +1146,16 @@ TEST(Errors_Number, NumberFollowedByIdentifier)
 
 TEST(Errors_Number, UnsupportedHexLiteral)
 {
-    Token t1("0x123", ERROR, std::string("Invalid number"), 1, 1);
+    Token              t1("0x123", ERROR, std::string("Invalid number"), 1, 1);
     std::vector<Token> expected = {t1};
 
     std::string source = "0x123";
-    Lexer lexer(source);
-    auto actual = lexer.scanTokens();
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1168,11 +1169,12 @@ TEST(Interpolation_Errors, UnterminatedInterpolationMissingBrace)
     std::vector<Token> expected = {t1, t2, t3, t4};
 
     std::string source = "\"hello {name\"";
-    Lexer lexer(source);
-    auto actual = lexer.scanTokens();
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1186,7 +1188,8 @@ TEST(EmptyInput, OnlyEOF)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1208,7 +1211,8 @@ TEST(Whitespace_Mixed, SpacesTabsNewlines)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1223,7 +1227,8 @@ TEST(Identifiers_Edge, SingleUnderscore)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1238,7 +1243,8 @@ TEST(Identifiers_Edge, MultipleUnderscores)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1253,7 +1259,8 @@ TEST(Identifiers_Edge, UnderscoreThenDigits)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1268,6 +1275,87 @@ TEST(Errors_Number, NumberWithUnderscoreInside)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Operator_Adjacency, LessGreaterChain)
+{
+    // source: "<><>"
+    Token t1("<", LESS, std::monostate{}, 1, 1);
+    Token t2(">", GREATER, std::monostate{}, 1, 2);
+    Token t3("<", LESS, std::monostate{}, 1, 3);
+    Token t4(">", GREATER, std::monostate{}, 1, 4);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 5);
+
+    std::vector<Token> expected = {t1, t2, t3, t4, te};
+
+    std::string source = "<><>";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Operator_Adjacency, MixedComparisonsChain)
+{
+    // source: "a<=b<c"
+    //
+    // Positions:
+    //  a   @ col 1
+    //  <   @ col 2
+    //  =   @ col 3   => "<=" token at col 2
+    //  b   @ col 4
+    //  <   @ col 5
+    //  c   @ col 6
+    //  EOF @ col 7
+
+    Token t1("a", IDENTIFIER, std::monostate{}, 1, 1);
+    Token t2("<=", LESS_EQUAL, std::monostate{}, 1, 2);
+    Token t3("b", IDENTIFIER, std::monostate{}, 1, 4);
+    Token t4("<", LESS, std::monostate{}, 1, 5);
+    Token t5("c", IDENTIFIER, std::monostate{}, 1, 6);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 7);
+
+    std::vector<Token> expected = {t1, t2, t3, t4, t5, te};
+
+    std::string source = "a<=b<c";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Operator_Adjacency, DoubleThenCompound)
+{
+    // source: "==>="
+    //
+    // Positions:
+    //  '=' @ 1,1
+    //  '=' @ 1,2   => "==" at 1,1
+    //  '>' @ 1,3
+    //  '=' @ 1,4   => ">=" at 1,3
+    //  EOF @ 1,5
+
+    Token t1("==", EQUAL_EQUAL, std::monostate{}, 1, 1);
+    Token t2(">=", GREATER_EQUAL, std::monostate{}, 1, 3);
+    Token te("", EOF_TOKEN, std::monostate{}, 1, 5);
+
+    std::vector<Token> expected = {t1, t2, te};
+
+    std::string source = "==>=";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
