@@ -1175,3 +1175,99 @@ TEST(Interpolation_Errors, UnterminatedInterpolationMissingBrace)
     if (!res) printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
+
+TEST(EmptyInput, OnlyEOF)
+{
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 1, 1);
+    std::vector<Token> expected = {eof_token};
+
+    std::string source = "";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Whitespace_Mixed, SpacesTabsNewlines)
+{
+    // " \t\n  "
+    // Line/col evolution:
+    //   ' '  -> line 1, col 2
+    //   '\t' -> line 1, col 3
+    //   '\n' -> line 2, col 1
+    //   ' '  -> line 2, col 2
+    //   ' '  -> line 2, col 3
+    // EOF at line 2, col 3
+    Token              eof_token("", EOF_TOKEN, std::monostate{}, 2, 3);
+    std::vector<Token> expected = {eof_token};
+
+    std::string source = " \t\n  ";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Identifiers_Edge, SingleUnderscore)
+{
+    Token              t1("_", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              te("", EOF_TOKEN, std::monostate{}, 1, 2);
+    std::vector<Token> expected = {t1, te};
+
+    std::string source = "_";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Identifiers_Edge, MultipleUnderscores)
+{
+    Token              t1("___", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              te("", EOF_TOKEN, std::monostate{}, 1, 4);
+    std::vector<Token> expected = {t1, te};
+
+    std::string source = "___";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Identifiers_Edge, UnderscoreThenDigits)
+{
+    Token              t1("_123", IDENTIFIER, std::monostate{}, 1, 1);
+    Token              te("", EOF_TOKEN, std::monostate{}, 1, 5);
+    std::vector<Token> expected = {t1, te};
+
+    std::string source = "_123";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+// Numeric-with-underscore should be an invalid number, not IDENT + INT
+TEST(Errors_Number, NumberWithUnderscoreInside)
+{
+    Token              t1("1_2", ERROR, std::string("Invalid number"), 1, 1);
+    std::vector<Token> expected = {t1};
+
+    std::string source = "1_2";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
