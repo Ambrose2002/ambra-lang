@@ -1157,3 +1157,20 @@ TEST(Errors_Number, UnsupportedHexLiteral)
     if (!res) printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
+
+TEST(Interpolation_Errors, UnterminatedInterpolationMissingBrace)
+{
+    Token t1("\"hello ", STRING, std::string("hello "), 1, 1);
+    Token t2("{", INTERP_START, std::monostate{}, 1, 8);
+    Token t3("{", ERROR, std::string("Unterminated interpolation"), 1, 13);
+
+    std::vector<Token> expected = {t1, t2, t3};
+
+    std::string source = "\"hello {name\"";
+    Lexer lexer(source);
+    auto actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}

@@ -64,6 +64,12 @@ class Lexer
      */
     int column = 1;
 
+    int interpStartLine = 0;
+
+    int interpStartColumn = 0;
+
+    int interpStart = 0;
+
     bool insideMultiline;
 
     LexerMode mode;
