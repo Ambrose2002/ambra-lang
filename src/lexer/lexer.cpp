@@ -381,7 +381,7 @@ Token Lexer::scanOperator(char c, int startLine, int startColumn)
             advance();
             return makeToken(BANG_EQUAL, startLine, startColumn, std::monostate{});
         }
-        return makeErrorToken("We lack support for unary bang", line, column);
+        return makeErrorToken("We lack support for unary bang", startLine, startColumn);
 
     case '<':
         if (!isAtEnd() && peek() == '=')
@@ -574,7 +574,7 @@ Token Lexer::scanToken()
             return scanIdentifierOrKeyword(startLine, startColumn);
         }
 
-        return makeErrorToken("Unexpected character", line, column);
+        return makeErrorToken("Unexpected character", startLine, startColumn);
     }
 }
 
