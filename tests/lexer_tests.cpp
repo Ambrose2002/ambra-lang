@@ -630,7 +630,7 @@ TEST(SingleToken, MultiLineStringInterpolationStart)
     // Expect full token stream: MULTILINE_STRING("hello"), INTERP_START("{"), EOF
     Token              token("hello", MULTILINE_STRING, std::string("hello"), 1, 1);
     Token              interp("{", INTERP_START, std::monostate{}, 1, 9);
-    Token              error_token("{", ERROR, std::string("Unterminated string"), 1, 10);
+    Token              error_token("{", ERROR, std::string("Unterminated interpolation"), 1, 9);
     std::vector<Token> expected = {token, interp, error_token};
 
     std::string source = "\"\"\"hello{"; // """hello{
@@ -943,7 +943,7 @@ TEST(Interpolation_Edge, UnterminatedStringBeforeInterp)
     // source: "\"hello {" -> should produce ERROR for unterminated string
     Token              t1("\"hello ", STRING, "hello ", 1, 1);
     Token              t2("{", INTERP_START, std::monostate{}, 1, 8);
-    Token              t3("{", ERROR, std::string("Unterminated string"), 1, 9);
+    Token              t3("{", ERROR, std::string("Unterminated interpolation"), 1, 8);
     std::vector<Token> expected = {t1, t2, t3};
 
     std::string source = "\"hello {";
@@ -1162,9 +1162,10 @@ TEST(Interpolation_Errors, UnterminatedInterpolationMissingBrace)
 {
     Token t1("\"hello ", STRING, std::string("hello "), 1, 1);
     Token t2("{", INTERP_START, std::monostate{}, 1, 8);
-    Token t3("{", ERROR, std::string("Unterminated interpolation"), 1, 13);
+    Token t3("name", IDENTIFIER, std::monostate{}, 1, 9);
+    Token t4("{", ERROR, std::string("Unterminated interpolation"), 1, 8);
 
-    std::vector<Token> expected = {t1, t2, t3};
+    std::vector<Token> expected = {t1, t2, t3, t4};
 
     std::string source = "\"hello {name\"";
     Lexer lexer(source);
