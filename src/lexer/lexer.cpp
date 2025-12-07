@@ -183,6 +183,10 @@ Token Lexer::scanString(int startLine, int startColumn)
         // 2. Start of interpolation
         if (c == '{')
         {
+            // Interpolation tracking
+            interpStartLine = line;
+            interpStartColumn = column;
+            interpStart = current;
             // If we're resuming (not initial entry) and immediately hit '{',
             // don't emit an empty STRING token - just switch modes
             if (!isInitialEntry && current == start)
@@ -247,6 +251,10 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
         // Check for interpolation start
         if (peek() == '{')
         {
+            // Interpolation tracking
+            interpStartLine = line;
+            interpStartColumn = column;
+            interpStart = current;
             // Do NOT consume '{'
             std::string lexeme = source.substr(start, current - start);
             mode = INTERP_EXPR_MODE;
@@ -447,14 +455,17 @@ Token Lexer::scanToken()
     int startLine = line;
     int startColumn = column;
     start = current;
+    // Interpolation unterminated error check
+    if (mode == INTERP_EXPR_MODE && isAtEnd()) {
+        std::string lex = source.substr(interpStart, 1);
+        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine, interpStartColumn);
+    }
+    if (mode == INTERP_EXPR_MODE && peek() == '"') {
+        std::string lex = source.substr(interpStart, 1);
+        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine, interpStartColumn);
+    }
     if (isAtEnd())
     {
-        if (mode == INTERP_EXPR_MODE)
-        {
-            // ERROR should report lexeme "{"
-            std::string lexeme = "{";
-            return Token(lexeme, ERROR, std::string("Unterminated string"), startLine, startColumn);
-        }
         return makeToken(EOF_TOKEN, startLine, startColumn, std::monostate{});
     }
 
