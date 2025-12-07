@@ -1359,3 +1359,31 @@ TEST(Operator_Adjacency, DoubleThenCompound)
         printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
+
+TEST(Errors_Char, UnexpectedAtSign)
+{
+    Token              t1("@", ERROR, std::string("Unexpected character"), 1, 1);
+    std::vector<Token> expected = {t1};
+
+    std::string source = "@";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
+
+TEST(Errors_Operator, UnaryBang)
+{
+    Token              t1("!", ERROR, std::string("We lack support for unary bang"), 1, 1);
+    std::vector<Token> expected = {t1};
+
+    std::string source = "!";
+    Lexer       lexer(source);
+    auto        actual = lexer.scanTokens();
+
+    bool res = equalTokenVectors(expected, actual);
+    if (!res) printExpectedVsActual(expected, actual);
+    ASSERT_TRUE(res);
+}
