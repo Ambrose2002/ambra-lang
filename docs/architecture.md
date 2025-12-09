@@ -113,7 +113,7 @@ The AST is a **tree of semantic constructs**, not tokens.
   - Otherwise
   - AslongAs
   - Not
-
+```
   Stmt 
   ::= VarDecl {
     name: IdentifierName
@@ -145,7 +145,7 @@ The AST is a **tree of semantic constructs**, not tokens.
     body: Block
     loc: SourceLoc
   }
-  
+```
 - **Expressions**
   - Binary
   - Unary
@@ -176,6 +176,29 @@ The AST is a **tree of semantic constructs**, not tokens.
   Expr
   ::= InterpolatedString {
     parts: [StringPart] 
+    loc: SourceLoc
+  }
+
+  ::= Variable {
+    name: IdentifierName
+    loc: SourceLoc
+  }
+
+  ::= Unary {
+    op: UnaryOpKind
+    operand: Expr
+    loc: SourceLoc
+  }
+
+  ::= Binary {
+    left: Expr
+    op: BinaryOpKind
+    right: Expr
+    loc: SourceLoc
+  }
+
+  ::= Grouping {
+    expression: Expr
     loc: SourceLoc
   }
 ```
