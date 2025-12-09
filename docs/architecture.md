@@ -93,140 +93,190 @@ Each stage is described below with responsibilities and considerations.
 - Treat `otherwise` as the “final else.”
 
 ---
-
 ## 2.3 AST Representation
 
-The AST is a **tree of semantic constructs**, not tokens.
+The Abstract Syntax Tree (AST) represents the *semantic* structure of an Ambra program.  
+It is not token-based; it is a clean hierarchical model of statements and expressions.
 
-### Example core node categories
+---
+
+# Core Node Categories
+
+The AST has three main categories of nodes:
 
 - **Program**
-- **Block**
 - **Statements**
-  We'll model them as variants of a Stmt type
+- **Expressions**
 
-  ***Statement variants***
-  - Summon
-  - Say
-  - Should
-  - ShouldOtherwise
-  - Otherwise
-  - AslongAs
-  - Not
+Each AST node includes a `SourceLoc` used for error reporting.
+
+---
+
+# Program Node
+
 ```
-  Stmt 
-  ::= VarDecl {
-    name: IdentifierName
-    initializer: Expr
-    loc: SourceLoc
-  }
+Program {
+  statements: [Stmt]
+}
+```
+
+---
+
+# Statements
+
+Statements are represented as variants of the unified `Stmt` type.
+
+```
+Stmt
+  ::= Summon {
+        name: IdentifierName
+        initializer: Expr
+        loc: SourceLoc
+      }
 
   ::= Say {
-    expression: Expr
-    loc: SourceLoc
-  }
+        expression: Expr
+        loc: SourceLoc
+      }
 
   ::= Block {
-    statements: [Stmt]
-    loc: SourceLoc
-  }
+        statements: [Stmt]
+        loc: SourceLoc
+      }
 
   ::= IfChain {
-    ***should (cond1) {...}***
-    ***otherwise should (cond2) {...}***
-    ***otherwise{...}***
-    branches: [(condition: Expr, body: Block)]
-    elseBranch: Block?
-    loc: SourceLoc
-  }
+        # Represents:
+        #   should (cond1) { ... }
+        #   otherwise should (cond2) { ... }
+        #   otherwise { ... }
+
+        branches: [
+          (condition: Expr, body: Block)
+        ]
+
+        elseBranch: Block?   # null if absent
+
+        loc: SourceLoc
+      }
 
   ::= While {
-    condition: Expr
-    body: Block
-    loc: SourceLoc
-  }
+        condition: Expr
+        body: Block
+        loc: SourceLoc
+      }
 ```
-- **Expression Variants**
-  - Binary
-  - Unary
-  - Literal (string/int/bool)
-  - Identifier
-  - InterpolatedString (optional intermediate form)
-```
-  Expr 
-  ::= IntLiteral {
-    value: int
-    loc: SourceLoc
-  }
 
-  ::= BoolLIteral {
-    value: bool
-    loc: SourceLoc
-  }
+### Notes
+
+- The older “Should”, “ShouldOtherwise”, and “Otherwise” nodes are now unified into **IfChain**.
+- `AslongAs` is normalized to **While**.
+- `Not` is **not** a statement—it's part of the unary expression system.
+
+---
+
+# Expressions
+
+Expressions compute values and appear inside statements.
+
+```
+Expr
+  ::= IntLiteral {
+        value: int
+        loc: SourceLoc
+      }
+
+  ::= BoolLiteral {
+        value: bool
+        loc: SourceLoc
+      }
 
   ::= StringLiteral {
-    value: string
-    loc: SourceLoc
-  }
+        value: string
+        loc: SourceLoc
+      }
+```
 
-  StringPart ::= 
-    TextChunk {text: string}
-    | ExprPart {expression: Expr}
+## Interpolated Strings
 
-  Expr
+Ambra supports embedded expressions within string literals:
+
+```
+"hello {x + 1} world"
+```
+
+This is modeled as:
+
+```
+StringPart
+  ::= TextChunk { text: string }
+  ::= ExprPart { expression: Expr }
+
+Expr
   ::= InterpolatedString {
-    parts: [StringPart] 
-    loc: SourceLoc
-  }
+        parts: [StringPart]
+        loc: SourceLoc
+      }
+```
 
+## Variable & Composite Expressions
+
+```
+Expr
   ::= Variable {
-    name: IdentifierName
-    loc: SourceLoc
-  }
+        name: IdentifierName
+        loc: SourceLoc
+      }
 
   ::= Unary {
-    op: UnaryOpKind
-    operand: Expr
-    loc: SourceLoc
-  }
+        op: UnaryOpKind
+        operand: Expr
+        loc: SourceLoc
+      }
 
   ::= Binary {
-    left: Expr
-    op: BinaryOpKind
-    right: Expr
-    loc: SourceLoc
-  }
+        left: Expr
+        op: BinaryOpKind
+        right: Expr
+        loc: SourceLoc
+      }
 
   ::= Grouping {
-    expression: Expr
-    loc: SourceLoc
-  }
+        expression: Expr
+        loc: SourceLoc
+      }
 ```
 
-- **Operator Variants**
+---
+
+# Operator Variants
+
+These correspond directly to supported language operators.
+
 ```
-UnaryOpKind ::=
-    LogicalNot         # "not"
-  | ArithmeticNegate   # "-"  (optional future extension)
+UnaryOpKind ::= 
+      LogicalNot         # "not"
+    | ArithmeticNegate   # "-" (optional extension)
+```
 
-
+```
 BinaryOpKind ::=
-    Equal              # "=="
-  | NotEqual           # "!="
-
-  | Less               # "<"
-  | LessEqual          # "<="
-  | Greater            # ">"
-  | GreaterEqual       # ">="
-
-  | Add                # "+"
-  | Subtract           # "-"
-
-  | Multiply           # "*"
-  | Divide             # "/"
+      Equal              # "=="
+    | NotEqual           # "!="
+    | Less               # "<"
+    | LessEqual          # "<="
+    | Greater            # ">"
+    | GreaterEqual       # ">="
+    | Add                # "+"
+    | Subtract           # "-"
+    | Multiply           # "*"
+    | Divide             # "/"
 ```
 
-- **Source Locations**
+---
+
+# Source Locations
+
+Every AST node stores its originating position.
 
 ```
 SourceLoc {
@@ -235,7 +285,7 @@ SourceLoc {
 }
 ```
 
-The AST should be *stable*— later phases should not modify it structurally.
+The AST must remain structurally stable after creation; later phases must not modify its shape.
 
 ---
 
