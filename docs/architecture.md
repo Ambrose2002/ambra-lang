@@ -152,7 +152,7 @@ The AST is a **tree of semantic constructs**, not tokens.
   - Literal (string/int/bool)
   - Identifier
   - InterpolatedString (optional intermediate form)
-
+```
   Expr 
   ::= IntLiteral {
     value: int
@@ -178,7 +178,7 @@ The AST is a **tree of semantic constructs**, not tokens.
     parts: [StringPart] 
     loc: SourceLoc
   }
-
+```
 The AST should be *stable*— later phases should not modify it structurally.
 
 ---
