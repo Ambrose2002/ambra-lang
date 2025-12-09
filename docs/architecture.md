@@ -106,6 +106,14 @@ The AST is a **tree of semantic constructs**, not tokens.
   We'll model them as variants of a Stmt type
 
   ***Statement variants***
+  - Summon
+  - Say
+  - Should
+  - ShouldOtherwise
+  - Otherwise
+  - AslongAs
+  - Not
+
   Stmt 
   ::= VarDecl {
     name: IdentifierName
@@ -137,19 +145,39 @@ The AST is a **tree of semantic constructs**, not tokens.
     body: Block
     loc: SourceLoc
   }
-  - Assignment
-  - Say
-  - Should
-  - ShouldOtherwise
-  - Otherwise
-  - AslongAs
-  - Not
+  
 - **Expressions**
   - Binary
   - Unary
   - Literal (string/int/bool)
   - Identifier
   - InterpolatedString (optional intermediate form)
+
+  Expr 
+  ::= IntLiteral {
+    value: int
+    loc: SourceLoc
+  }
+
+  ::= BoolLIteral {
+    value: bool
+    loc: SourceLoc
+  }
+
+  ::= StringLiteral {
+    value: string
+    loc: SourceLoc
+  }
+
+  StringPart ::= 
+    TextChunk {text: string}
+    | ExprPart {expression: Expr}
+
+  Expr
+  ::= InterpolatedString {
+    parts: [StringPart] 
+    loc: SourceLoc
+  }
 
 The AST should be *stable*— later phases should not modify it structurally.
 
