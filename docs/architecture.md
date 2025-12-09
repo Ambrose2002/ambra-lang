@@ -103,11 +103,38 @@ The AST is a **tree of semantic constructs**, not tokens.
 - **Program**
 - **Block**
 - **Statements**
-  - VarDecl
+  We'll model them as variants of a Stmt type
+
+  ***Statement variants***
+  Stmt 
+  ::= VarDecl {
+    name: IdentifierName
+    initializer: Expr
+    loc: SourceLoc
+  }
+
+  ::= Say {
+    expression: Expr
+    loc: SourceLoc
+  }
+
+  ::= Block {
+    statements: [Stmt]
+    loc: SourceLoc
+  }
+
+  ::= IfChain {
+    branches: [(condition: Expr, body: Block)]
+    elseBranch: Block?
+    loc: SourceLoc
+  }
   - Assignment
-  - SayStmt
-  - IfStmt
-  - WhileStmt
+  - Say
+  - Should
+  - ShouldOtherwise
+  - Otherwise
+  - AslongAs
+  - Not
 - **Expressions**
   - Binary
   - Unary

@@ -1370,7 +1370,8 @@ TEST(Errors_Char, UnexpectedAtSign)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
 
@@ -1384,6 +1385,7 @@ TEST(Errors_Operator, UnaryBang)
     auto        actual = lexer.scanTokens();
 
     bool res = equalTokenVectors(expected, actual);
-    if (!res) printExpectedVsActual(expected, actual);
+    if (!res)
+        printExpectedVsActual(expected, actual);
     ASSERT_TRUE(res);
 }
