@@ -124,8 +124,17 @@ The AST is a **tree of semantic constructs**, not tokens.
   }
 
   ::= IfChain {
+    ***should (cond1) {...}***
+    ***otherwise should (cond2) {...}***
+    ***otherwise{...}***
     branches: [(condition: Expr, body: Block)]
     elseBranch: Block?
+    loc: SourceLoc
+  }
+
+  ::= While {
+    condition: Expr
+    body: Block
     loc: SourceLoc
   }
   - Assignment
