@@ -146,7 +146,7 @@ The AST is a **tree of semantic constructs**, not tokens.
     loc: SourceLoc
   }
 ```
-- **Expressions**
+- **Expression Variants**
   - Binary
   - Unary
   - Literal (string/int/bool)
@@ -202,6 +202,39 @@ The AST is a **tree of semantic constructs**, not tokens.
     loc: SourceLoc
   }
 ```
+
+- **Operator Variants**
+```
+UnaryOpKind ::=
+    LogicalNot         # "not"
+  | ArithmeticNegate   # "-"  (optional future extension)
+
+
+BinaryOpKind ::=
+    Equal              # "=="
+  | NotEqual           # "!="
+
+  | Less               # "<"
+  | LessEqual          # "<="
+  | Greater            # ">"
+  | GreaterEqual       # ">="
+
+  | Add                # "+"
+  | Subtract           # "-"
+
+  | Multiply           # "*"
+  | Divide             # "/"
+```
+
+- **Source Locations**
+
+```
+SourceLoc {
+  line: int
+  column: int
+}
+```
+
 The AST should be *stable*— later phases should not modify it structurally.
 
 ---
