@@ -57,15 +57,16 @@ struct StringPart
         TEXT,
         EXPR
     } kind;
-    std::string text;
-    std::unique_ptr<Expr>       expr;
+    std::string           text;
+    std::unique_ptr<Expr> expr;
 };
 
 class IntLiteralExpr : public Expr
 {
 
   public:
-    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc) {
+    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc)
+    {
         kind = IntLiteral;
     };
 
@@ -74,22 +75,28 @@ class IntLiteralExpr : public Expr
     SourceLoc loc;
 };
 
-class BoolLiteral : public Expr
+class BoolLiteralExpr : public Expr
 {
 
   public:
-    BoolLiteral(bool value, SourceLoc loc) : value(value), loc(loc) {};
+    BoolLiteralExpr(bool value, SourceLoc loc) : value(value), loc(loc)
+    {
+        kind = BoolLiteral;
+    };
 
   private:
     bool      value;
     SourceLoc loc;
 };
 
-class StringLiteral : public Expr
+class StringLiteralExpr : public Expr
 {
 
   public:
-    StringLiteral(std::string value, SourceLoc loc) : value(value), loc(loc) {};
+    StringLiteralExpr(std::string value, SourceLoc loc) : value(value), loc(loc)
+    {
+        kind = StringLiteral;
+    };
 
   private:
     std::string value;
@@ -100,7 +107,10 @@ class VariableExpr : public Expr
 {
 
   public:
-    VariableExpr(std::string name, SourceLoc loc) : name(name), loc(loc) {};
+    VariableExpr(std::string name, SourceLoc loc) : name(name), loc(loc)
+    {
+        kind = Variable;
+    };
 
   private:
     std::string name;
@@ -110,42 +120,56 @@ class VariableExpr : public Expr
 class UnaryExpr : public Expr
 {
   public:
-    UnaryExpr(UnaryOpKind op, std::unique_ptr<Expr> operand, SourceLoc loc) : op(op), operand(std::move(operand)), loc(loc) {};
+    UnaryExpr(UnaryOpKind op, std::unique_ptr<Expr> operand, SourceLoc loc)
+        : op(op), operand(std::move(operand)), loc(loc)
+    {
+        kind = Unary;
+    };
 
   private:
-    UnaryOpKind op;
-    std::unique_ptr<Expr>       operand;
-    SourceLoc   loc;
+    UnaryOpKind           op;
+    std::unique_ptr<Expr> operand;
+    SourceLoc             loc;
 };
 
 class BinaryExpr : public Expr
 {
   public:
-    BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right, SourceLoc loc)
-        : left(std::move(left)), op(op), right(std::move(right)), loc(loc) {};
+    BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right,
+               SourceLoc loc)
+        : left(std::move(left)), op(op), right(std::move(right)), loc(loc)
+    {
+        kind = Binary;
+    };
 
   private:
-    std::unique_ptr<Expr>        left;
-    BinaryOpKind op;
-    std::unique_ptr<Expr>        right;
-    SourceLoc    loc;
+    std::unique_ptr<Expr> left;
+    BinaryOpKind          op;
+    std::unique_ptr<Expr> right;
+    SourceLoc             loc;
 };
 
 class GroupingExpr : public Expr
 {
   public:
-    GroupingExpr(std::unique_ptr<Expr> expression, SourceLoc loc) : expression(std::move(expression)), loc(loc) {};
+    GroupingExpr(std::unique_ptr<Expr> expression, SourceLoc loc)
+        : expression(std::move(expression)), loc(loc)
+    {
+        kind = Grouping;
+    };
 
   private:
-    std::unique_ptr<Expr>     expression;
-    SourceLoc loc;
+    std::unique_ptr<Expr> expression;
+    SourceLoc             loc;
 };
 
 class InterpolatedStringExpr : public Expr
 {
   public:
-    InterpolatedStringExpr(std::vector<StringPart> parts, SourceLoc loc)
-        : parts(parts), loc(loc) {};
+    InterpolatedStringExpr(std::vector<StringPart> parts, SourceLoc loc) : parts(parts), loc(loc)
+    {
+        kind = InterpolatedString;
+    };
 
   private:
     std::vector<StringPart> parts;
