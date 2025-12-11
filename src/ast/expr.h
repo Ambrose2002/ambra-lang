@@ -1,4 +1,7 @@
 
+#include <string>
+
+
 enum ExprKind
 {
     IntLiteral,
@@ -32,5 +35,17 @@ class IntLiteralExpr: public Expr {
 
     private:
     int value;
+    SourceLoc loc;
+};
+
+class BoolLiteral: public Expr {
+    private:
+    bool value;
+    SourceLoc loc;
+};
+
+class StringLiteral: public Expr {
+    private:
+    std::string value;
     SourceLoc loc;
 };
