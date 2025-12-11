@@ -1,5 +1,6 @@
 
 #include <string>
+#include <vector>
 
 
 enum ExprKind
@@ -41,12 +42,14 @@ class SourceLoc
     int col;
 };
 
-
-class StringPart {
-
-};
 class Expr
 {
+};
+
+struct StringPart {
+    enum Kind {TEXT, EXPR} kind;
+    std::string text;
+    Expr* expr;
 };
 
 class IntLiteralExpr: public Expr {
@@ -96,4 +99,34 @@ class UnaryExpr: public Expr {
     private:
     UnaryOpKind op;
     Expr* operand;
+    SourceLoc loc;
+};
+
+class BinaryExpr: public Expr {
+    public:
+    BinaryExpr();
+
+    private:
+    Expr* left;
+    BinaryOpKind op;
+    Expr* right;
+    SourceLoc loc;
+};
+
+class GroupingExpr: public Expr {
+    public:
+    GroupingExpr();
+
+    private:
+    Expr* expression;
+    SourceLoc loc;
+};
+
+class InterpolatedStringExpr: public Expr {
+    public:
+    InterpolatedStringExpr();
+
+    private:
+    std::vector<StringPart> parts;
+    SourceLoc loc;
 };
