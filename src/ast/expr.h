@@ -45,6 +45,8 @@ class SourceLoc
 
 class Expr
 {
+    public:
+    ~Expr() {};
 };
 
 struct StringPart
