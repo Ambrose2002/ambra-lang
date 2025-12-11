@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 
-
 enum ExprKind
 {
     IntLiteral,
@@ -15,12 +14,14 @@ enum ExprKind
     Grouping
 };
 
-enum UnaryOpKind {
+enum UnaryOpKind
+{
     LogicalNot,
     ArithmeticNegate
 };
 
-enum BinaryOpKind {
+enum BinaryOpKind
+{
     Equal,
     NotEqual,
     Less,
@@ -46,87 +47,102 @@ class Expr
 {
 };
 
-struct StringPart {
-    enum Kind {TEXT, EXPR} kind;
+struct StringPart
+{
+    enum Kind
+    {
+        TEXT,
+        EXPR
+    } kind;
     std::string text;
-    Expr* expr;
+    Expr*       expr;
 };
 
-class IntLiteralExpr: public Expr {
+class IntLiteralExpr : public Expr
+{
 
-    public:
-    IntLiteralExpr (int value, SourceLoc loc): value(value), loc(loc) {};
+  public:
+    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc) {};
 
-    private:
-    int value;
+  private:
+    int       value;
     SourceLoc loc;
 };
 
-class BoolLiteral: public Expr {
+class BoolLiteral : public Expr
+{
 
-    public:
-    BoolLiteral (bool value, SourceLoc loc): value(value), loc(loc) {};
+  public:
+    BoolLiteral(bool value, SourceLoc loc) : value(value), loc(loc) {};
 
-    private:
-    bool value;
+  private:
+    bool      value;
     SourceLoc loc;
 };
 
-class StringLiteral: public Expr {
+class StringLiteral : public Expr
+{
 
-    public:
-    StringLiteral (std::string value, SourceLoc loc): value(value), loc(loc) {};
+  public:
+    StringLiteral(std::string value, SourceLoc loc) : value(value), loc(loc) {};
 
-    private:
+  private:
     std::string value;
-    SourceLoc loc;
+    SourceLoc   loc;
 };
 
-class VariableExpr: public Expr {
+class VariableExpr : public Expr
+{
 
-    public:
-    VariableExpr (std::string name, SourceLoc loc): name(name), loc(loc) {};
+  public:
+    VariableExpr(std::string name, SourceLoc loc) : name(name), loc(loc) {};
 
-    private:
+  private:
     std::string name;
-    SourceLoc loc;
+    SourceLoc   loc;
 };
 
-class UnaryExpr: public Expr {
-    public:
-    UnaryExpr ();
+class UnaryExpr : public Expr
+{
+  public:
+    UnaryExpr(UnaryOpKind op, Expr* operand, SourceLoc loc) : op(op), operand(operand), loc(loc) {};
 
-    private:
+  private:
     UnaryOpKind op;
-    Expr* operand;
-    SourceLoc loc;
+    Expr*       operand;
+    SourceLoc   loc;
 };
 
-class BinaryExpr: public Expr {
-    public:
-    BinaryExpr();
+class BinaryExpr : public Expr
+{
+  public:
+    BinaryExpr(Expr* left, BinaryOpKind op, Expr* right, SourceLoc loc)
+        : left(left), op(op), right(right), loc(loc) {};
 
-    private:
-    Expr* left;
+  private:
+    Expr*        left;
     BinaryOpKind op;
-    Expr* right;
+    Expr*        right;
+    SourceLoc    loc;
+};
+
+class GroupingExpr : public Expr
+{
+  public:
+    GroupingExpr(Expr* expression, SourceLoc loc) : expression(expression), loc(loc) {};
+
+  private:
+    Expr*     expression;
     SourceLoc loc;
 };
 
-class GroupingExpr: public Expr {
-    public:
-    GroupingExpr();
+class InterpolatedStringExpr : public Expr
+{
+  public:
+    InterpolatedStringExpr(std::vector<StringPart> parts, SourceLoc loc)
+        : parts(parts), loc(loc) {};
 
-    private:
-    Expr* expression;
-    SourceLoc loc;
-};
-
-class InterpolatedStringExpr: public Expr {
-    public:
-    InterpolatedStringExpr();
-
-    private:
+  private:
     std::vector<StringPart> parts;
-    SourceLoc loc;
+    SourceLoc               loc;
 };
