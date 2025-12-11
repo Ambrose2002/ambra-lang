@@ -95,6 +95,55 @@ Each stage is described below with responsibilities and considerations.
 ---
 ## 2.3 AST Representation
 
+## 2.3.1 AST Implementation Strategy (C++ Representation)
+
+To ensure a consistent, maintainable, and extensible AST in the Ambra compiler, the following implementation rules apply:
+
+### Representation Model
+- The AST uses **abstract base classes** (`Expr`, `Stmt`) with **derived concrete node types** (e.g., `BinaryExpr`, `SummonStmt`).
+- Each variant of an expression or statement is a distinct C++ class.
+
+### Ownership Model
+- The AST is a **strict tree**:
+  - Every node exclusively owns its children.
+  - There is no parent pointer and no sharing of subtrees.
+  - Destroying the root `Program` node destroys the entire tree.
+- Ownership is implemented conceptually as unique ownership; in code this will translate into exclusive (unique) pointers.
+
+### Source Location Convention
+- Every AST node stores a `SourceLoc` representing the **line and column of the first token** that introduces that node.
+  - `SummonStmt` → location of the `summon` keyword.
+  - `SayStmt` → location of the `say` keyword.
+  - `IfChain` → location of the first `should` keyword.
+  - `WhileStmt` → location of the `aslongas` keyword.
+  - `BinaryExpr` → location of its left operand’s first token.
+  - `UnaryExpr` → location of its operator token.
+  - `VariableExpr` → identifier location.
+  - Literal expressions → location of their literal token.
+  - `InterpolatedStringExpr` → location of the opening quote of the string.
+
+### Operator Storage
+- Unary and binary operators are represented using the enums:
+  - `UnaryOpKind`
+  - `BinaryOpKind`
+- The parser maps token kinds to these operator enums when constructing AST nodes.  
+  Tokens themselves are **not** stored in the AST.
+
+### Node Field Design
+- Each AST class contains exactly the fields required to represent the semantic structure:
+  - e.g., `BinaryExpr` contains `left`, `op`, `right`.
+  - `InterpolatedStringExpr` contains a list of `StringPart` objects.
+  - `BlockStmt` contains a list of owned `Stmt` nodes.
+- No node contains token text except where necessary (e.g., identifier names, literal values).  
+  No node contains raw lexer tokens.
+
+### Stability Requirement
+- After construction, the AST is immutable in structure:
+  - Later phases (semantic analysis, codegen) may read the AST but must not modify topology.
+  - This ensures predictable compilation, easier debugging, and safe visitor patterns.
+
+This strategy defines a consistent and unambiguous contract for implementing all AST node classes in `expr.h` and `stmt.h`.
+
 The Abstract Syntax Tree (AST) represents the *semantic* structure of an Ambra program.  
 It is not token-based; it is a clean hierarchical model of statements and expressions.
 
