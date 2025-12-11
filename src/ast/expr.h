@@ -6,7 +6,7 @@ enum ExprKind
 {
     IntLiteral,
     BoolLiteral,
-    StringLIteral,
+    StringLiteral,
     InterpolatedString,
     Variable,
     Unary,
@@ -45,8 +45,9 @@ class SourceLoc
 
 class Expr
 {
-    public:
-    ~Expr() {};
+  public:
+    ExprKind kind;
+    virtual ~Expr() {};
 };
 
 struct StringPart
@@ -57,14 +58,16 @@ struct StringPart
         EXPR
     } kind;
     std::string text;
-    Expr*       expr;
+    std::unique_ptr<Expr>       expr;
 };
 
 class IntLiteralExpr : public Expr
 {
 
   public:
-    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc) {};
+    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc) {
+        kind = IntLiteral;
+    };
 
   private:
     int       value;
@@ -107,34 +110,34 @@ class VariableExpr : public Expr
 class UnaryExpr : public Expr
 {
   public:
-    UnaryExpr(UnaryOpKind op, Expr* operand, SourceLoc loc) : op(op), operand(operand), loc(loc) {};
+    UnaryExpr(UnaryOpKind op, std::unique_ptr<Expr> operand, SourceLoc loc) : op(op), operand(std::move(operand)), loc(loc) {};
 
   private:
     UnaryOpKind op;
-    Expr*       operand;
+    std::unique_ptr<Expr>       operand;
     SourceLoc   loc;
 };
 
 class BinaryExpr : public Expr
 {
   public:
-    BinaryExpr(Expr* left, BinaryOpKind op, Expr* right, SourceLoc loc)
-        : left(left), op(op), right(right), loc(loc) {};
+    BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right, SourceLoc loc)
+        : left(std::move(left)), op(op), right(std::move(right)), loc(loc) {};
 
   private:
-    Expr*        left;
+    std::unique_ptr<Expr>        left;
     BinaryOpKind op;
-    Expr*        right;
+    std::unique_ptr<Expr>        right;
     SourceLoc    loc;
 };
 
 class GroupingExpr : public Expr
 {
   public:
-    GroupingExpr(Expr* expression, SourceLoc loc) : expression(expression), loc(loc) {};
+    GroupingExpr(std::unique_ptr<Expr> expression, SourceLoc loc) : expression(std::move(expression)), loc(loc) {};
 
   private:
-    Expr*     expression;
+    std::unique_ptr<Expr>     expression;
     SourceLoc loc;
 };
 
