@@ -67,14 +67,18 @@ class BlockStmt : public Stmt
 
 class IfChainStmt : public Stmt
 {
-    public:
-    IfChainStmt(std::vector<std::tuple<Expr, BlockStmt>> branches, BlockStmt elseBranch, SourceLoc loc): branches(branches), elseBranch(elseBranch), loc(loc){
+  public:
+    IfChainStmt(std::vector<std::tuple<Expr, BlockStmt>> branches, BlockStmt elseBranch,
+                SourceLoc loc)
+        : branches(branches), elseBranch(elseBranch), loc(loc)
+    {
         kind = IfChain;
     };
-    private:
+
+  private:
     std::vector<std::tuple<Expr, BlockStmt>> branches;
-    BlockStmt elseBranch;
-    SourceLoc loc;
+    BlockStmt                                elseBranch;
+    SourceLoc                                loc;
 };
 
 class WhileStmt : public Stmt
