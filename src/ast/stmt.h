@@ -1,8 +1,8 @@
 #include "expr.h"
 
-#include <algorithm>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -67,15 +67,24 @@ class BlockStmt : public Stmt
 
 class IfChainStmt : public Stmt
 {
+    public:
+    IfChainStmt(std::vector<std::tuple<Expr, BlockStmt>> branches, BlockStmt elseBranch, SourceLoc loc): branches(branches), elseBranch(elseBranch), loc(loc){
+        kind = IfChain;
+    };
+    private:
+    std::vector<std::tuple<Expr, BlockStmt>> branches;
+    BlockStmt elseBranch;
+    SourceLoc loc;
 };
 
 class WhileStmt : public Stmt
 {
   public:
     WhileStmt(std::unique_ptr<Expr> condition, BlockStmt body, SourceLoc loc)
-        : condition(std::move(condition)), body(body), loc(loc) {
-            kind = While;
-        };
+        : condition(std::move(condition)), body(body), loc(loc)
+    {
+        kind = While;
+    };
 
   private:
     std::unique_ptr<Expr> condition;
