@@ -15,14 +15,14 @@
  */
 enum ExprKind
 {
-    IntLiteral,           ///< Integer literal expression
-    BoolLiteral,          ///< Boolean literal expression
-    StringLiteral,        ///< String literal expression
-    InterpolatedString,   ///< Interpolated string expression
-    Variable,             ///< Variable reference expression
-    Unary,                ///< Unary operator expression
-    Binary,               ///< Binary operator expression
-    Grouping              ///< Parenthesized grouping expression
+    IntLiteral,         ///< Integer literal expression
+    BoolLiteral,        ///< Boolean literal expression
+    StringLiteral,      ///< String literal expression
+    InterpolatedString, ///< Interpolated string expression
+    Variable,           ///< Variable reference expression
+    Unary,              ///< Unary operator expression
+    Binary,             ///< Binary operator expression
+    Grouping            ///< Parenthesized grouping expression
 };
 
 /**
@@ -30,8 +30,8 @@ enum ExprKind
  */
 enum UnaryOpKind
 {
-    LogicalNot,        ///< Logical negation (not)
-    ArithmeticNegate   ///< Arithmetic negation (-)
+    LogicalNot,      ///< Logical negation (not)
+    ArithmeticNegate ///< Arithmetic negation (-)
 };
 
 /**
@@ -66,9 +66,9 @@ class SourceLoc
      * @param col Column number (1-indexed)
      */
     SourceLoc(int line, int col) : line(line), col(col) {};
-    
-    int line;   ///< Line number
-    int col;    ///< Column number
+
+    int line; ///< Line number
+    int col;  ///< Column number
 };
 
 /**
@@ -80,8 +80,8 @@ class SourceLoc
 class Expr
 {
   public:
-    ExprKind kind;  ///< The concrete type of this expression
-    
+    ExprKind kind; ///< The concrete type of this expression
+
     /// Virtual destructor for polymorphic deletion
     virtual ~Expr() {};
 };
@@ -96,12 +96,12 @@ struct StringPart
     /// Distinguishes between text and expression parts
     enum Kind
     {
-        TEXT,   ///< Text chunk
-        EXPR    ///< Embedded expression
+        TEXT, ///< Text chunk
+        EXPR  ///< Embedded expression
     } kind;
-    
-    std::string           text;   ///< Text content (for TEXT parts)
-    std::unique_ptr<Expr> expr;   ///< Expression content (for EXPR parts)
+
+    std::string           text; ///< Text content (for TEXT parts)
+    std::unique_ptr<Expr> expr; ///< Expression content (for EXPR parts)
 };
 
 /**
@@ -122,8 +122,8 @@ class IntLiteralExpr : public Expr
     };
 
   private:
-    int       value;   ///< The integer value
-    SourceLoc loc;     ///< Source location
+    int       value; ///< The integer value
+    SourceLoc loc;   ///< Source location
 };
 
 /**
@@ -144,8 +144,8 @@ class BoolLiteralExpr : public Expr
     };
 
   private:
-    bool      value;   ///< The boolean value
-    SourceLoc loc;     ///< Source location
+    bool      value; ///< The boolean value
+    SourceLoc loc;   ///< Source location
 };
 
 /**
@@ -166,8 +166,8 @@ class StringLiteralExpr : public Expr
     };
 
   private:
-    std::string value;  ///< The string value
-    SourceLoc   loc;    ///< Source location
+    std::string value; ///< The string value
+    SourceLoc   loc;   ///< Source location
 };
 
 /**
@@ -188,8 +188,8 @@ class VariableExpr : public Expr
     };
 
   private:
-    std::string name;   ///< The variable name
-    SourceLoc   loc;    ///< Source location
+    std::string name; ///< The variable name
+    SourceLoc   loc;  ///< Source location
 };
 
 /**
@@ -213,9 +213,9 @@ class UnaryExpr : public Expr
     };
 
   private:
-    UnaryOpKind           op;         ///< The unary operator
-    std::unique_ptr<Expr> operand;    ///< The operand expression
-    SourceLoc             loc;        ///< Source location
+    UnaryOpKind           op;      ///< The unary operator
+    std::unique_ptr<Expr> operand; ///< The operand expression
+    SourceLoc             loc;     ///< Source location
 };
 
 /**
@@ -241,10 +241,10 @@ class BinaryExpr : public Expr
     };
 
   private:
-    std::unique_ptr<Expr> left;     ///< The left operand
-    BinaryOpKind          op;       ///< The binary operator
-    std::unique_ptr<Expr> right;    ///< The right operand
-    SourceLoc             loc;      ///< Source location
+    std::unique_ptr<Expr> left;  ///< The left operand
+    BinaryOpKind          op;    ///< The binary operator
+    std::unique_ptr<Expr> right; ///< The right operand
+    SourceLoc             loc;   ///< Source location
 };
 
 /**
@@ -267,8 +267,8 @@ class GroupingExpr : public Expr
     };
 
   private:
-    std::unique_ptr<Expr> expression;  ///< The inner expression
-    SourceLoc             loc;         ///< Source location
+    std::unique_ptr<Expr> expression; ///< The inner expression
+    SourceLoc             loc;        ///< Source location
 };
 
 /**
@@ -295,6 +295,6 @@ class InterpolatedStringExpr : public Expr
     };
 
   private:
-    std::vector<StringPart> parts;  ///< Sequence of string parts
-    SourceLoc               loc;    ///< Source location
+    std::vector<StringPart> parts; ///< Sequence of string parts
+    SourceLoc               loc;   ///< Source location
 };

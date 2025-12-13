@@ -22,11 +22,11 @@ class Stmt
     virtual ~Stmt() {};
 };
 
-class SummonSmt : public Stmt
+class SummonStmt : public Stmt
 {
 
   public:
-    SummonSmt(std::string name, std::unique_ptr<Expr> initializer, SourceLoc loc)
+    SummonStmt(std::string name, std::unique_ptr<Expr> initializer, SourceLoc loc)
         : name(name), initializer(std::move(initializer)), loc(loc)
     {
         kind = Summon;
@@ -55,30 +55,31 @@ class SayStmt : public Stmt
 class BlockStmt : public Stmt
 {
   public:
-    BlockStmt(std::vector<Stmt> statements, SourceLoc loc) : statements(statements), loc(loc)
+    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements, SourceLoc loc)
+        : statements(std::move(statements)), loc(loc)
     {
         kind = Block;
     };
 
   private:
-    std::vector<Stmt> statements;
-    SourceLoc         loc;
+    std::vector<std::unique_ptr<Stmt>> statements;
+    SourceLoc                          loc;
 };
 
 class IfChainStmt : public Stmt
 {
   public:
-    IfChainStmt(std::vector<std::tuple<Expr, BlockStmt>> branches, BlockStmt elseBranch,
-                SourceLoc loc)
-        : branches(branches), elseBranch(elseBranch), loc(loc)
+    IfChainStmt(std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches,
+                std::unique_ptr<BlockStmt> elseBranch, SourceLoc loc)
+        : branches(std::move(branches)), elseBranch(std::move(elseBranch)), loc(loc)
     {
         kind = IfChain;
     };
 
   private:
-    std::vector<std::tuple<Expr, BlockStmt>> branches;
-    BlockStmt                                elseBranch;
-    SourceLoc                                loc;
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    std::unique_ptr<BlockStmt>                                                 elseBranch;
+    SourceLoc                                                                  loc;
 };
 
 class WhileStmt : public Stmt
