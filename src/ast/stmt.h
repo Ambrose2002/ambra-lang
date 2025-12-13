@@ -78,21 +78,21 @@ class IfChainStmt : public Stmt
 
   private:
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
-    std::unique_ptr<BlockStmt>                                                 elseBranch;
+    std::optional<std::unique_ptr<BlockStmt>>                                                 elseBranch;
     SourceLoc                                                                  loc;
 };
 
 class WhileStmt : public Stmt
 {
   public:
-    WhileStmt(std::unique_ptr<Expr> condition, BlockStmt body, SourceLoc loc)
-        : condition(std::move(condition)), body(body), loc(loc)
+    WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BlockStmt> body, SourceLoc loc)
+        : condition(std::move(condition)), body(std::move(body)), loc(loc)
     {
         kind = While;
     };
 
   private:
     std::unique_ptr<Expr> condition;
-    BlockStmt             body;
+    std::unique_ptr<BlockStmt>             body;
     SourceLoc             loc;
 };
