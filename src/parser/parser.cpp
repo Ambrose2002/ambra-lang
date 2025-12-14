@@ -25,3 +25,18 @@ bool Parser::check(TokenType t) {
     }
     return peek().getType() == t;
 }
+
+bool Parser::match(TokenType t) {
+    if (check(t)) {
+        advance();
+        return true;
+    }
+    return false;
+}
+
+Token Parser::consume(TokenType t, std::string& msg) {
+    if (check(t)) {
+        auto token = advance();
+        return token;
+    }
+}

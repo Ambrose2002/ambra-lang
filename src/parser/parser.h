@@ -23,7 +23,7 @@ class Parser
     Token advance();
     bool  check(TokenType t);
     bool  match(TokenType t);
-    Token  consume(TokenType t, std::string msg);
+    Token  consume(TokenType t, std::string& msg);
     void  reportError(const Token& where, const std::string& message);
 
     std::unique_ptr<Expr> parseEquality();
