@@ -6,7 +6,7 @@
  * All expression types inherit from the base Expr class and are tagged
  * with an ExprKind enum value.
  */
-
+#pragma once
 #include <string>
 #include <vector>
 

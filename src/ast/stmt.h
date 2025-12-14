@@ -6,6 +6,7 @@
  * All statement types inherit from the base Stmt class and are tagged
  * with a StmtKind enum value.
  */
+#pragma once
 
 #include "expr.h"
 
