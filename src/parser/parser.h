@@ -22,11 +22,11 @@ class Parser
     bool  isAtEnd();
     Token advance();
     bool  check(TokenType t);
-    bool  match();
-    void  consume(TokenType t, std::string msg);
+    bool  match(TokenType t);
+    Token  consume(TokenType t, std::string msg);
     void  reportError(const Token& where, const std::string& message);
 
-    std::unique_ptr<Expr> ParseEquality();
+    std::unique_ptr<Expr> parseEquality();
     std::unique_ptr<Expr> parseComparison();
     std::unique_ptr<Expr> parseAddition();
     std::unique_ptr<Expr> parseMultiplication();
