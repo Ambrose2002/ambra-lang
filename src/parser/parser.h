@@ -4,8 +4,13 @@
 #include <vector>
 class Parser {
     public:
-    Parser(std::vector<Token> tokens): tokens(tokens){};
+    Parser(const std::vector<Token>& tokens): tokens(tokens){};
+
+    void parseExpression();
+
+    bool hasError();
 
     private:
-    std::vector<Token> tokens;
+    const std::vector<Token>& tokens;
+    size_t current;
 };
