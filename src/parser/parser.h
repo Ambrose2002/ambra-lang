@@ -2,6 +2,7 @@
 #include "ast/stmt.h"
 #include "lexer/lexer.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 class Parser
@@ -9,9 +10,8 @@ class Parser
   public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
 
-    void parseExpression();
-
-    bool hadError();
+    std::unique_ptr<Expr> parseExpression();
+    bool                  hadError();
 
   private:
     const std::vector<Token>& tokens;
@@ -25,4 +25,12 @@ class Parser
     bool  match();
     void  consume(TokenType t, std::string msg);
     void  reportError(const Token& where, const std::string& message);
+
+    std::unique_ptr<Expr> ParseEquality();
+    std::unique_ptr<Expr> parseComparison();
+    std::unique_ptr<Expr> parseAddition();
+    std::unique_ptr<Expr> parseMultiplication();
+    std::unique_ptr<Expr> parseUnary();
+    std::unique_ptr<Expr> parsePrimary();
+    std::unique_ptr<Expr> parseInterpolatedString();
 };
