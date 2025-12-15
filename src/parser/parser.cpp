@@ -10,7 +10,7 @@ Token Parser::previous() {
 }
 
 bool Parser::isAtEnd() {
-    return current >= tokens.size();
+    return peek().getType() == EOF_TOKEN;
 }
 
 Token Parser::advance() {
@@ -39,4 +39,10 @@ Token Parser::consume(TokenType t, std::string& msg) {
         auto token = advance();
         return token;
     }
+    reportError(peek(), msg);
+    return peek();
+}
+
+void Parser::reportError(const Token& where, const std::string& msg) {
+    hasError = true;
 }
