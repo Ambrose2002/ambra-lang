@@ -82,6 +82,12 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         bool value = std::get<bool>(token.getValue());
         return std::make_unique<BoolLiteralExpr>(value, loc.line, loc.column);
     }
+    case IDENTIFIER:
+    {
+        advance();
+        std::string name = std::get<std::string>(token.getValue());
+        return std::make_unique<VariableExpr>(name, loc.line, loc.column);
+    }
     default:
         reportError(token, "Expcted expression");
         return nullptr;
