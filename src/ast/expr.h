@@ -56,17 +56,8 @@ enum BinaryOpKind
  *
  * Used to track the source location of AST nodes for error reporting.
  */
-class SourceLoc
+struct SourceLoc
 {
-
-  public:
-    /**
-     * @brief Constructs a source location.
-     * @param line Line number (1-indexed)
-     * @param col Column number (1-indexed)
-     */
-    SourceLoc(int line, int col) : line(line), col(col) {};
-
     int line; ///< Line number
     int col;  ///< Column number
 };
@@ -81,6 +72,7 @@ class Expr
 {
   public:
     ExprKind kind; ///< The concrete type of this expression
+    SourceLoc loc;
 
     /// Virtual destructor for polymorphic deletion
     virtual ~Expr() {};
@@ -116,14 +108,14 @@ class IntLiteralExpr : public Expr
      * @param value The integer value
      * @param loc Source location
      */
-    IntLiteralExpr(int value, SourceLoc loc) : value(value), loc(loc)
+    IntLiteralExpr(int value, int line, int col) : value(value)
     {
+        loc = {line, col};
         kind = IntLiteral;
     };
 
   private:
     int       value; ///< The integer value
-    SourceLoc loc;   ///< Source location
 };
 
 /**
@@ -138,14 +130,14 @@ class BoolLiteralExpr : public Expr
      * @param value The boolean value
      * @param loc Source location
      */
-    BoolLiteralExpr(bool value, SourceLoc loc) : value(value), loc(loc)
+    BoolLiteralExpr(bool value, int line, int col) : value(value)
     {
         kind = BoolLiteral;
+        loc = {line, col};
     };
 
   private:
     bool      value; ///< The boolean value
-    SourceLoc loc;   ///< Source location
 };
 
 /**
@@ -160,14 +152,14 @@ class StringLiteralExpr : public Expr
      * @param value The string value
      * @param loc Source location
      */
-    StringLiteralExpr(std::string value, SourceLoc loc) : value(value), loc(loc)
+    StringLiteralExpr(std::string value, int line, int col) : value(value)
     {
         kind = StringLiteral;
+        loc = {line, col};
     };
 
   private:
     std::string value; ///< The string value
-    SourceLoc   loc;   ///< Source location
 };
 
 /**
@@ -182,14 +174,14 @@ class VariableExpr : public Expr
      * @param name The variable name
      * @param loc Source location
      */
-    VariableExpr(std::string name, SourceLoc loc) : name(name), loc(loc)
+    VariableExpr(std::string name, int line, int col) : name(name)
     {
         kind = Variable;
+        loc = {line, col};
     };
 
   private:
     std::string name; ///< The variable name
-    SourceLoc   loc;  ///< Source location
 };
 
 /**
@@ -206,16 +198,16 @@ class UnaryExpr : public Expr
      * @param operand The operand expression
      * @param loc Source location
      */
-    UnaryExpr(UnaryOpKind op, std::unique_ptr<Expr> operand, SourceLoc loc)
-        : op(op), operand(std::move(operand)), loc(loc)
+    UnaryExpr(UnaryOpKind op, std::unique_ptr<Expr> operand, int line, int col)
+        : op(op), operand(std::move(operand))
     {
         kind = Unary;
+        loc = {line, col};
     };
 
   private:
     UnaryOpKind           op;      ///< The unary operator
     std::unique_ptr<Expr> operand; ///< The operand expression
-    SourceLoc             loc;     ///< Source location
 };
 
 /**
@@ -234,17 +226,17 @@ class BinaryExpr : public Expr
      * @param loc Source location
      */
     BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right,
-               SourceLoc loc)
-        : left(std::move(left)), op(op), right(std::move(right)), loc(loc)
+               int line, int col)
+        : left(std::move(left)), op(op), right(std::move(right))
     {
         kind = Binary;
+        loc = {line, col};
     };
 
   private:
     std::unique_ptr<Expr> left;  ///< The left operand
     BinaryOpKind          op;    ///< The binary operator
     std::unique_ptr<Expr> right; ///< The right operand
-    SourceLoc             loc;   ///< Source location
 };
 
 /**
@@ -260,15 +252,15 @@ class GroupingExpr : public Expr
      * @param expression The inner expression
      * @param loc Source location
      */
-    GroupingExpr(std::unique_ptr<Expr> expression, SourceLoc loc)
-        : expression(std::move(expression)), loc(loc)
+    GroupingExpr(std::unique_ptr<Expr> expression, int line, int col)
+        : expression(std::move(expression))
     {
         kind = Grouping;
+        loc = {line, col};
     };
 
   private:
     std::unique_ptr<Expr> expression; ///< The inner expression
-    SourceLoc             loc;        ///< Source location
 };
 
 /**
@@ -289,12 +281,12 @@ class InterpolatedStringExpr : public Expr
      * @param parts The sequence of text chunks and expressions
      * @param loc Source location
      */
-    InterpolatedStringExpr(std::vector<StringPart> parts, SourceLoc loc) : parts(parts), loc(loc)
+    InterpolatedStringExpr(std::vector<StringPart> parts, int line, int col) : parts(parts)
     {
         kind = InterpolatedString;
+        loc = {line, col};
     };
 
   private:
     std::vector<StringPart> parts; ///< Sequence of string parts
-    SourceLoc               loc;   ///< Source location
 };
