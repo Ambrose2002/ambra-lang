@@ -60,6 +60,10 @@ struct SourceLoc
 {
     int line; ///< Line number
     int col;  ///< Column number
+
+    bool operator==(const SourceLoc& other) const {
+        return line == other.line && col == other.col;
+    }
 };
 
 /**
@@ -113,6 +117,14 @@ class IntLiteralExpr : public Expr
         loc = {line, col};
         kind = IntLiteral;
     };
+
+    int getValue() const {
+      return value;
+    }
+
+    bool operator==(const IntLiteralExpr& other) const {
+      return value == other.getValue() && loc == other.loc;
+    }
 
   private:
     int       value; ///< The integer value
