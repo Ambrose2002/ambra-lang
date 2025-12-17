@@ -61,7 +61,8 @@ struct SourceLoc
     int line; ///< Line number
     int col;  ///< Column number
 
-    bool operator==(const SourceLoc& other) const {
+    bool operator==(const SourceLoc& other) const
+    {
         return line == other.line && col == other.col;
     }
 };
@@ -75,11 +76,13 @@ struct SourceLoc
 class Expr
 {
   public:
-    ExprKind kind; ///< The concrete type of this expression
+    ExprKind  kind; ///< The concrete type of this expression
     SourceLoc loc;
 
     /// Virtual destructor for polymorphic deletion
     virtual ~Expr() {};
+
+    virtual bool operator==(const Expr& other) const;
 };
 
 /**
@@ -98,6 +101,19 @@ struct StringPart
 
     std::string           text; ///< Text content (for TEXT parts)
     std::unique_ptr<Expr> expr; ///< Expression content (for EXPR parts)
+
+    bool operator==(const StringPart& other) const
+    {
+        if (!(kind == other.kind))
+        {
+            return false;
+        }
+        if (kind == TEXT)
+        {
+            return text == other.text;
+        }
+        return expr == other.expr;
+    }
 };
 
 /**
@@ -118,16 +134,18 @@ class IntLiteralExpr : public Expr
         kind = IntLiteral;
     };
 
-    int getValue() const {
-      return value;
+    int getValue() const
+    {
+        return value;
     }
 
-    bool operator==(const IntLiteralExpr& other) const {
-      return value == other.getValue() && loc == other.loc;
+    bool operator==(const IntLiteralExpr& other) const
+    {
+        return value == other.value && loc == other.loc;
     }
 
   private:
-    int       value; ///< The integer value
+    int value; ///< The integer value
 };
 
 /**
@@ -148,8 +166,13 @@ class BoolLiteralExpr : public Expr
         loc = {line, col};
     };
 
+    bool operator==(const BoolLiteralExpr& other) const
+    {
+        return value == other.value && loc == other.loc;
+    }
+
   private:
-    bool      value; ///< The boolean value
+    bool value; ///< The boolean value
 };
 
 /**
@@ -169,6 +192,11 @@ class StringLiteralExpr : public Expr
         kind = StringLiteral;
         loc = {line, col};
     };
+
+    bool operator==(const StringLiteralExpr& other) const
+    {
+        return value == other.value && loc == other.loc;
+    }
 
   private:
     std::string value; ///< The string value
@@ -191,6 +219,11 @@ class VariableExpr : public Expr
         kind = Variable;
         loc = {line, col};
     };
+
+    bool operator==(const VariableExpr& other) const
+    {
+        return name == other.name && loc == other.loc;
+    }
 
   private:
     std::string name; ///< The variable name
@@ -217,6 +250,11 @@ class UnaryExpr : public Expr
         loc = {line, col};
     };
 
+    bool operator==(const UnaryExpr& other) const
+    {
+        return op == other.op && operand == other.operand && loc == other.loc;
+    }
+
   private:
     UnaryOpKind           op;      ///< The unary operator
     std::unique_ptr<Expr> operand; ///< The operand expression
@@ -237,13 +275,18 @@ class BinaryExpr : public Expr
      * @param right The right operand expression
      * @param loc Source location
      */
-    BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right,
-               int line, int col)
+    BinaryExpr(std::unique_ptr<Expr> left, BinaryOpKind op, std::unique_ptr<Expr> right, int line,
+               int col)
         : left(std::move(left)), op(op), right(std::move(right))
     {
         kind = Binary;
         loc = {line, col};
     };
+
+    bool operator==(const BinaryExpr& other) const
+    {
+        return op == other.op && left == other.left && right == other.right && loc == other.loc;
+    }
 
   private:
     std::unique_ptr<Expr> left;  ///< The left operand
@@ -271,6 +314,11 @@ class GroupingExpr : public Expr
         loc = {line, col};
     };
 
+    bool operator==(const GroupingExpr& other) const
+    {
+        return expression == other.expression && loc == other.loc;
+    }
+
   private:
     std::unique_ptr<Expr> expression; ///< The inner expression
 };
@@ -293,11 +341,17 @@ class InterpolatedStringExpr : public Expr
      * @param parts The sequence of text chunks and expressions
      * @param loc Source location
      */
-    InterpolatedStringExpr(std::vector<StringPart> parts, int line, int col) : parts(std::move(parts))
+    InterpolatedStringExpr(std::vector<StringPart> parts, int line, int col)
+        : parts(std::move(parts))
     {
         kind = InterpolatedString;
         loc = {line, col};
     };
+
+    bool operator==(const InterpolatedStringExpr& other) const
+    {
+        return parts == other.parts && loc == other.loc;
+    }
 
   private:
     std::vector<StringPart> parts; ///< Sequence of string parts
