@@ -7,6 +7,7 @@
  * with an ExprKind enum value.
  */
 #pragma once
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -80,9 +81,9 @@ class Expr
     SourceLoc loc;
 
     /// Virtual destructor for polymorphic deletion
-    virtual ~Expr() {};
+    virtual ~Expr() = default;
 
-    virtual bool operator==(const Expr& other) const;
+    virtual bool operator==(const Expr& other) const = 0;
 };
 
 /**
@@ -112,8 +113,10 @@ struct StringPart
         {
             return text == other.text;
         }
-        if (!expr && !other.expr) return true;
-        if (!expr && !other.expr) return false;
+        if (!expr && !other.expr)
+            return true;
+        if (!expr || !other.expr)
+            return false;
         return *expr == *other.expr;
     }
 };
@@ -141,9 +144,12 @@ class IntLiteralExpr : public Expr
         return value;
     }
 
-    bool operator==(const IntLiteralExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return value == other.value && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const IntLiteralExpr&>(other);
+        return value == o.value && loc == o.loc;
     }
 
   private:
@@ -168,9 +174,12 @@ class BoolLiteralExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const BoolLiteralExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return value == other.value && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const BoolLiteralExpr&>(other);
+        return value == o.value && loc == o.loc;
     }
 
   private:
@@ -195,9 +204,12 @@ class StringLiteralExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const StringLiteralExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return value == other.value && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const StringLiteralExpr&>(other);
+        return value == o.value && loc == o.loc;
     }
 
   private:
@@ -222,9 +234,12 @@ class VariableExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const VariableExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return name == other.name && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const VariableExpr&>(other);
+        return name == o.name && loc == o.loc;
     }
 
   private:
@@ -252,9 +267,20 @@ class UnaryExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const UnaryExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return op == other.op && operand == other.operand && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const UnaryExpr&>(other);
+        if (op != o.op || !(loc == o.loc))
+        {
+            return false;
+        };
+        if (!operand && !o.operand)
+            return true;
+        if (!operand || !o.operand)
+            return false;
+        return *operand == *o.operand;
     }
 
   private:
@@ -285,9 +311,20 @@ class BinaryExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const BinaryExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return op == other.op && left == other.left && right == other.right && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const BinaryExpr&>(other);
+        if (op != o.op || !(loc == o.loc))
+        {
+            return false;
+        };
+        if (!left && !o.left && !right && !o.right)
+            return true;
+        if (!left || !o.left || !right || !o.right)
+            return false;
+        return *left == *o.left && *right == *o.right;
     }
 
   private:
@@ -316,9 +353,18 @@ class GroupingExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const GroupingExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return expression == other.expression && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const GroupingExpr&>(other);
+        if (!(loc == o.loc))
+            return false;
+        if (!expression && !o.expression)
+            return true;
+        if (!expression || !o.expression)
+            return false;
+        return *expression == *o.expression;
     }
 
   private:
@@ -350,9 +396,12 @@ class InterpolatedStringExpr : public Expr
         loc = {line, col};
     };
 
-    bool operator==(const InterpolatedStringExpr& other) const
+    bool operator==(const Expr& other) const override
     {
-        return parts == other.parts && loc == other.loc;
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const InterpolatedStringExpr&>(other);
+        return parts == o.parts && loc == o.loc;
     }
 
   private:
