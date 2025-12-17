@@ -106,3 +106,22 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         return nullptr;
     }
 }
+
+std::unique_ptr<Expr> Parser::parseUnary()
+{
+    Token token = peek();
+    auto  loc = token.getLocation();
+    if (match(NOT) || match(MINUS))
+    {
+        advance();
+        auto operand = parseUnary();
+        if (token.getType() == NOT)
+        {
+            return std::make_unique<UnaryExpr>(LogicalNot, std::move(operand), loc.line,
+                                               loc.column);
+        }
+        return std::make_unique<UnaryExpr>(ArithmeticNegate, std::move(operand), loc.line,
+                                           loc.column);
+    }
+    return parsePrimary();
+}
