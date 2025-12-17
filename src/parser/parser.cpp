@@ -88,6 +88,12 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         std::string name = std::get<std::string>(token.getValue());
         return std::make_unique<VariableExpr>(name, loc.line, loc.column);
     }
+    case STRING:
+    {
+        advance();
+        std::string value = std::get<std::string>(token.getValue());
+        return std::make_unique<StringLiteralExpr>(value, loc.line, loc.column);
+    }
     default:
         reportError(token, "Expcted expression");
         return nullptr;
