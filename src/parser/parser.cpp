@@ -46,7 +46,7 @@ bool Parser::match(TokenType t)
     return false;
 }
 
-Token Parser::consume(TokenType t, std::string& msg)
+Token Parser::consume(TokenType t, const std::string& msg)
 {
     if (check(t))
     {
@@ -88,6 +88,13 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         std::string name = std::get<std::string>(token.getValue());
         return std::make_unique<VariableExpr>(name, loc.line, loc.column);
     }
+    case LEFT_PAREN:
+    {
+        advance();
+        auto expression = parseExpression();
+        consume(RIGHT_PAREN, "Expected ')' after expression");
+        return std::make_unique<GroupingExpr>(std::move(expression), loc.line, loc.column);
+    }
     case STRING:
     {
         advance();
@@ -95,7 +102,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         return std::make_unique<StringLiteralExpr>(value, loc.line, loc.column);
     }
     default:
-        reportError(token, "Expcted expression");
+        reportError(token, "Expected expression");
         return nullptr;
     }
 }
