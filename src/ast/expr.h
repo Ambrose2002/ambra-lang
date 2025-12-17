@@ -104,7 +104,7 @@ struct StringPart
 
     bool operator==(const StringPart& other) const
     {
-        if (!(kind == other.kind))
+        if (kind != other.kind)
         {
             return false;
         }
@@ -112,7 +112,9 @@ struct StringPart
         {
             return text == other.text;
         }
-        return expr == other.expr;
+        if (!expr && !other.expr) return true;
+        if (!expr && !other.expr) return false;
+        return *expr == *other.expr;
     }
 };
 
