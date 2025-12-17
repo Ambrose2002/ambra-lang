@@ -83,6 +83,17 @@ class Expr
     /// Virtual destructor for polymorphic deletion
     virtual ~Expr() = default;
 
+    /**
+     * @brief Compare two expressions for structural equality.
+     *
+     * Derived classes must implement this to perform a deep, structural
+     * comparison of the expression subtree. Implementations should first
+     * check the concrete `kind` and the source location when relevant,
+     * then compare any fields and recursively compare child expressions.
+     *
+     * @param other Expression to compare against
+     * @return true if expressions are structurally equal, false otherwise
+     */
     virtual bool operator==(const Expr& other) const = 0;
 };
 
@@ -103,6 +114,13 @@ struct StringPart
     std::string           text; ///< Text content (for TEXT parts)
     std::unique_ptr<Expr> expr; ///< Expression content (for EXPR parts)
 
+    /**
+     * @brief Deep-compare two StringPart instances.
+     *
+     * For TEXT parts this compares the contained string. For EXPR parts
+     * this performs a deep structural comparison of the embedded expression
+     * (handling null pointers appropriately).
+     */
     bool operator==(const StringPart& other) const
     {
         if (kind != other.kind)
