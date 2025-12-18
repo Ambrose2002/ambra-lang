@@ -85,7 +85,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     case IDENTIFIER:
     {
         advance();
-        std::string name = std::get<std::string>(token.getValue());
+        std::string name = token.getLexeme();
         return std::make_unique<IdentifierExpr>(name, loc.line, loc.column);
     }
     case LEFT_PAREN:
