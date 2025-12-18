@@ -20,7 +20,7 @@ enum ExprKind
     BoolLiteral,        ///< Boolean literal expression
     StringLiteral,      ///< String literal expression
     InterpolatedString, ///< Interpolated string expression
-    Variable,           ///< Variable reference expression
+    Identifier,           ///< Identifier reference expression
     Unary,              ///< Unary operator expression
     Binary,             ///< Binary operator expression
     Grouping            ///< Parenthesized grouping expression
@@ -235,20 +235,20 @@ class StringLiteralExpr : public Expr
 };
 
 /**
- * @brief Represents a variable reference expression.
+ * @brief Represents a identifier reference expression.
  */
-class VariableExpr : public Expr
+class IdentifierExpr : public Expr
 {
 
   public:
     /**
-     * @brief Constructs a variable reference.
-     * @param name The variable name
+     * @brief Constructs a identifier reference.
+     * @param name The identifier name
      * @param loc Source location
      */
-    VariableExpr(std::string name, int line, int col) : name(name)
+    IdentifierExpr(std::string name, int line, int col) : name(name)
     {
-        kind = Variable;
+        kind = Identifier;
         loc = {line, col};
     };
 
@@ -256,12 +256,12 @@ class VariableExpr : public Expr
     {
         if (other.kind != kind)
             return false;
-        auto& o = static_cast<const VariableExpr&>(other);
+        auto& o = static_cast<const IdentifierExpr&>(other);
         return name == o.name && loc == o.loc;
     }
 
   private:
-    std::string name; ///< The variable name
+    std::string name; ///< The identifier name
 };
 
 /**
@@ -395,9 +395,9 @@ class GroupingExpr : public Expr
  * Contains alternating text chunks and embedded expressions.
  * Example: `"x={x} y={y}"` is parsed as:
  * - TextChunk "x="
- * - ExprPart (variable x)
+ * - ExprPart (identifier x)
  * - TextChunk " y="
- * - ExprPart (variable y)
+ * - ExprPart (identifier y)
  */
 class InterpolatedStringExpr : public Expr
 {

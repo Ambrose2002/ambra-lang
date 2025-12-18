@@ -86,7 +86,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     {
         advance();
         std::string name = std::get<std::string>(token.getValue());
-        return std::make_unique<VariableExpr>(name, loc.line, loc.column);
+        return std::make_unique<IdentifierExpr>(name, loc.line, loc.column);
     }
     case LEFT_PAREN:
     {
