@@ -26,22 +26,34 @@ TEST(SingleTokenExpression, IntLiteral)
 
     Parser parser(tokens);
 
-    auto results = parser.parseExpression();
+    auto actual = parser.parseExpression();
 
-    ASSERT_TRUE(isEqualExpression(results, expected));
+    ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
 TEST(SingleTokenExpression, BoolLiteral)
 {
-    std::vector<Token> tokens = {
-        Token("affirmative", BOOL, true, 1, 1),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 12)
-    };
+    std::vector<Token> tokens = {Token("affirmative", BOOL, true, 1, 1),
+                                 Token("", EOF_TOKEN, std::monostate{}, 1, 12)};
 
     std::unique_ptr<Expr> expected = std::make_unique<BoolLiteralExpr>(true, 1, 1);
 
     Parser parser(tokens);
 
-    auto results = parser.parseExpression();
-    ASSERT_TRUE(isEqualExpression(results, expected));
+    auto actual = parser.parseExpression();
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+TEST(SingleTokenExpression, Identifer)
+{
+    std::vector<Token> tokens = {
+        Token("x1", IDENTIFIER, std::monostate{}, 1, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 3)
+    };
+
+    std::unique_ptr<Expr> expected = std::make_unique<IdentifierExpr>("x1", 1, 1);
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+    ASSERT_TRUE(isEqualExpression(actual, expected));
 }
