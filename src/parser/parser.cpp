@@ -125,3 +125,7 @@ std::unique_ptr<Expr> Parser::parseUnary()
     }
     return parsePrimary();
 }
+
+std::unique_ptr<Expr> Parser::parseExpression() {
+    return parsePrimary();
+}
