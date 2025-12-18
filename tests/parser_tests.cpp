@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <variant>
 
 bool isEqualExpression(std::unique_ptr<Expr>& e1, std::unique_ptr<Expr>& e2)
 {
@@ -12,7 +13,18 @@ bool isEqualExpression(std::unique_ptr<Expr>& e1, std::unique_ptr<Expr>& e2)
     return *e1 == *e2;
 }
 
-TEST(Trial, trial)
+TEST(SingleToken, IntLiteral)
 {
-    std::cout << "First test";
+    std::vector<Token> tokens = {
+        Token("40", INTEGER, 42, 1, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 3),
+    };
+
+    std::unique_ptr<Expr> expected = std::make_unique<IntLiteralExpr>(42, 1, 1);
+
+    Parser parser(tokens);
+
+    auto results = parser.parseExpression();
+
+    ASSERT_TRUE(isEqualExpression(results, expected));
 }
