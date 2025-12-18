@@ -6,14 +6,16 @@
 #include <memory>
 #include <variant>
 
-bool isEqualExpression(std::unique_ptr<Expr>& e1, std::unique_ptr<Expr>& e2)
+bool isEqualExpression(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Expr>& e2)
 {
-    if (e1 == e2) return true;
-    if (!e1 || !e2) return false;
+    if (e1 == e2)
+        return true;
+    if (!e1 || !e2)
+        return false;
     return *e1 == *e2;
 }
 
-TEST(SingleToken, IntLiteral)
+TEST(SingleTokenExpression, IntLiteral)
 {
     std::vector<Token> tokens = {
         Token("40", INTEGER, 42, 1, 1),
@@ -26,5 +28,20 @@ TEST(SingleToken, IntLiteral)
 
     auto results = parser.parseExpression();
 
+    ASSERT_TRUE(isEqualExpression(results, expected));
+}
+
+TEST(SingleTokenExpression, BoolLiteral)
+{
+    std::vector<Token> tokens = {
+        Token("affirmative", BOOL, true, 1, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 12)
+    };
+
+    std::unique_ptr<Expr> expected = std::make_unique<BoolLiteralExpr>(true, 1, 1);
+
+    Parser parser(tokens);
+
+    auto results = parser.parseExpression();
     ASSERT_TRUE(isEqualExpression(results, expected));
 }
