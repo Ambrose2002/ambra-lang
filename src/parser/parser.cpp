@@ -126,6 +126,30 @@ std::unique_ptr<Expr> Parser::parseUnary()
     return parsePrimary();
 }
 
-std::unique_ptr<Expr> Parser::parseExpression() {
+std::unique_ptr<Expr> Parser::parseMultiplication()
+{
+    std::unique_ptr<Expr> initial = parseUnary();
+
+    while (check(STAR) || check(SLASH))
+    {
+        Token                 op = advance();
+        SourceLocation        loc = op.getLocation();
+        std::unique_ptr<Expr> right = parseUnary();
+        if (op.getType() == STAR)
+        {
+            initial = std::make_unique<BinaryExpr>(std::move(initial), Multiply, std::move(right),
+                                                   loc.line, loc.column);
+        }
+        else
+        {
+            initial = std::make_unique<BinaryExpr>(std::move(initial), Divide, std::move(right),
+                                                   loc.line, loc.column);
+        }
+    }
+    return initial;
+}
+
+std::unique_ptr<Expr> Parser::parseExpression()
+{
     return parsePrimary();
 }
