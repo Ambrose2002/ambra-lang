@@ -40,7 +40,7 @@ enum UnaryOpKind
  */
 enum BinaryOpKind
 {
-    Equal,        ///< Equality comparison (==)
+    EqualEqual,        ///< Equality comparison (==)
     NotEqual,     ///< Inequality comparison (!=)
     Less,         ///< Less than (<)
     LessEqual,    ///< Less than or equal (<=)

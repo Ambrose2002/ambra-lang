@@ -218,6 +218,29 @@ std::unique_ptr<Expr> Parser::parseComparison()
     return left;
 }
 
+std::unique_ptr<Expr> Parser::parseEquality()
+{
+    std::unique_ptr<Expr> left = parseComparison();
+    while (check(EQUAL_EQUAL) || check(BANG_EQUAL))
+    {
+        Token          op = advance();
+        SourceLocation loc = op.getLocation();
+
+        std::unique_ptr<Expr> right = parseComparison();
+        if (op.getType() == EQUAL_EQUAL)
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), EqualEqual, std::move(right),
+                                                loc.line, loc.column);
+        }
+        else
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), NotEqual, std::move(right),
+                                                loc.line, loc.column);
+        }
+    }
+    return left;
+}
+
 std::unique_ptr<Expr> Parser::parseExpression()
 {
     return parsePrimary();
