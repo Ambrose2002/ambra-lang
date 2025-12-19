@@ -149,6 +149,29 @@ std::unique_ptr<Expr> Parser::parseMultiplication()
     return initial;
 }
 
+std::unique_ptr<Expr> Parser::parseAddition()
+{
+    std::unique_ptr<Expr> left = parseMultiplication();
+
+    while (check(PLUS) || check(MINUS))
+    {
+        Token                 op = advance();
+        SourceLocation        loc = op.getLocation();
+        std::unique_ptr<Expr> right = parseMultiplication();
+        if (op.getType() == MINUS)
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), Subtract, std::move(right),
+                                                loc.line, loc.column);
+        }
+        else
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), Add, std::move(right), loc.line,
+                                                loc.column);
+        }
+    }
+    return left;
+}
+
 std::unique_ptr<Expr> Parser::parseExpression()
 {
     return parsePrimary();
