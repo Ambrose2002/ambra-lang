@@ -2,7 +2,6 @@
 #include "parser/parser.h"
 
 #include <gtest/gtest.h>
-#include <iostream>
 #include <memory>
 #include <variant>
 
@@ -46,14 +45,24 @@ TEST(SingleTokenExpression, BoolLiteral)
 
 TEST(SingleTokenExpression, Identifer)
 {
-    std::vector<Token> tokens = {
-        Token("x1", IDENTIFIER, std::monostate{}, 1, 1),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 3)
-    };
+    std::vector<Token> tokens = {Token("x1", IDENTIFIER, std::monostate{}, 1, 1),
+                                 Token("", EOF_TOKEN, std::monostate{}, 1, 3)};
 
     std::unique_ptr<Expr> expected = std::make_unique<IdentifierExpr>("x1", 1, 1);
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+TEST(SingleTokenExpression, String)
+{
+    std::vector<Token> tokens = {Token("\"hello\"", STRING, "hello", 1, 1),
+                                 Token("", EOF_TOKEN, std::monostate{}, 1, 5)};
+
+    std::unique_ptr<Expr> expected = std::make_unique<StringLiteralExpr>("hello", 1, 1);
+
+    Parser parser(tokens);
+    auto   actual = parser.parseExpression();
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
