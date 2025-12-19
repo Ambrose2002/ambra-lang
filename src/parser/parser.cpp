@@ -172,6 +172,52 @@ std::unique_ptr<Expr> Parser::parseAddition()
     return left;
 }
 
+std::unique_ptr<Expr> Parser::parseComparison()
+{
+    std::unique_ptr<Expr> left = parseAddition();
+
+    while (check(LESS) || check(LESS_EQUAL) || check(GREATER) || check(GREATER_EQUAL))
+    {
+        Token                 op = advance();
+        SourceLocation        loc = op.getLocation();
+        std::unique_ptr<Expr> right = parseAddition();
+
+        switch (op.getType())
+        {
+        case LESS:
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), Less, std::move(right), loc.line,
+                                                loc.column);
+            break;
+        }
+        case LESS_EQUAL:
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), LessEqual, std::move(right),
+                                                loc.line, loc.column);
+            break;
+        }
+        case GREATER:
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), Greater, std::move(right),
+                                                loc.line, loc.column);
+            break;
+        }
+        case GREATER_EQUAL:
+        {
+            left = std::make_unique<BinaryExpr>(std::move(left), GreaterEqual, std::move(right),
+                                                loc.line, loc.column);
+            break;
+        }
+        default:
+        {
+            reportError(op, "Invalid comparison operator");
+            return left;
+        }
+        }
+    }
+    return left;
+}
+
 std::unique_ptr<Expr> Parser::parseExpression()
 {
     return parsePrimary();
