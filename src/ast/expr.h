@@ -203,37 +203,6 @@ class BoolLiteralExpr : public Expr
   private:
     bool value; ///< The boolean value
 };
-
-/**
- * @brief Represents a string literal expression (no interpolation).
- */
-class StringLiteralExpr : public Expr
-{
-
-  public:
-    /**
-     * @brief Constructs a string literal.
-     * @param value The string value
-     * @param loc Source location
-     */
-    StringLiteralExpr(std::string value, int line, int col) : value(value)
-    {
-        kind = StringLiteral;
-        loc = {line, col};
-    };
-
-    bool operator==(const Expr& other) const override
-    {
-        if (other.kind != kind)
-            return false;
-        auto& o = static_cast<const StringLiteralExpr&>(other);
-        return value == o.value && loc == o.loc;
-    }
-
-  private:
-    std::string value; ///< The string value
-};
-
 /**
  * @brief Represents a identifier reference expression.
  */
