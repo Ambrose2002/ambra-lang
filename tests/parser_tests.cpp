@@ -169,3 +169,21 @@ TEST(ExpressionUnary, LogicalNot)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionComparison, GreaterThan)
+{
+    std::vector<Token> tokens = {
+        Token("5", INTEGER, 5, 1, 1),
+        Token(">", GREATER, std::monostate{}, 1, 3),
+        Token("3", INTEGER, 3, 1, 5),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 6),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(5, 1, 1), Greater,
+                                                 std::make_unique<IntLiteralExpr>(3, 1, 5), 1, 3);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
