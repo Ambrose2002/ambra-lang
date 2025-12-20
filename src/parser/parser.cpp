@@ -63,6 +63,10 @@ void Parser::reportError(const Token& where, const std::string& msg)
     hasError = true;
 }
 
+bool Parser::hadError() {
+    return hasError;
+}
+
 std::unique_ptr<Expr> Parser::parsePrimary()
 {
 
