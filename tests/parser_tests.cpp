@@ -182,8 +182,45 @@ TEST(ExpressionComparison, GreaterThan)
     Parser parser(tokens);
     auto   actual = parser.parseExpression();
 
-    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(5, 1, 1), Greater,
-                                                 std::make_unique<IntLiteralExpr>(3, 1, 5), 1, 3);
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(5, 1, 1), Greater,
+                                     std::make_unique<IntLiteralExpr>(3, 1, 5), 1, 3);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+TEST(ExpressionString, InterpolatedSingle)
+{
+    std::vector<Token> tokens = {
+        Token("\"hello \"", STRING, "hello ", 1, 1),
+        Token("{", INTERP_START, std::monostate{}, 1, 9),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        Token("}", INTERP_END, std::monostate{}, 1, 11),
+        Token("\"\"", STRING, "", 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 14),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseExpression();
+
+    std::vector<StringPart> parts;
+    StringPart              textPart;
+    textPart.kind = StringPart::TEXT;
+    textPart.text = "hello ";
+    parts.push_back(std::move(textPart));
+
+    StringPart exprPart;
+    exprPart.kind = StringPart::EXPR;
+    exprPart.expr = std::make_unique<IdentifierExpr>("x", 1, 10);
+    parts.push_back(std::move(exprPart));
+
+    // Parser appends the trailing string chunk (empty string literal here).
+    StringPart trailingText;
+    trailingText.kind = StringPart::TEXT;
+    trailingText.text = "";
+    parts.push_back(std::move(trailingText));
+
+    std::unique_ptr<Expr> expected = std::make_unique<StringExpr>(std::move(parts), 1, 1);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
