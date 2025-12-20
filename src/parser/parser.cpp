@@ -157,7 +157,7 @@ std::unique_ptr<Expr> Parser::parseUnary()
 {
     Token token = peek();
     auto  loc = token.getLocation();
-    if (match(NOT) || match(MINUS))
+    if (check(NOT) || check(MINUS))
     {
         advance();
         auto operand = parseUnary();
