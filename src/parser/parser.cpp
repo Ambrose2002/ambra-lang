@@ -243,5 +243,5 @@ std::unique_ptr<Expr> Parser::parseEquality()
 
 std::unique_ptr<Expr> Parser::parseExpression()
 {
-    return parsePrimary();
+    return parseEquality();
 }
