@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 Token Parser::peek()
 {
@@ -96,10 +97,55 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         return std::make_unique<GroupingExpr>(std::move(expression), loc.line, loc.column);
     }
     case STRING:
+    case MULTILINE_STRING:
     {
-        advance();
-        std::string value = std::get<std::string>(token.getValue());
-        return std::make_unique<StringLiteralExpr>(value, loc.line, loc.column);
+        std::vector<StringPart> parts;
+
+        // Consume initial string token
+        Token          strToken = advance();
+        SourceLocation loc = strToken.getLocation();
+
+        StringPart textPart;
+        textPart.kind = StringPart::TEXT;
+        textPart.text = std::get<std::string>(strToken.getValue());
+        parts.push_back(textPart);
+
+        // Handle interpolations
+        while (peek().getType() == INTERP_START)
+        {
+            Token interpStart = advance(); // consume '{'
+
+            std::unique_ptr<Expr> expr = parseExpression();
+
+            if (peek().getType() != INTERP_END)
+            {
+                reportError(interpStart, "Unterminated interpolation");
+                return nullptr;
+            }
+
+            advance(); // consume '}'
+
+            StringPart exprPart;
+            exprPart.kind = StringPart::EXPR;
+            exprPart.expr = std::move(expr);
+            parts.push_back(exprPart);
+
+            // Expect another string chunk
+            if (peek().getType() != STRING && peek().getType() != MULTILINE_STRING)
+            {
+                reportError(peek(), "Expected string after interpolation");
+                return nullptr;
+            }
+
+            Token nextStr = advance();
+
+            StringPart nextText;
+            nextText.kind = StringPart::TEXT;
+            nextText.text = std::get<std::string>(nextStr.getValue());
+            parts.push_back(nextText);
+        }
+
+        return std::make_unique<InterpolatedStringExpr>(parts, loc.line, loc.column);
     }
     default:
         reportError(token, "Expected expression");
