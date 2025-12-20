@@ -95,6 +95,13 @@ class Expr
      * @return true if expressions are structurally equal, false otherwise
      */
     virtual bool operator==(const Expr& other) const = 0;
+    /**
+     * @brief Return a human-readable representation of this expression.
+     *
+     * Used by tests and debugging output. Derived classes must implement a
+     * concise serialization suitable for debugging (not necessarily reversible).
+     */
+    virtual std::string toString() const = 0;
 };
 
 /**
@@ -170,6 +177,11 @@ class IntLiteralExpr : public Expr
         return value == o.value && loc == o.loc;
     }
 
+    std::string toString() const override
+    {
+        return std::string("Int(" ) + std::to_string(value) + ")";
+    }
+
   private:
     int value; ///< The integer value
 };
@@ -200,6 +212,11 @@ class BoolLiteralExpr : public Expr
         return value == o.value && loc == o.loc;
     }
 
+    std::string toString() const override
+    {
+        return std::string("Bool(") + (value ? "true" : "false") + ")";
+    }
+
   private:
     bool value; ///< The boolean value
 };
@@ -227,6 +244,11 @@ class IdentifierExpr : public Expr
             return false;
         auto& o = static_cast<const IdentifierExpr&>(other);
         return name == o.name && loc == o.loc;
+    }
+
+    std::string toString() const override
+    {
+        return std::string("Ident(") + name + ")";
     }
 
   private:
@@ -268,6 +290,12 @@ class UnaryExpr : public Expr
         if (!operand || !o.operand)
             return false;
         return *operand == *o.operand;
+    }
+
+    std::string toString() const override
+    {
+        std::string opName = (op == LogicalNot) ? "Not" : "Neg";
+        return std::string("Unary(") + opName + ", " + (operand ? operand->toString() : "null") + ")";
     }
 
   private:
@@ -314,6 +342,48 @@ class BinaryExpr : public Expr
         return *left == *o.left && *right == *o.right;
     }
 
+    std::string toString() const override
+    {
+        std::string opName;
+        switch (op)
+        {
+        case EqualEqual:
+            opName = "==";
+            break;
+        case NotEqual:
+            opName = "!=";
+            break;
+        case Less:
+            opName = "<";
+            break;
+        case LessEqual:
+            opName = "<=";
+            break;
+        case Greater:
+            opName = ">";
+            break;
+        case GreaterEqual:
+            opName = ">=";
+            break;
+        case Add:
+            opName = "+";
+            break;
+        case Subtract:
+            opName = "-";
+            break;
+        case Multiply:
+            opName = "*";
+            break;
+        case Divide:
+            opName = "/";
+            break;
+        default:
+            opName = "?";
+        }
+        return std::string("Binary(") + (left ? left->toString() : "null") + " " + opName + " " +
+               (right ? right->toString() : "null") + ")";
+    }
+
   private:
     std::unique_ptr<Expr> left;  ///< The left operand
     BinaryOpKind          op;    ///< The binary operator
@@ -354,6 +424,11 @@ class GroupingExpr : public Expr
         return *expression == *o.expression;
     }
 
+    std::string toString() const override
+    {
+        return std::string("Group(") + (expression ? expression->toString() : "null") + ")";
+    }
+
   private:
     std::unique_ptr<Expr> expression; ///< The inner expression
 };
@@ -389,6 +464,24 @@ class StringExpr : public Expr
             return false;
         auto& o = static_cast<const StringExpr&>(other);
         return parts == o.parts && loc == o.loc;
+    }
+
+    std::string toString() const override
+    {
+        std::string out = "String(\"";
+        for (const auto &p : parts)
+        {
+            if (p.kind == StringPart::TEXT)
+            {
+                out += p.text;
+            }
+            else
+            {
+                out += "${" + (p.expr ? p.expr->toString() : std::string("null")) + "}";
+            }
+        }
+        out += "\")";
+        return out;
     }
 
   private:

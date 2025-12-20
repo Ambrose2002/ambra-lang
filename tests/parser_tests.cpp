@@ -4,14 +4,27 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <variant>
+#include <iostream>
 
 bool isEqualExpression(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Expr>& e2)
 {
     if (e1 == e2)
         return true;
     if (!e1 || !e2)
+    {
+        std::cerr << "Expression mismatch: one side is null\n";
+        std::cerr << " actual: " << (e1 ? e1->toString() : std::string("<null>")) << "\n";
+        std::cerr << " expected: " << (e2 ? e2->toString() : std::string("<null>")) << "\n";
         return false;
-    return *e1 == *e2;
+    }
+    if (!(*e1 == *e2))
+    {
+        std::cerr << "Expression mismatch:\n";
+        std::cerr << " actual:   " << e1->toString() << "\n";
+        std::cerr << " expected: " << e2->toString() << "\n";
+        return false;
+    }
+    return true;
 }
 
 TEST(SingleTokenExpression, IntLiteral)
