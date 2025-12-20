@@ -145,7 +145,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
             parts.push_back(nextText);
         }
 
-        return std::make_unique<InterpolatedStringExpr>(parts, loc.line, loc.column);
+        return std::make_unique<StringExpr>(parts, loc.line, loc.column);
     }
     default:
         reportError(token, "Expected expression");

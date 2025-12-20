@@ -359,7 +359,7 @@ class GroupingExpr : public Expr
 };
 
 /**
- * @brief Represents an interpolated string expression.
+ * @brief Represents a string expression.
  *
  * Contains alternating text chunks and embedded expressions.
  * Example: `"x={x} y={y}"` is parsed as:
@@ -368,7 +368,7 @@ class GroupingExpr : public Expr
  * - TextChunk " y="
  * - ExprPart (identifier y)
  */
-class InterpolatedStringExpr : public Expr
+class StringExpr : public Expr
 {
   public:
     /**
@@ -376,7 +376,7 @@ class InterpolatedStringExpr : public Expr
      * @param parts The sequence of text chunks and expressions
      * @param loc Source location
      */
-    InterpolatedStringExpr(std::vector<StringPart> parts, int line, int col)
+    StringExpr(std::vector<StringPart> parts, int line, int col)
         : parts(std::move(parts))
     {
         kind = InterpolatedString;
@@ -387,7 +387,7 @@ class InterpolatedStringExpr : public Expr
     {
         if (other.kind != kind)
             return false;
-        auto& o = static_cast<const InterpolatedStringExpr&>(other);
+        auto& o = static_cast<const StringExpr&>(other);
         return parts == o.parts && loc == o.loc;
     }
 
