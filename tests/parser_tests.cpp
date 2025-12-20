@@ -59,8 +59,16 @@ TEST(SingleTokenExpression, String)
 {
     std::vector<Token> tokens = {Token("\"hello\"", STRING, "hello", 1, 1),
                                  Token("", EOF_TOKEN, std::monostate{}, 1, 5)};
+    
+    StringPart part;
 
-    std::unique_ptr<Expr> expected = std::make_unique<StringLiteralExpr>("hello", 1, 1);
+    Token strToken("\"hello\"", STRING, "hello", 1, 1);
+    part.kind = StringPart::TEXT;
+    part.text = std::get<std::string>(strToken.getValue());
+
+    std::vector<StringPart> parts;
+    parts.push_back(std::move(part));
+    std::unique_ptr<Expr> expected = std::make_unique<StringExpr>(std::move(parts), 1, 1);
 
     Parser parser(tokens);
     auto   actual = parser.parseExpression();
