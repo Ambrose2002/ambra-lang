@@ -108,7 +108,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         StringPart textPart;
         textPart.kind = StringPart::TEXT;
         textPart.text = std::get<std::string>(strToken.getValue());
-        parts.push_back(textPart);
+        parts.push_back(std::move(textPart));
 
         // Handle interpolations
         while (peek().getType() == INTERP_START)
@@ -128,7 +128,7 @@ std::unique_ptr<Expr> Parser::parsePrimary()
             StringPart exprPart;
             exprPart.kind = StringPart::EXPR;
             exprPart.expr = std::move(expr);
-            parts.push_back(exprPart);
+            parts.push_back(std::move(exprPart));
 
             // Expect another string chunk
             if (peek().getType() != STRING && peek().getType() != MULTILINE_STRING)
@@ -142,10 +142,10 @@ std::unique_ptr<Expr> Parser::parsePrimary()
             StringPart nextText;
             nextText.kind = StringPart::TEXT;
             nextText.text = std::get<std::string>(nextStr.getValue());
-            parts.push_back(nextText);
+            parts.push_back(std::move(nextText));
         }
 
-        return std::make_unique<StringExpr>(parts, loc.line, loc.column);
+        return std::make_unique<StringExpr>(std::move(parts), loc.line, loc.column);
     }
     default:
         reportError(token, "Expected expression");
