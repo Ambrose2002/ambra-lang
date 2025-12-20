@@ -59,7 +59,7 @@ TEST(SingleTokenExpression, String)
 {
     std::vector<Token> tokens = {Token("\"hello\"", STRING, "hello", 1, 1),
                                  Token("", EOF_TOKEN, std::monostate{}, 1, 5)};
-    
+
     StringPart part;
 
     Token strToken("\"hello\"", STRING, "hello", 1, 1);
