@@ -126,3 +126,35 @@ TEST(ExpressionAssociativity, LeftAssociativeSubtraction)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionGrouping, ParenthesesOverridePrecedence)
+{
+    std::vector<Token> tokens = {
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 2),
+        Token("+", PLUS, std::monostate{}, 1, 4),
+        Token("2", INTEGER, 2, 1, 6),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 7),
+        Token("*", STAR, std::monostate{}, 1, 9),
+        Token("3", INTEGER, 3, 1, 11),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 12),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<GroupingExpr>(
+                std::make_unique<BinaryExpr>(
+                    std::make_unique<IntLiteralExpr>(1, 1, 2),
+                    Add,
+                    std::make_unique<IntLiteralExpr>(2, 1, 6),
+                    1, 4),
+                1, 1),
+            Multiply,
+            std::make_unique<IntLiteralExpr>(3, 1, 11),
+            1, 9);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
