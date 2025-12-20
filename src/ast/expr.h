@@ -376,7 +376,7 @@ class StringExpr : public Expr
      * @param parts The sequence of text chunks and expressions
      * @param loc Source location
      */
-    StringExpr(std::vector<StringPart> parts, int line, int col)
+    StringExpr(std::vector<StringPart>&& parts, int line, int col)
         : parts(std::move(parts))
     {
         kind = InterpolatedString;
