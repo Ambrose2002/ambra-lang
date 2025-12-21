@@ -200,24 +200,18 @@ TEST(ExpressionUnary, LogicalNot)
 TEST(ExpressionUnaryBinary, UnaryBindsTighterThanMultiplication)
 {
     std::vector<Token> tokens = {
-        Token("-", MINUS, std::monostate{}, 1, 1),
-        Token("1", INTEGER, 1, 1, 2),
-        Token("*", STAR, std::monostate{}, 1, 4),
-        Token("2", INTEGER, 2, 1, 6),
+        Token("-", MINUS, std::monostate{}, 1, 1),    Token("1", INTEGER, 1, 1, 2),
+        Token("*", STAR, std::monostate{}, 1, 4),     Token("2", INTEGER, 2, 1, 6),
         Token("", EOF_TOKEN, std::monostate{}, 1, 7),
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
-        std::make_unique<UnaryExpr>(
-            ArithmeticNegate,
-            std::make_unique<IntLiteralExpr>(1, 1, 2),
-            1, 1),
-        Multiply,
-        std::make_unique<IntLiteralExpr>(2, 1, 6),
-        1, 4);
+        std::make_unique<UnaryExpr>(ArithmeticNegate, std::make_unique<IntLiteralExpr>(1, 1, 2), 1,
+                                    1),
+        Multiply, std::make_unique<IntLiteralExpr>(2, 1, 6), 1, 4);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -233,14 +227,12 @@ TEST(ExpressionUnary, DoubleLogicalNot)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
         LogicalNot,
-        std::make_unique<UnaryExpr>(
-            LogicalNot,
-            std::make_unique<BoolLiteralExpr>(true, 1, 9),
-            1, 5),
+        std::make_unique<UnaryExpr>(LogicalNot, std::make_unique<BoolLiteralExpr>(true, 1, 9), 1,
+                                    5),
         1, 1);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
@@ -272,26 +264,18 @@ TEST(ExpressionComparison, GreaterThan)
 TEST(ExpressionComparison, ChainedLessThan)
 {
     std::vector<Token> tokens = {
-        Token("1", INTEGER, 1, 1, 1),
-        Token("<", LESS, std::monostate{}, 1, 3),
-        Token("2", INTEGER, 2, 1, 5),
-        Token("<", LESS, std::monostate{}, 1, 7),
-        Token("3", INTEGER, 3, 1, 9),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 1), Token("<", LESS, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 5), Token("<", LESS, std::monostate{}, 1, 7),
+        Token("3", INTEGER, 3, 1, 9), Token("", EOF_TOKEN, std::monostate{}, 1, 10),
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
-        std::make_unique<BinaryExpr>(
-            std::make_unique<IntLiteralExpr>(1, 1, 1),
-            Less,
-            std::make_unique<IntLiteralExpr>(2, 1, 5),
-            1, 3),
-        Less,
-        std::make_unique<IntLiteralExpr>(3, 1, 9),
-        1, 7);
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 1), Less,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 5), 1, 3),
+        Less, std::make_unique<IntLiteralExpr>(3, 1, 9), 1, 7);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -341,15 +325,13 @@ TEST(ExpressionString, InterpolatedSingle)
 TEST(ExpressionErrors, MissingRightParen)
 {
     std::vector<Token> tokens = {
-        Token("(", LEFT_PAREN, std::monostate{}, 1, 1),
-        Token("1", INTEGER, 1, 1, 2),
-        Token("+", PLUS, std::monostate{}, 1, 4),
-        Token("2", INTEGER, 2, 1, 6),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 1), Token("1", INTEGER, 1, 1, 2),
+        Token("+", PLUS, std::monostate{}, 1, 4),       Token("2", INTEGER, 2, 1, 6),
         Token("", EOF_TOKEN, std::monostate{}, 1, 7),
     };
 
     Parser parser(tokens);
-    auto result = parser.parseExpression();
+    auto   result = parser.parseExpression();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
@@ -365,7 +347,7 @@ TEST(ExpressionErrors, MissingRightHandOperand)
     };
 
     Parser parser(tokens);
-    auto result = parser.parseExpression();
+    auto   result = parser.parseExpression();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
@@ -383,7 +365,7 @@ TEST(ExpressionErrors, UnterminatedInterpolation)
     };
 
     Parser parser(tokens);
-    auto result = parser.parseExpression();
+    auto   result = parser.parseExpression();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
@@ -403,16 +385,13 @@ TEST(ExpressionUnary, UnaryOnGroupedExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
         ArithmeticNegate,
         std::make_unique<GroupingExpr>(
-            std::make_unique<BinaryExpr>(
-                std::make_unique<IntLiteralExpr>(1, 1, 3),
-                Add,
-                std::make_unique<IntLiteralExpr>(2, 1, 7),
-                1, 5),
+            std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 3), Add,
+                                         std::make_unique<IntLiteralExpr>(2, 1, 7), 1, 5),
             1, 2),
         1, 1);
 
@@ -430,14 +409,11 @@ TEST(ExpressionEquality, EqualEqual)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected =
-        std::make_unique<BinaryExpr>(
-            std::make_unique<IntLiteralExpr>(1, 1, 1),
-            EqualEqual,
-            std::make_unique<IntLiteralExpr>(2, 1, 6),
-            1, 3);
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 1), EqualEqual,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 6), 1, 3);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -455,18 +431,12 @@ TEST(ExpressionPrecedence, ComparisonBeforeEquality)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
-    std::unique_ptr<Expr> expected =
-        std::make_unique<BinaryExpr>(
-            std::make_unique<BinaryExpr>(
-                std::make_unique<IntLiteralExpr>(1, 1, 1),
-                Less,
-                std::make_unique<IntLiteralExpr>(2, 1, 5),
-                1, 3),
-            EqualEqual,
-            std::make_unique<BoolLiteralExpr>(true, 1, 10),
-            1, 7);
+    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 1), Less,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 5), 1, 3),
+        EqualEqual, std::make_unique<BoolLiteralExpr>(true, 1, 10), 1, 7);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -488,7 +458,7 @@ TEST(ExpressionString, MultipleInterpolations)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::vector<StringPart> parts;
 
@@ -511,8 +481,7 @@ TEST(ExpressionString, MultipleInterpolations)
     StringPart t3{StringPart::TEXT, " c", nullptr};
     parts.push_back(std::move(t3));
 
-    std::unique_ptr<Expr> expected =
-        std::make_unique<StringExpr>(std::move(parts), 1, 1);
+    std::unique_ptr<Expr> expected = std::make_unique<StringExpr>(std::move(parts), 1, 1);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -532,7 +501,7 @@ TEST(ExpressionString, InterpolationWithExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::vector<StringPart> parts;
 
@@ -543,11 +512,8 @@ TEST(ExpressionString, InterpolationWithExpression)
 
     StringPart expr;
     expr.kind = StringPart::EXPR;
-    expr.expr = std::make_unique<BinaryExpr>(
-        std::make_unique<IntLiteralExpr>(1, 1, 8),
-        Add,
-        std::make_unique<IntLiteralExpr>(2, 1, 12),
-        1, 10);
+    expr.expr = std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 8), Add,
+                                             std::make_unique<IntLiteralExpr>(2, 1, 12), 1, 10);
     parts.push_back(std::move(expr));
 
     StringPart trailing;
@@ -555,8 +521,7 @@ TEST(ExpressionString, InterpolationWithExpression)
     trailing.text = "";
     parts.push_back(std::move(trailing));
 
-    std::unique_ptr<Expr> expected =
-        std::make_unique<StringExpr>(std::move(parts), 1, 1);
+    std::unique_ptr<Expr> expected = std::make_unique<StringExpr>(std::move(parts), 1, 1);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
@@ -570,7 +535,7 @@ TEST(ExpressionErrors, UnaryMissingOperand)
     };
 
     Parser parser(tokens);
-    auto result = parser.parseExpression();
+    auto   result = parser.parseExpression();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
@@ -587,14 +552,51 @@ TEST(ExpressionEquality, NotEqual)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(std::make_unique<BoolLiteralExpr>(true, 1, 1), NotEqual,
+                                     std::make_unique<BoolLiteralExpr>(false, 1, 9), 1, 6);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+// Tests parsing of deeply nested grouped expressions.
+TEST(ExpressionGrouping, DeeplyNestedGrouping)
+{
+    std::vector<Token> tokens = {
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 2),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 3),
+        Token("1", INTEGER, 1, 1, 4),
+        Token("+", PLUS, std::monostate{}, 1, 6),
+        Token("2", INTEGER, 2, 1, 8),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 9),
+        Token("*", STAR, std::monostate{}, 1, 11),
+        Token("3", INTEGER, 3, 1, 13),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 14),
+        Token("-", MINUS, std::monostate{}, 1, 16),
+        Token("4", INTEGER, 4, 1, 18),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 19),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 20),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<GroupingExpr>(
         std::make_unique<BinaryExpr>(
-            std::make_unique<BoolLiteralExpr>(true, 1, 1),
-            NotEqual,
-            std::make_unique<BoolLiteralExpr>(false, 1, 9),
-            1, 6);
+            std::make_unique<GroupingExpr>( // ← THIS was missing
+                std::make_unique<BinaryExpr>(
+                    std::make_unique<GroupingExpr>(
+                        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 4), Add,
+                                                     std::make_unique<IntLiteralExpr>(2, 1, 8), 1,
+                                                     6),
+                        1, 3),
+                    Multiply, std::make_unique<IntLiteralExpr>(3, 1, 13), 1, 11),
+                1, 2),
+            Subtract, std::make_unique<IntLiteralExpr>(4, 1, 18), 1, 16),
+        1, 1);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
