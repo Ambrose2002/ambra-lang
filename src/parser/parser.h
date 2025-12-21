@@ -53,31 +53,58 @@ class Parser
 
     /**
      * @brief Look at the current token without consuming it.
+     *
+     * Does not advance the parser position.
+     * Undefined behavior if `current` is out of bounds, but tokens always end with EOF token.
+     *
+     * @return The current token.
      */
     Token peek();
 
     /**
      * @brief Return the most recently consumed token.
+     *
+     * Assumes at least one token has been consumed; behavior is undefined if called before any advance.
+     *
+     * @return The previous token.
      */
     Token previous();
 
     /**
      * @brief True when the parser has reached the end-of-file token.
+     *
+     * Checks whether the current token is the EOF_TOKEN.
+     *
+     * @return true if at end of token stream, false otherwise.
      */
     bool isAtEnd();
 
     /**
      * @brief Consume and return the current token, advancing the cursor.
+     *
+     * Moves the parser forward by one token.
+     *
+     * @return The consumed token.
      */
     Token advance();
 
     /**
      * @brief Check whether the current token is of type `t` (without consuming).
+     *
+     * Returns false if at end of file.
+     *
+     * @param t Token type to check against.
+     * @return true if current token matches `t`, false otherwise.
      */
     bool check(TokenType t);
 
     /**
      * @brief If the current token matches `t`, consume it and return true.
+     *
+     * Conditionally consumes the token if it matches the expected type.
+     *
+     * @param t Token type to match.
+     * @return true if token matched and was consumed, false otherwise.
      */
     bool match(TokenType t);
 
@@ -85,19 +112,78 @@ class Parser
      * @brief Consume a token of the expected type or report an error.
      * @param t Expected token type
      * @param msg Error message used when the token does not match
+     *
+     * If the current token is not of type `t`, reports a parse error and does not advance.
+     * The returned token should not be used if `hadError()` returns true.
+     *
+     * @return The consumed token if it matches `t`.
      */
     Token consume(TokenType t, const std::string& msg);
 
     /**
      * @brief Record a parse error at a token location.
+     *
+     * Records that a parse error has occurred and logs the error message.
+     * Intended to be called exactly once per detected error.
+     *
+     * @param where Token location where the error was detected.
+     * @param msg Error message describing the problem.
      */
     void reportError(const Token& where, const std::string& msg);
 
     /* Parsing helpers for precedence levels */
+
+    /**
+     * @brief Parse equality expressions (==, !=).
+     *
+     * Handles the equality grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parseEquality();
+
+    /**
+     * @brief Parse comparison expressions (<, >, <=, >=).
+     *
+     * Handles the comparison grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parseComparison();
+
+    /**
+     * @brief Parse addition and subtraction expressions (+, -).
+     *
+     * Handles the addition grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parseAddition();
+
+    /**
+     * @brief Parse multiplication and division expressions (*, /).
+     *
+     * Handles the multiplication grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parseMultiplication();
+
+    /**
+     * @brief Parse unary expressions (-, !).
+     *
+     * Handles the unary grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parseUnary();
+
+    /**
+     * @brief Parse primary expressions (literals, grouping, identifiers).
+     *
+     * Handles the primary grammar level, returning nullptr on failure.
+     *
+     * @return Parsed Expr or nullptr on error.
+     */
     std::unique_ptr<Expr> parsePrimary();
 };

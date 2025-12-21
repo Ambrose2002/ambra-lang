@@ -8,21 +8,27 @@
 
 Token Parser::peek()
 {
+    // Returns the current token without consuming it.
+    // Undefined behavior if current is out of bounds, but tokens always end with EOF_TOKEN.
     return tokens[current];
 }
 
 Token Parser::previous()
 {
+    // Returns the previously consumed token.
+    // Assumes at least one token has been consumed (current > 0).
     return tokens[current - 1];
 }
 
 bool Parser::isAtEnd()
 {
+    // Returns true if the current token is EOF_TOKEN.
     return peek().getType() == EOF_TOKEN;
 }
 
 Token Parser::advance()
 {
+    // Consumes the current token and advances the cursor.
     auto token = tokens[current];
     current += 1;
     return token;
@@ -30,6 +36,9 @@ Token Parser::advance()
 
 bool Parser::check(TokenType t)
 {
+    // Returns true if the current token is of type t.
+    // Returns false if at EOF_TOKEN.
+    // Does not consume the token.
     if (isAtEnd())
     {
         return false;
@@ -39,6 +48,8 @@ bool Parser::check(TokenType t)
 
 bool Parser::match(TokenType t)
 {
+    // If the current token matches t, consumes it and returns true.
+    // Otherwise returns false without consuming.
     if (check(t))
     {
         advance();
@@ -47,6 +58,9 @@ bool Parser::match(TokenType t)
     return false;
 }
 
+// Error reporting responsibility: called when a token of expected type is required.
+// On failure, reports an error and does not consume the token.
+// The returned token should not be used if hadError() is true.
 Token Parser::consume(TokenType t, const std::string& msg)
 {
     if (check(t))
@@ -58,6 +72,8 @@ Token Parser::consume(TokenType t, const std::string& msg)
     return peek();
 }
 
+// Records a parse error at the given token location.
+// Intended to be called exactly once per detected error.
 void Parser::reportError(const Token& where, const std::string& msg)
 {
     hasError = true;
@@ -68,6 +84,8 @@ bool Parser::hadError()
     return hasError;
 }
 
+// Parses a primary expression, the base level of the grammar.
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parsePrimary()
 {
 
@@ -96,6 +114,8 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     }
     case LEFT_PAREN:
     {
+        // Parse grouping: '(' expression ')'.
+        // If the closing ')' is missing, report error and return nullptr.
         advance();
         auto expression = parseExpression();
         if (!expression)
@@ -119,6 +139,8 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     case STRING:
     case MULTILINE_STRING:
     {
+        // Parse string literals with possible interpolations.
+        // String parts are collected in order: text and embedded expressions.
         std::vector<StringPart> parts;
 
         // Consume initial string token
@@ -173,6 +195,8 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     }
 }
 
+// Parses unary expressions, handling chained unary operators recursively.
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parseUnary()
 {
     if (match(NOT) || match(MINUS))
@@ -224,6 +248,8 @@ std::unique_ptr<Expr> Parser::parseMultiplication()
     return initial;
 }
 
+// Parses addition and subtraction expressions.
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parseAddition()
 {
     std::unique_ptr<Expr> left = parseMultiplication();
@@ -251,6 +277,8 @@ std::unique_ptr<Expr> Parser::parseAddition()
     return left;
 }
 
+// Parses comparison expressions: <, <=, >, >=
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parseComparison()
 {
     std::unique_ptr<Expr> left = parseAddition();
@@ -300,6 +328,8 @@ std::unique_ptr<Expr> Parser::parseComparison()
     return left;
 }
 
+// Parses equality expressions: ==, !=
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parseEquality()
 {
     std::unique_ptr<Expr> left = parseComparison();
@@ -329,6 +359,8 @@ std::unique_ptr<Expr> Parser::parseEquality()
     return left;
 }
 
+// Top-level expression parsing entry point.
+// Returns nullptr on failure.
 std::unique_ptr<Expr> Parser::parseExpression()
 {
     return parseEquality();
