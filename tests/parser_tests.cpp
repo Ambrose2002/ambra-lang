@@ -470,3 +470,49 @@ TEST(ExpressionPrecedence, ComparisonBeforeEquality)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests parsing of a string with multiple interpolations.
+TEST(ExpressionString, MultipleInterpolations)
+{
+    std::vector<Token> tokens = {
+        Token("\"a \"", STRING, "a ", 1, 1),
+        Token("{", INTERP_START, std::monostate{}, 1, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 6),
+        Token("}", INTERP_END, std::monostate{}, 1, 7),
+        Token("\" b \"", STRING, " b ", 1, 8),
+        Token("{", INTERP_START, std::monostate{}, 1, 13),
+        Token("y", IDENTIFIER, std::monostate{}, 1, 14),
+        Token("}", INTERP_END, std::monostate{}, 1, 15),
+        Token("\" c\"", STRING, " c", 1, 16),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 20),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::vector<StringPart> parts;
+
+    StringPart t1{StringPart::TEXT, "a ", nullptr};
+    parts.push_back(std::move(t1));
+
+    StringPart e1;
+    e1.kind = StringPart::EXPR;
+    e1.expr = std::make_unique<IdentifierExpr>("x", 1, 6);
+    parts.push_back(std::move(e1));
+
+    StringPart t2{StringPart::TEXT, " b ", nullptr};
+    parts.push_back(std::move(t2));
+
+    StringPart e2;
+    e2.kind = StringPart::EXPR;
+    e2.expr = std::make_unique<IdentifierExpr>("y", 1, 14);
+    parts.push_back(std::move(e2));
+
+    StringPart t3{StringPart::TEXT, " c", nullptr};
+    parts.push_back(std::move(t3));
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<StringExpr>(std::move(parts), 1, 1);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
