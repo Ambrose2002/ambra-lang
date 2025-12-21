@@ -224,3 +224,20 @@ TEST(ExpressionString, InterpolatedSingle)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionErrors, MissingRightParen)
+{
+    std::vector<Token> tokens = {
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 2),
+        Token("+", PLUS, std::monostate{}, 1, 4),
+        Token("2", INTEGER, 2, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto result = parser.parseExpression();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(result, nullptr);
+}

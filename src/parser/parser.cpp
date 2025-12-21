@@ -97,7 +97,19 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     {
         advance();
         auto expression = parseExpression();
-        consume(RIGHT_PAREN, "Expected ')' after expression");
+
+        // If we cannot find the closing ')', report and bail out.
+        if (!match(RIGHT_PAREN))
+        {
+            reportError(peek(), "Expected ')' after expression");
+            return nullptr;
+        }
+
+        if (!expression)
+        {
+            return nullptr;
+        }
+
         return std::make_unique<GroupingExpr>(std::move(expression), loc.line, loc.column);
     }
     case STRING:
@@ -159,13 +171,18 @@ std::unique_ptr<Expr> Parser::parsePrimary()
 
 std::unique_ptr<Expr> Parser::parseUnary()
 {
-    Token token = peek();
-    auto  loc = token.getLocation();
-    if (check(NOT) || check(MINUS))
+    if (match(NOT) || match(MINUS))
     {
-        advance();
+        Token op = previous();
+        auto  loc = op.getLocation();
+
         auto operand = parseUnary();
-        if (token.getType() == NOT)
+        if (!operand)
+        {
+            return nullptr;
+        }
+
+        if (op.getType() == NOT)
         {
             return std::make_unique<UnaryExpr>(LogicalNot, std::move(operand), loc.line,
                                                loc.column);

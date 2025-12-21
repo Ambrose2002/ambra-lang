@@ -28,10 +28,7 @@ class Parser
      * @brief Construct a parser over an existing token sequence.
      * @param tokens Reference to the token vector to parse (must outlive parser)
      */
-    Parser(const std::vector<Token>& tokens) : tokens(tokens)
-    {
-        current = 0;
-    };
+    Parser(const std::vector<Token>& tokens) : tokens(tokens), current(0), hasError(false) {};
 
     /**
      * @brief Parse the next full expression from the token stream.
