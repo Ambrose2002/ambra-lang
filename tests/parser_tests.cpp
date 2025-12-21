@@ -600,3 +600,21 @@ TEST(ExpressionGrouping, DeeplyNestedGrouping)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests behavior when extra tokens appear after a valid expression.
+TEST(ExpressionErrors, TrailingTokensAfterExpression)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("2", INTEGER, 2, 1, 3),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 4),
+    };
+
+    Parser parser(tokens);
+    auto result = parser.parseExpression();
+
+    // Current parser accepts the first expression and ignores trailing tokens.
+    // This test documents existing behavior.
+    ASSERT_FALSE(parser.hadError());
+    ASSERT_NE(result, nullptr);
+}
