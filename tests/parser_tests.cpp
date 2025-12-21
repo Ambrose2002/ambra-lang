@@ -516,3 +516,47 @@ TEST(ExpressionString, MultipleInterpolations)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests interpolation containing a full expression.
+TEST(ExpressionString, InterpolationWithExpression)
+{
+    std::vector<Token> tokens = {
+        Token("\"sum \"", STRING, "sum ", 1, 1),
+        Token("{", INTERP_START, std::monostate{}, 1, 7),
+        Token("1", INTEGER, 1, 1, 8),
+        Token("+", PLUS, std::monostate{}, 1, 10),
+        Token("2", INTEGER, 2, 1, 12),
+        Token("}", INTERP_END, std::monostate{}, 1, 13),
+        Token("\"\"", STRING, "", 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 16),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::vector<StringPart> parts;
+
+    StringPart text;
+    text.kind = StringPart::TEXT;
+    text.text = "sum ";
+    parts.push_back(std::move(text));
+
+    StringPart expr;
+    expr.kind = StringPart::EXPR;
+    expr.expr = std::make_unique<BinaryExpr>(
+        std::make_unique<IntLiteralExpr>(1, 1, 8),
+        Add,
+        std::make_unique<IntLiteralExpr>(2, 1, 12),
+        1, 10);
+    parts.push_back(std::move(expr));
+
+    StringPart trailing;
+    trailing.kind = StringPart::TEXT;
+    trailing.text = "";
+    parts.push_back(std::move(trailing));
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<StringExpr>(std::move(parts), 1, 1);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
