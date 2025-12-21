@@ -331,3 +331,20 @@ TEST(ExpressionErrors, MissingRightHandOperand)
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
 }
+
+TEST(ExpressionErrors, UnterminatedInterpolation)
+{
+    std::vector<Token> tokens = {
+        Token("\"hello \"", STRING, "hello ", 1, 1),
+        Token("{", INTERP_START, std::monostate{}, 1, 9),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        // Missing INTERP_END
+        Token("", EOF_TOKEN, std::monostate{}, 1, 11),
+    };
+
+    Parser parser(tokens);
+    auto result = parser.parseExpression();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(result, nullptr);
+}
