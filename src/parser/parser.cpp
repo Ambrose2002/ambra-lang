@@ -63,7 +63,8 @@ void Parser::reportError(const Token& where, const std::string& msg)
     hasError = true;
 }
 
-bool Parser::hadError() {
+bool Parser::hadError()
+{
     return hasError;
 }
 
@@ -202,6 +203,10 @@ std::unique_ptr<Expr> Parser::parseMultiplication()
         Token                 op = advance();
         SourceLocation        loc = op.getLocation();
         std::unique_ptr<Expr> right = parseUnary();
+        if (!right)
+        {
+            return nullptr;
+        }
         if (op.getType() == STAR)
         {
             initial = std::make_unique<BinaryExpr>(std::move(initial), Multiply, std::move(right),
@@ -225,6 +230,10 @@ std::unique_ptr<Expr> Parser::parseAddition()
         Token                 op = advance();
         SourceLocation        loc = op.getLocation();
         std::unique_ptr<Expr> right = parseMultiplication();
+        if (!right)
+        {
+            return nullptr;
+        }
         if (op.getType() == MINUS)
         {
             left = std::make_unique<BinaryExpr>(std::move(left), Subtract, std::move(right),
@@ -248,7 +257,10 @@ std::unique_ptr<Expr> Parser::parseComparison()
         Token                 op = advance();
         SourceLocation        loc = op.getLocation();
         std::unique_ptr<Expr> right = parseAddition();
-
+        if (!right)
+        {
+            return nullptr;
+        }
         switch (op.getType())
         {
         case LESS:
@@ -278,7 +290,7 @@ std::unique_ptr<Expr> Parser::parseComparison()
         default:
         {
             reportError(op, "Invalid comparison operator");
-            return left;
+            return nullptr;
         }
         }
     }
@@ -294,6 +306,12 @@ std::unique_ptr<Expr> Parser::parseEquality()
         SourceLocation loc = op.getLocation();
 
         std::unique_ptr<Expr> right = parseComparison();
+
+        if (!right)
+        {
+            return nullptr;
+        }
+
         if (op.getType() == EQUAL_EQUAL)
         {
             left = std::make_unique<BinaryExpr>(std::move(left), EqualEqual, std::move(right),

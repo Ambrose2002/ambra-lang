@@ -316,3 +316,18 @@ TEST(ExpressionComparison, ChainedLessThan)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionErrors, MissingRightHandOperand)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("+", PLUS, std::monostate{}, 1, 3),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 4),
+    };
+
+    Parser parser(tokens);
+    auto result = parser.parseExpression();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(result, nullptr);
+}
