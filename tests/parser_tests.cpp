@@ -441,3 +441,32 @@ TEST(ExpressionEquality, EqualEqual)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests that comparison binds tighter than equality.
+TEST(ExpressionPrecedence, ComparisonBeforeEquality)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("<", LESS, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 5),
+        Token("==", EQUAL_EQUAL, std::monostate{}, 1, 7),
+        Token("affirmative", BOOL, true, 1, 10),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 22),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<BinaryExpr>(
+                std::make_unique<IntLiteralExpr>(1, 1, 1),
+                Less,
+                std::make_unique<IntLiteralExpr>(2, 1, 5),
+                1, 3),
+            EqualEqual,
+            std::make_unique<BoolLiteralExpr>(true, 1, 10),
+            1, 7);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
