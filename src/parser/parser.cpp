@@ -98,7 +98,10 @@ std::unique_ptr<Expr> Parser::parsePrimary()
     {
         advance();
         auto expression = parseExpression();
-
+        if (!expression)
+        {
+            return nullptr;
+        }
         // If we cannot find the closing ')', report and bail out.
         if (!match(RIGHT_PAREN))
         {
