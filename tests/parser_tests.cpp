@@ -575,3 +575,26 @@ TEST(ExpressionErrors, UnaryMissingOperand)
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
 }
+
+// Tests parsing of inequality operator (!=).
+TEST(ExpressionEquality, NotEqual)
+{
+    std::vector<Token> tokens = {
+        Token("true", BOOL, true, 1, 1),
+        Token("!=", BANG_EQUAL, std::monostate{}, 1, 6),
+        Token("false", BOOL, false, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 14),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<BoolLiteralExpr>(true, 1, 1),
+            NotEqual,
+            std::make_unique<BoolLiteralExpr>(false, 1, 9),
+            1, 6);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
