@@ -289,3 +289,30 @@ TEST(ExpressionUnary, DoubleLogicalNot)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionComparison, ChainedLessThan)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("<", LESS, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 5),
+        Token("<", LESS, std::monostate{}, 1, 7),
+        Token("3", INTEGER, 3, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 10),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
+        std::make_unique<BinaryExpr>(
+            std::make_unique<IntLiteralExpr>(1, 1, 1),
+            Less,
+            std::make_unique<IntLiteralExpr>(2, 1, 5),
+            1, 3),
+        Less,
+        std::make_unique<IntLiteralExpr>(3, 1, 9),
+        1, 7);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
