@@ -266,3 +266,26 @@ TEST(ExpressionUnaryBinary, UnaryBindsTighterThanMultiplication)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(ExpressionUnary, DoubleLogicalNot)
+{
+    std::vector<Token> tokens = {
+        Token("not", NOT, std::monostate{}, 1, 1),
+        Token("not", NOT, std::monostate{}, 1, 5),
+        Token("affirmative", BOOL, true, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 21),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
+        LogicalNot,
+        std::make_unique<UnaryExpr>(
+            LogicalNot,
+            std::make_unique<BoolLiteralExpr>(true, 1, 9),
+            1, 5),
+        1, 1);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
