@@ -1,3 +1,8 @@
+// Tests for the parser component of the Ambra language.
+// These tests cover expression parsing, including single-token expressions,
+// operator precedence and associativity, grouping with parentheses, unary expressions,
+// comparison and equality expressions, string interpolation, and error handling.
+
 #include "ast/expr.h"
 #include "parser/parser.h"
 
@@ -6,6 +11,11 @@
 #include <memory>
 #include <variant>
 
+/**
+ * Compares two expressions for equality.
+ * Prints diagnostic messages to std::cerr if the expressions do not match.
+ * Intended for use in test assertions only.
+ */
 bool isEqualExpression(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Expr>& e2)
 {
     if (e1 == e2)
@@ -27,6 +37,9 @@ bool isEqualExpression(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Ex
     return true;
 }
 
+// === Single-token expressions ===
+
+// Tests parsing of integer literals.
 TEST(SingleTokenExpression, IntLiteral)
 {
     std::vector<Token> tokens = {
@@ -43,6 +56,7 @@ TEST(SingleTokenExpression, IntLiteral)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests parsing of boolean literals.
 TEST(SingleTokenExpression, BoolLiteral)
 {
     std::vector<Token> tokens = {Token("affirmative", BOOL, true, 1, 1),
@@ -56,6 +70,7 @@ TEST(SingleTokenExpression, BoolLiteral)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests parsing of identifiers.
 TEST(SingleTokenExpression, Identifer)
 {
     std::vector<Token> tokens = {Token("x1", IDENTIFIER, std::monostate{}, 1, 1),
@@ -68,6 +83,7 @@ TEST(SingleTokenExpression, Identifer)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests parsing of string literals.
 TEST(SingleTokenExpression, String)
 {
     std::vector<Token> tokens = {Token("\"hello\"", STRING, "hello", 1, 1),
@@ -88,6 +104,9 @@ TEST(SingleTokenExpression, String)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// === Operator precedence and associativity ===
+
+// Tests correct precedence of addition and multiplication.
 TEST(ExpressionPrecedence, AdditionAndMultiplication)
 {
     std::vector<Token> tokens = {
@@ -108,6 +127,7 @@ TEST(ExpressionPrecedence, AdditionAndMultiplication)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests left-associativity of subtraction.
 TEST(ExpressionAssociativity, LeftAssociativeSubtraction)
 {
     std::vector<Token> tokens = {
@@ -127,6 +147,9 @@ TEST(ExpressionAssociativity, LeftAssociativeSubtraction)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// === Grouping / parentheses ===
+
+// Tests that parentheses override operator precedence.
 TEST(ExpressionGrouping, ParenthesesOverridePrecedence)
 {
     std::vector<Token> tokens = {
@@ -153,6 +176,9 @@ TEST(ExpressionGrouping, ParenthesesOverridePrecedence)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// === Unary expressions ===
+
+// Tests parsing of logical NOT unary operator.
 TEST(ExpressionUnary, LogicalNot)
 {
     std::vector<Token> tokens = {
@@ -170,6 +196,59 @@ TEST(ExpressionUnary, LogicalNot)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests that unary operators bind tighter than multiplication.
+TEST(ExpressionUnaryBinary, UnaryBindsTighterThanMultiplication)
+{
+    std::vector<Token> tokens = {
+        Token("-", MINUS, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 2),
+        Token("*", STAR, std::monostate{}, 1, 4),
+        Token("2", INTEGER, 2, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
+        std::make_unique<UnaryExpr>(
+            ArithmeticNegate,
+            std::make_unique<IntLiteralExpr>(1, 1, 2),
+            1, 1),
+        Multiply,
+        std::make_unique<IntLiteralExpr>(2, 1, 6),
+        1, 4);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+// Tests parsing of double logical NOT unary operators.
+TEST(ExpressionUnary, DoubleLogicalNot)
+{
+    std::vector<Token> tokens = {
+        Token("not", NOT, std::monostate{}, 1, 1),
+        Token("not", NOT, std::monostate{}, 1, 5),
+        Token("affirmative", BOOL, true, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 21),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
+        LogicalNot,
+        std::make_unique<UnaryExpr>(
+            LogicalNot,
+            std::make_unique<BoolLiteralExpr>(true, 1, 9),
+            1, 5),
+        1, 1);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+// === Comparison and equality expressions ===
+
+// Tests parsing of greater-than comparison.
 TEST(ExpressionComparison, GreaterThan)
 {
     std::vector<Token> tokens = {
@@ -189,6 +268,37 @@ TEST(ExpressionComparison, GreaterThan)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// Tests chaining of less-than comparisons.
+TEST(ExpressionComparison, ChainedLessThan)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("<", LESS, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 5),
+        Token("<", LESS, std::monostate{}, 1, 7),
+        Token("3", INTEGER, 3, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 10),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
+        std::make_unique<BinaryExpr>(
+            std::make_unique<IntLiteralExpr>(1, 1, 1),
+            Less,
+            std::make_unique<IntLiteralExpr>(2, 1, 5),
+            1, 3),
+        Less,
+        std::make_unique<IntLiteralExpr>(3, 1, 9),
+        1, 7);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
+
+// === String and interpolation expressions ===
+
+// Tests parsing of single interpolation in a string.
 TEST(ExpressionString, InterpolatedSingle)
 {
     std::vector<Token> tokens = {
@@ -225,6 +335,9 @@ TEST(ExpressionString, InterpolatedSingle)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
+// === Error-handling tests ===
+
+// Tests error detection for missing right parenthesis.
 TEST(ExpressionErrors, MissingRightParen)
 {
     std::vector<Token> tokens = {
@@ -242,81 +355,7 @@ TEST(ExpressionErrors, MissingRightParen)
     ASSERT_EQ(result, nullptr);
 }
 
-TEST(ExpressionUnaryBinary, UnaryBindsTighterThanMultiplication)
-{
-    std::vector<Token> tokens = {
-        Token("-", MINUS, std::monostate{}, 1, 1),
-        Token("1", INTEGER, 1, 1, 2),
-        Token("*", STAR, std::monostate{}, 1, 4),
-        Token("2", INTEGER, 2, 1, 6),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
-    };
-
-    Parser parser(tokens);
-    auto actual = parser.parseExpression();
-
-    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
-        std::make_unique<UnaryExpr>(
-            ArithmeticNegate,
-            std::make_unique<IntLiteralExpr>(1, 1, 2),
-            1, 1),
-        Multiply,
-        std::make_unique<IntLiteralExpr>(2, 1, 6),
-        1, 4);
-
-    ASSERT_TRUE(isEqualExpression(actual, expected));
-}
-
-TEST(ExpressionUnary, DoubleLogicalNot)
-{
-    std::vector<Token> tokens = {
-        Token("not", NOT, std::monostate{}, 1, 1),
-        Token("not", NOT, std::monostate{}, 1, 5),
-        Token("affirmative", BOOL, true, 1, 9),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 21),
-    };
-
-    Parser parser(tokens);
-    auto actual = parser.parseExpression();
-
-    std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
-        LogicalNot,
-        std::make_unique<UnaryExpr>(
-            LogicalNot,
-            std::make_unique<BoolLiteralExpr>(true, 1, 9),
-            1, 5),
-        1, 1);
-
-    ASSERT_TRUE(isEqualExpression(actual, expected));
-}
-
-TEST(ExpressionComparison, ChainedLessThan)
-{
-    std::vector<Token> tokens = {
-        Token("1", INTEGER, 1, 1, 1),
-        Token("<", LESS, std::monostate{}, 1, 3),
-        Token("2", INTEGER, 2, 1, 5),
-        Token("<", LESS, std::monostate{}, 1, 7),
-        Token("3", INTEGER, 3, 1, 9),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 10),
-    };
-
-    Parser parser(tokens);
-    auto actual = parser.parseExpression();
-
-    std::unique_ptr<Expr> expected = std::make_unique<BinaryExpr>(
-        std::make_unique<BinaryExpr>(
-            std::make_unique<IntLiteralExpr>(1, 1, 1),
-            Less,
-            std::make_unique<IntLiteralExpr>(2, 1, 5),
-            1, 3),
-        Less,
-        std::make_unique<IntLiteralExpr>(3, 1, 9),
-        1, 7);
-
-    ASSERT_TRUE(isEqualExpression(actual, expected));
-}
-
+// Tests error detection for missing right-hand operand.
 TEST(ExpressionErrors, MissingRightHandOperand)
 {
     std::vector<Token> tokens = {
@@ -332,6 +371,7 @@ TEST(ExpressionErrors, MissingRightHandOperand)
     ASSERT_EQ(result, nullptr);
 }
 
+// Tests error detection for unterminated string interpolation.
 TEST(ExpressionErrors, UnterminatedInterpolation)
 {
     std::vector<Token> tokens = {
