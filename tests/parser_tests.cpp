@@ -388,3 +388,33 @@ TEST(ExpressionErrors, UnterminatedInterpolation)
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(result, nullptr);
 }
+
+// Tests unary operator applied to a grouped expression.
+TEST(ExpressionUnary, UnaryOnGroupedExpression)
+{
+    std::vector<Token> tokens = {
+        Token("-", MINUS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 2),
+        Token("1", INTEGER, 1, 1, 3),
+        Token("+", PLUS, std::monostate{}, 1, 5),
+        Token("2", INTEGER, 2, 1, 7),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 8),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 9),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected = std::make_unique<UnaryExpr>(
+        ArithmeticNegate,
+        std::make_unique<GroupingExpr>(
+            std::make_unique<BinaryExpr>(
+                std::make_unique<IntLiteralExpr>(1, 1, 3),
+                Add,
+                std::make_unique<IntLiteralExpr>(2, 1, 7),
+                1, 5),
+            1, 2),
+        1, 1);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
