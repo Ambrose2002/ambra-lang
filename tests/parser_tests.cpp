@@ -418,3 +418,26 @@ TEST(ExpressionUnary, UnaryOnGroupedExpression)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests parsing of equality operator (==).
+TEST(ExpressionEquality, EqualEqual)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("==", EQUAL_EQUAL, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<IntLiteralExpr>(1, 1, 1),
+            EqualEqual,
+            std::make_unique<IntLiteralExpr>(2, 1, 6),
+            1, 3);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
