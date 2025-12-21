@@ -618,3 +618,26 @@ TEST(ExpressionErrors, TrailingTokensAfterExpression)
     ASSERT_FALSE(parser.hadError());
     ASSERT_NE(result, nullptr);
 }
+
+// Tests parsing of less-than-or-equal operator.
+TEST(ExpressionComparison, LessEqual)
+{
+    std::vector<Token> tokens = {
+        Token("1", INTEGER, 1, 1, 1),
+        Token("<=", LESS_EQUAL, std::monostate{}, 1, 3),
+        Token("2", INTEGER, 2, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseExpression();
+
+    std::unique_ptr<Expr> expected =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<IntLiteralExpr>(1, 1, 1),
+            LessEqual,
+            std::make_unique<IntLiteralExpr>(2, 1, 6),
+            1, 3);
+
+    ASSERT_TRUE(isEqualExpression(actual, expected));
+}
