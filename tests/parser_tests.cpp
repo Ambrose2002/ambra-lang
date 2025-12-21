@@ -560,3 +560,18 @@ TEST(ExpressionString, InterpolationWithExpression)
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+// Tests error detection for unary operator without operand.
+TEST(ExpressionErrors, UnaryMissingOperand)
+{
+    std::vector<Token> tokens = {
+        Token("not", NOT, std::monostate{}, 1, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 4),
+    };
+
+    Parser parser(tokens);
+    auto result = parser.parseExpression();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(result, nullptr);
+}
