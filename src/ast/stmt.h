@@ -69,10 +69,6 @@ class SummonStmt : public Stmt
         loc = {line, col};
     }
 
-  private:
-    std::string           name;        ///< The variable name
-    std::unique_ptr<Expr> initializer; ///< The initialization expression
-
     bool operator==(const Stmt& other) const override
     {
 
@@ -90,6 +86,10 @@ class SummonStmt : public Stmt
             return false;
         return *initializer == *o.initializer;
     }
+
+  private:
+    std::string           name;        ///< The variable name
+    std::unique_ptr<Expr> initializer; ///< The initialization expression
 };
 
 /**
@@ -111,9 +111,7 @@ class SayStmt : public Stmt
         loc = {line, col};
     };
 
-  private:
-    std::unique_ptr<Expr> expression; ///< The expression to print
-    bool                  operator==(const Stmt& other) const override
+    bool operator==(const Stmt& other) const override
     {
 
         if (other.kind != kind)
@@ -130,6 +128,9 @@ class SayStmt : public Stmt
             return false;
         return *expression == *o.expression;
     }
+
+  private:
+    std::unique_ptr<Expr> expression; ///< The expression to print
 };
 
 /**
@@ -153,9 +154,7 @@ class BlockStmt : public Stmt
         loc = {line, col};
     };
 
-  private:
-    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
-    bool                               operator==(const Stmt& other) const override
+    bool operator==(const Stmt& other) const override
     {
 
         if (other.kind != kind)
@@ -184,6 +183,9 @@ class BlockStmt : public Stmt
         }
         return true;
     }
+
+  private:
+    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
 };
 
 /**
@@ -223,7 +225,62 @@ class IfChainStmt : public Stmt
     /// Optional fallback block executed if all conditions are false
     std::optional<std::unique_ptr<BlockStmt>> elseBranch;
 
-    bool operator==(const Stmt& other) const override {}
+    bool operator==(const Stmt& other) const override
+    {
+
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const IfChainStmt&>(other);
+        if (!(o.loc == loc))
+        {
+            return false;
+        }
+
+        if (branches.size() != o.branches.size())
+            return false;
+
+        for (size_t i = 0; i < branches.size(); ++i)
+        {
+            const auto& lhs = branches[i];
+            const auto& rhs = o.branches[i];
+
+            const auto& lc = std::get<0>(lhs);
+            const auto& rc = std::get<0>(rhs);
+            if (!lc && !rc)
+                ;
+            else if (!lc || !rc)
+                return false;
+            else if (!(*lc == *rc))
+                return false;
+
+            const auto& lb = std::get<1>(lhs);
+            const auto& rb = std::get<1>(rhs);
+            if (!lb && !rb)
+                continue;
+            if (!lb || !rb)
+                return false;
+            if (!(*lb == *rb))
+                return false;
+        }
+
+        if (elseBranch.has_value() != o.elseBranch.has_value())
+            return false;
+
+        if (elseBranch && o.elseBranch)
+        {
+            const auto& eb1 = *elseBranch;
+            const auto& eb2 = *o.elseBranch;
+
+            if (!eb1 && !eb2)
+                return true;
+            if (!eb1 || !eb2)
+                return false;
+            if (!(*eb1 == *eb2))
+                return false;
+        }
+
+        return true;
+    }
 };
 
 /**
