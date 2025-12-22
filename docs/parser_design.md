@@ -124,7 +124,7 @@ primary     → INT_LITERAL
 |----------|------|---------|
 | `tokens` | `std::vector<Token>` | Token stream from lexer |
 | `current` | `int` | Index into tokens array |
-| `error` | `bool` | Error flag for error handling |
+| `hasError` | `bool` | Error flag for error handling |
 
 ### Utility Methods
 
@@ -162,8 +162,8 @@ primary     → INT_LITERAL
 |--------|--------|-----------|
 | `parseEquality()` | `==`, `!=` | 1 (lowest) |
 | `parseComparison()` | `<`, `<=`, `>`, `>=` | 2 |
-| `parseTerm()` | `+`, `-` | 3 |
-| `parseFactor()` | `*`, `/` | 4 |
+| `parseAddition()` | `+`, `-` | 3 |
+| `parseMultiplication()` | `*`, `/` | 4 |
 | `parseUnary()` | `not`, `-` | 5 |
 | `parsePrimary()` | Literals, identifiers, grouping | 6 (highest) |
 
@@ -218,9 +218,9 @@ primary     → INT_LITERAL
 ## 6. Expression Parsing Precedence Chain
 
 ```
-                    ┌─────────────────┐
-                    │ parseExpression()  │
-                    │  (entry point)     │
+                    ┌───────────────────┐
+                    │ parseExpression() │
+                    │  (entry point)    │
                     └──────────┬────────┘
                                │
                                ▼
@@ -236,14 +236,14 @@ primary     → INT_LITERAL
                     └──────────┬──────────┘
                                │
                                ▼
-                    ┌─────────────────────┐
-                    │ parseTerm()         │  +   -
-                    │ (precedence 3)      │
-                    └──────────┬──────────┘
+                    ┌───────────────────────┐
+                    │ parseAddition()       │  +   -
+                    │ (precedence 3)        │
+                    └──────────┬────────────┘
                                │
                                ▼
                     ┌─────────────────────┐
-                    │ parseFactor()       │  *   /
+                    │ parseMultiplication()       │  *   /
                     │ (precedence 4)      │
                     └──────────┬──────────┘
                                │
@@ -576,8 +576,8 @@ InterpolatedString
 │  │ └─ Precedence chain:        │   │
 │  │    parseEquality()          │   │
 │  │    └─ parseComparison()     │   │
-│  │       └─ parseTerm()        │   │
-│  │          └─ parseFactor()   │   │
+│  │       └─ parseAddition()        │   │
+│  │          └─ parseMultiplication()   │   │
 │  │             └─ parseUnary() │   │
 │  │                └─ parsePrimary()│
 │  └──────────────────────────────┘   │
