@@ -37,6 +37,35 @@ bool isEqualExpression(const std::unique_ptr<Expr>& e1, const std::unique_ptr<Ex
     return true;
 }
 
+/**
+ * Compares two statements for equality.
+ * Prints diagnostic messages to std::cerr if the statements do not match.
+ * Intended for use in test assertions only.
+ */
+bool isEqualStatements(const std::unique_ptr<Stmt>& s1, const std::unique_ptr<Stmt>& s2)
+{
+    if (s1 == s2)
+    {
+        return true;
+    }
+
+    if (!s1 || !s2)
+    {
+        std::cerr << "Statement mismatch: one side is null\n";
+        std::cerr << " actual: " << (s1 ? s1->toString() : std::string("<null>")) << "\n";
+        std::cerr << " expected: " << (s2 ? s2->toString() : std::string("<null>")) << "\n";
+        return false;
+    }
+    if (!(*s1 == *s2))
+    {
+        std::cerr << "Statement mismatch:\n";
+        std::cerr << " actual:   " << s1->toString() << "\n";
+        std::cerr << " expected: " << s2->toString() << "\n";
+        return false;
+    }
+    return true;
+}
+
 // === Single-token expressions ===
 
 // Tests parsing of integer literals.
@@ -611,7 +640,7 @@ TEST(ExpressionErrors, TrailingTokensAfterExpression)
     };
 
     Parser parser(tokens);
-    auto result = parser.parseExpression();
+    auto   result = parser.parseExpression();
 
     // Current parser accepts the first expression and ignores trailing tokens.
     // This test documents existing behavior.
@@ -630,14 +659,13 @@ TEST(ExpressionComparison, LessEqual)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseExpression();
+    auto   actual = parser.parseExpression();
 
     std::unique_ptr<Expr> expected =
-        std::make_unique<BinaryExpr>(
-            std::make_unique<IntLiteralExpr>(1, 1, 1),
-            LessEqual,
-            std::make_unique<IntLiteralExpr>(2, 1, 6),
-            1, 3);
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 1), LessEqual,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 6), 1, 3);
 
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
+
+TEST(Statement, SayStatement) {}
