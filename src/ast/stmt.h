@@ -43,6 +43,8 @@ class Stmt
 
     /// Virtual destructor for polymorphic deletion
     virtual ~Stmt() {};
+
+    virtual bool operator==(const Stmt& other) const = 0;
 };
 
 /**
@@ -70,6 +72,24 @@ class SummonStmt : public Stmt
   private:
     std::string           name;        ///< The variable name
     std::unique_ptr<Expr> initializer; ///< The initialization expression
+
+    bool operator==(const Stmt& other) const override
+    {
+
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const SummonStmt&>(other);
+        if (o.name != name || !(o.loc == loc))
+        {
+            return false;
+        }
+
+        if (!initializer && !o.initializer)
+            return true;
+        if (!initializer || !o.initializer)
+            return false;
+        return *initializer == *o.initializer;
+    }
 };
 
 /**
@@ -93,6 +113,7 @@ class SayStmt : public Stmt
 
   private:
     std::unique_ptr<Expr> expression; ///< The expression to print
+    bool                  operator==(const Stmt& other) const override {}
 };
 
 /**
@@ -118,6 +139,7 @@ class BlockStmt : public Stmt
 
   private:
     std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
+    bool                               operator==(const Stmt& other) const override {}
 };
 
 /**
@@ -156,6 +178,8 @@ class IfChainStmt : public Stmt
 
     /// Optional fallback block executed if all conditions are false
     std::optional<std::unique_ptr<BlockStmt>> elseBranch;
+
+    bool operator==(const Stmt& other) const override {}
 };
 
 /**
@@ -183,4 +207,6 @@ class WhileStmt : public Stmt
   private:
     std::unique_ptr<Expr>      condition; ///< The loop condition
     std::unique_ptr<BlockStmt> body;      ///< The loop body
+
+    bool operator==(const Stmt& other) const override {}
 };
