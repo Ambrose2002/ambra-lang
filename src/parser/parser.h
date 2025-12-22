@@ -8,6 +8,7 @@
  * precedence level.
  */
 #include "ast/expr.h"
+#include "ast/stmt.h"
 #include "lexer/lexer.h"
 
 #include <memory>
@@ -186,4 +187,10 @@ class Parser
      * @return Parsed Expr or nullptr on error.
      */
     std::unique_ptr<Expr> parsePrimary();
+
+    std::unique_ptr<Stmt> parseStatement();
+
+    std::unique_ptr<Stmt> parseSayStatement();
+
+    std::unique_ptr<Stmt> parseSummonStatement();
 };
