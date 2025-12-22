@@ -113,7 +113,7 @@ class SayStmt : public Stmt
 
   private:
     std::unique_ptr<Expr> expression; ///< The expression to print
-    bool operator==(const Stmt& other) const override
+    bool                  operator==(const Stmt& other) const override
     {
 
         if (other.kind != kind)
@@ -155,7 +155,35 @@ class BlockStmt : public Stmt
 
   private:
     std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
-    bool                               operator==(const Stmt& other) const override {}
+    bool                               operator==(const Stmt& other) const override
+    {
+
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const BlockStmt&>(other);
+        if (!(o.loc == loc))
+        {
+            return false;
+        }
+
+        if (statements.size() != o.statements.size())
+            return false;
+
+        auto s1 = statements.begin();
+        auto s2 = o.statements.begin();
+        for (; s1 != statements.end() && s2 != o.statements.end(); ++s1, ++s2)
+        {
+            if (!*s1 && !*s2)
+                continue;
+            if (!*s1 || !*s2)
+                return false;
+            if (!(**s1 == **s2))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 /**
