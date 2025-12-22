@@ -4,12 +4,14 @@
 // comparison and equality expressions, string interpolation, and error handling.
 
 #include "ast/expr.h"
+#include "ast/stmt.h"
 #include "parser/parser.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
 #include <variant>
+#include <vector>
 
 /**
  * Compares two expressions for equality.
@@ -668,4 +670,136 @@ TEST(ExpressionComparison, LessEqual)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
-TEST(Statement, SayStatement) {}
+TEST(Statement, SayStatement) {
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("\"Hello \"", STRING, "Hello", 1, 4),
+        Token(",", SEMI_COLON, std::monostate{}, 1, 9),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 10)
+    };
+
+    Parser parser(tokens);
+    const auto actual = parser.parseStatement();
+
+    std::vector<StringPart> parts;
+    StringPart s1;
+    s1.kind = StringPart::TEXT;
+    s1.text = "Hello";
+    parts.push_back(std::move(s1));
+
+    std::unique_ptr<Stmt> expected = std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 4), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+TEST(Statement, SayIntLiteral)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("42", INTEGER, 42, 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 7),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 8),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SayStmt>(
+            std::make_unique<IntLiteralExpr>(42, 1, 5),
+            1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+TEST(Statement, SayIdentifier)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SayStmt>(
+            std::make_unique<IdentifierExpr>("x", 1, 5),
+            1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+TEST(Statement, SayBinaryExpression)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 5),
+        Token("+", PLUS, std::monostate{}, 1, 7),
+        Token("2", INTEGER, 2, 1, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 10),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 11),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SayStmt>(
+            std::make_unique<BinaryExpr>(
+                std::make_unique<IntLiteralExpr>(1, 1, 5),
+                Add,
+                std::make_unique<IntLiteralExpr>(2, 1, 9),
+                1, 7),
+            1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+TEST(StatementErrors, SayMissingSemicolon)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 5),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 6),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+TEST(StatementErrors, SayMissingExpression)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 5),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 6),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+TEST(StatementErrors, SayInvalidExpression)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("+", PLUS, std::monostate{}, 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}

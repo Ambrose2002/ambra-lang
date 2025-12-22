@@ -373,15 +373,15 @@ std::unique_ptr<Stmt> Parser::parseSayStatement()
     SourceLocation        loc = sayToken.getLocation();
     std::unique_ptr<Expr> expression = parseExpression();
 
-    if (!match(SEMI_COLON))
-    {
-        reportError(sayToken, "Missing terminating ;");
-        return nullptr;
-    }
-
     if (!expression)
     {
         reportError(sayToken, "Expression expected.");
+        return nullptr;
+    }
+
+    if (!match(SEMI_COLON))
+    {
+        reportError(sayToken, "Missing terminating ;");
         return nullptr;
     }
 
