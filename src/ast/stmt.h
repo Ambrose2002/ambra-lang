@@ -60,7 +60,8 @@ class SummonStmt : public Stmt
      * @brief Constructs a variable declaration.
      * @param name The variable name
      * @param initializer The initialization expression
-     * @param loc Source location
+     * @param line Source line number
+     * @param col Source column number
      */
     SummonStmt(std::string name, std::unique_ptr<Expr> initializer, int line, int col)
         : name(name), initializer(std::move(initializer))
@@ -69,6 +70,11 @@ class SummonStmt : public Stmt
         loc = {line, col};
     }
 
+    /**
+     * @brief Compares two SummonStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same name, initializer, and source location
+     */
     bool operator==(const Stmt& other) const override
     {
 
@@ -103,7 +109,8 @@ class SayStmt : public Stmt
     /**
      * @brief Constructs a print statement.
      * @param expression The expression to print
-     * @param loc Source location
+     * @param line Source line number
+     * @param col Source column number
      */
     SayStmt(std::unique_ptr<Expr> expression, int line, int col) : expression(std::move(expression))
     {
@@ -111,6 +118,11 @@ class SayStmt : public Stmt
         loc = {line, col};
     };
 
+    /**
+     * @brief Compares two SayStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same expression and source location
+     */
     bool operator==(const Stmt& other) const override
     {
 
@@ -145,7 +157,8 @@ class BlockStmt : public Stmt
     /**
      * @brief Constructs a block statement.
      * @param statements The sequence of statements in the block
-     * @param loc Source location
+     * @param line Source line number
+     * @param col Source column number
      */
     BlockStmt(std::vector<std::unique_ptr<Stmt>> statements, int line, int col)
         : statements(std::move(statements))
@@ -154,6 +167,11 @@ class BlockStmt : public Stmt
         loc = {line, col};
     };
 
+    /**
+     * @brief Compares two BlockStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same statements in the same order and source location
+     */
     bool operator==(const Stmt& other) const override
     {
 
@@ -208,7 +226,8 @@ class IfChainStmt : public Stmt
      * @brief Constructs a conditional chain.
      * @param branches Ordered list of (condition, block) pairs
      * @param elseBranch Optional fallback block (no condition)
-     * @param loc Source location
+     * @param line Source line number
+     * @param col Source column number
      */
     IfChainStmt(std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches,
                 std::unique_ptr<BlockStmt> elseBranch, int line, int col)
@@ -225,6 +244,11 @@ class IfChainStmt : public Stmt
     /// Optional fallback block executed if all conditions are false
     std::optional<std::unique_ptr<BlockStmt>> elseBranch;
 
+    /**
+     * @brief Compares two IfChainStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same branches and else branch in the same order and source location
+     */
     bool operator==(const Stmt& other) const override
     {
 
@@ -296,7 +320,8 @@ class WhileStmt : public Stmt
      * @brief Constructs a loop statement.
      * @param condition The loop condition expression
      * @param body The loop body block
-     * @param loc Source location
+     * @param line Source line number
+     * @param col Source column number
      */
     WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BlockStmt> body, int line, int col)
         : condition(std::move(condition)), body(std::move(body))
@@ -309,6 +334,11 @@ class WhileStmt : public Stmt
     std::unique_ptr<Expr>      condition; ///< The loop condition
     std::unique_ptr<BlockStmt> body;      ///< The loop body
 
+    /**
+     * @brief Compares two WhileStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same condition and body and source location
+     */
     bool operator==(const Stmt& other) const override
     {
         if (kind != other.kind)
