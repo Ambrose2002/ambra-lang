@@ -42,6 +42,8 @@ class Parser
      */
     std::unique_ptr<Expr> parseExpression();
 
+    std::unique_ptr<Stmt> parseStatement();
+
     /**
      * @brief Returns true if a parse error was encountered.
      */
@@ -65,7 +67,8 @@ class Parser
     /**
      * @brief Return the most recently consumed token.
      *
-     * Assumes at least one token has been consumed; behavior is undefined if called before any advance.
+     * Assumes at least one token has been consumed; behavior is undefined if called before any
+     * advance.
      *
      * @return The previous token.
      */
@@ -187,8 +190,6 @@ class Parser
      * @return Parsed Expr or nullptr on error.
      */
     std::unique_ptr<Expr> parsePrimary();
-
-    std::unique_ptr<Stmt> parseStatement();
 
     std::unique_ptr<Stmt> parseSayStatement();
 
