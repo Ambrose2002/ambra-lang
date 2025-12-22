@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include "ast/expr.h"
+#include "ast/stmt.h"
 
 #include <cstddef>
 #include <memory>
@@ -366,9 +367,26 @@ std::unique_ptr<Expr> Parser::parseExpression()
     return parseEquality();
 }
 
+std::unique_ptr<Stmt> Parser::parseSayStatement() {
+    Token sayToken = advance();
+    SourceLocation loc = sayToken.getLocation();
+    std::unique_ptr<Expr> expression = parseExpression();
+
+    if (!match(SEMI_COLON)) {
+        reportError(sayToken, "Missing terminating ;");
+        return nullptr;
+    }
+
+    if (!expression) {
+        reportError(sayToken, "Expression expected.");
+        return nullptr;
+    }
+
+    return std::make_unique<SayStmt>(std::move(expression), loc.line, loc.column);
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement() {
     Token token = peek();
-    SourceLocation loc = token.getLocation();
 
     switch (token.getType()) {
         case SAY: {
