@@ -45,6 +45,13 @@ class Stmt
     virtual ~Stmt() {};
 
     virtual bool operator==(const Stmt& other) const = 0;
+        /**
+         * @brief Return a human-readable representation of this statement.
+         *
+         * Used by tests and debugging output. Derived classes must implement a
+         * concise serialization suitable for debugging (not necessarily reversible).
+         */
+        virtual std::string toString() const = 0;
 };
 
 /**
@@ -91,6 +98,16 @@ class SummonStmt : public Stmt
         if (!initializer || !o.initializer)
             return false;
         return *initializer == *o.initializer;
+    }
+
+    std::string toString() const override
+    {
+        std::string out = "Summon(";
+        out += name;
+        out += ", ";
+        out += initializer ? initializer->toString() : std::string("null");
+        out += ")";
+        return out;
     }
 
   private:
@@ -141,8 +158,14 @@ class SayStmt : public Stmt
         return *expression == *o.expression;
     }
 
-  private:
-    std::unique_ptr<Expr> expression; ///< The expression to print
+    private:
+        std::unique_ptr<Expr> expression; ///< The expression to print
+
+    public:
+        std::string toString() const override
+    {
+        return std::string("Say(") + (expression ? expression->toString() : std::string("null")) + ")";
+    }
 };
 
 /**
@@ -202,8 +225,24 @@ class BlockStmt : public Stmt
         return true;
     }
 
-  private:
-    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
+    private:
+        std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
+
+    public:
+        std::string toString() const override
+    {
+        std::string out = "Block([";
+        bool first  = true;
+        for (const auto& s : statements)
+        {
+            if (!first)
+                out += ", ";
+            first = false;
+            out += (s ? s->toString() : std::string("null"));
+        }
+        out += "])";
+        return out;
+    }
 };
 
 /**
@@ -305,6 +344,33 @@ class IfChainStmt : public Stmt
 
         return true;
     }
+
+  public:
+    std::string toString() const override
+    {
+        std::string out = "IfChain([";
+        for (size_t i = 0; i < branches.size(); ++i)
+        {
+            if (i > 0)
+                out += ", ";
+            const auto& cond = std::get<0>(branches[i]);
+            const auto& blk  = std::get<1>(branches[i]);
+            out += "(";
+            out += (cond ? cond->toString() : std::string("null"));
+            out += ", ";
+            out += (blk ? blk->toString() : std::string("null"));
+            out += ")";
+        }
+        out += "]";
+        if (elseBranch.has_value())
+        {
+            out += ", else=";
+            const auto& eb = *elseBranch;
+            out += (eb ? eb->toString() : std::string("null"));
+        }
+        out += ")";
+        return out;
+    }
 };
 
 /**
@@ -356,5 +422,13 @@ class WhileStmt : public Stmt
             return false;
 
         return *condition == *o.condition && *body == *o.body;
+    }
+
+  public:
+    std::string toString() const override
+    {
+        return std::string("While(") +
+               (condition ? condition->toString() : std::string("null")) + ", " +
+               (body ? body->toString() : std::string("null")) + ")";
     }
 };

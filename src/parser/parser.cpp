@@ -367,17 +367,20 @@ std::unique_ptr<Expr> Parser::parseExpression()
     return parseEquality();
 }
 
-std::unique_ptr<Stmt> Parser::parseSayStatement() {
-    Token sayToken = advance();
-    SourceLocation loc = sayToken.getLocation();
+std::unique_ptr<Stmt> Parser::parseSayStatement()
+{
+    Token                 sayToken = advance();
+    SourceLocation        loc = sayToken.getLocation();
     std::unique_ptr<Expr> expression = parseExpression();
 
-    if (!match(SEMI_COLON)) {
+    if (!match(SEMI_COLON))
+    {
         reportError(sayToken, "Missing terminating ;");
         return nullptr;
     }
 
-    if (!expression) {
+    if (!expression)
+    {
         reportError(sayToken, "Expression expected.");
         return nullptr;
     }
@@ -385,15 +388,18 @@ std::unique_ptr<Stmt> Parser::parseSayStatement() {
     return std::make_unique<SayStmt>(std::move(expression), loc.line, loc.column);
 }
 
-std::unique_ptr<Stmt> Parser::parseStatement() {
+std::unique_ptr<Stmt> Parser::parseStatement()
+{
     Token token = peek();
 
-    switch (token.getType()) {
-        case SAY: {
-            return parseSayStatement();
-        }
-        case SUMMON: {
-            return parseSummonStatement();
-        }
+    switch (token.getType())
+    {
+    case SAY:
+    {
+        return parseSayStatement();
+    }
+    case SUMMON:
+    default:
+        return nullptr;
     }
 }
