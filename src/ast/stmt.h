@@ -309,5 +309,22 @@ class WhileStmt : public Stmt
     std::unique_ptr<Expr>      condition; ///< The loop condition
     std::unique_ptr<BlockStmt> body;      ///< The loop body
 
-    bool operator==(const Stmt& other) const override {}
+    bool operator==(const Stmt& other) const override
+    {
+        if (kind != other.kind)
+            return false;
+
+        const auto& o = static_cast<const WhileStmt&>(other);
+
+        if (!(loc == o.loc))
+            return false;
+
+        if (!condition && !o.condition && !body && !o.body)
+            return true;
+
+        if (!condition || !o.condition || !body || !o.body)
+            return false;
+
+        return *condition == *o.condition && *body == *o.body;
+    }
 };
