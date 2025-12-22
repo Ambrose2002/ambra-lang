@@ -113,7 +113,23 @@ class SayStmt : public Stmt
 
   private:
     std::unique_ptr<Expr> expression; ///< The expression to print
-    bool                  operator==(const Stmt& other) const override {}
+    bool operator==(const Stmt& other) const override
+    {
+
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const SayStmt&>(other);
+        if (!(o.loc == loc))
+        {
+            return false;
+        }
+
+        if (!expression && !o.expression)
+            return true;
+        if (!expression || !o.expression)
+            return false;
+        return *expression == *o.expression;
+    }
 };
 
 /**
