@@ -365,3 +365,17 @@ std::unique_ptr<Expr> Parser::parseExpression()
 {
     return parseEquality();
 }
+
+std::unique_ptr<Stmt> Parser::parseStatement() {
+    Token token = peek();
+    SourceLocation loc = token.getLocation();
+
+    switch (token.getType()) {
+        case SAY: {
+            return parseSayStatement();
+        }
+        case SUMMON: {
+            return parseSummonStatement();
+        }
+    }
+}
