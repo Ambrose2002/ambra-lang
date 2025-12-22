@@ -22,11 +22,11 @@
  */
 enum StmtKind
 {
-    Summon,    ///< Variable declaration statement
-    Say,       ///< Print statement
-    Block,     ///< Code block statement
-    IfChain,   ///< Conditional chain statement
-    While      ///< Loop statement
+    Summon,  ///< Variable declaration statement
+    Say,     ///< Print statement
+    Block,   ///< Code block statement
+    IfChain, ///< Conditional chain statement
+    While    ///< Loop statement
 };
 
 /**
@@ -38,8 +38,9 @@ enum StmtKind
 class Stmt
 {
   public:
-    StmtKind kind;  ///< The concrete type of this statement
-    
+    StmtKind  kind; ///< The concrete type of this statement
+    SourceLoc loc;
+
     /// Virtual destructor for polymorphic deletion
     virtual ~Stmt() {};
 };
@@ -59,16 +60,16 @@ class SummonStmt : public Stmt
      * @param initializer The initialization expression
      * @param loc Source location
      */
-    SummonStmt(std::string name, std::unique_ptr<Expr> initializer, SourceLoc loc)
-        : name(name), initializer(std::move(initializer)), loc(loc)
+    SummonStmt(std::string name, std::unique_ptr<Expr> initializer, int line, int col)
+        : name(name), initializer(std::move(initializer))
     {
         kind = Summon;
+        loc = {line, col};
     }
 
   private:
-    std::string           name;           ///< The variable name
-    std::unique_ptr<Expr> initializer;    ///< The initialization expression
-    SourceLoc             loc;            ///< Source location
+    std::string           name;        ///< The variable name
+    std::unique_ptr<Expr> initializer; ///< The initialization expression
 };
 
 /**
@@ -84,15 +85,14 @@ class SayStmt : public Stmt
      * @param expression The expression to print
      * @param loc Source location
      */
-    SayStmt(std::unique_ptr<Expr> expression, SourceLoc loc)
-        : expression(std::move(expression)), loc(loc)
+    SayStmt(std::unique_ptr<Expr> expression, int line, int col) : expression(std::move(expression))
     {
         kind = Say;
+        loc = {line, col};
     };
 
   private:
-    std::unique_ptr<Expr> expression;    ///< The expression to print
-    SourceLoc             loc;           ///< Source location
+    std::unique_ptr<Expr> expression; ///< The expression to print
 };
 
 /**
@@ -109,15 +109,15 @@ class BlockStmt : public Stmt
      * @param statements The sequence of statements in the block
      * @param loc Source location
      */
-    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements, SourceLoc loc)
-        : statements(std::move(statements)), loc(loc)
+    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements, int line, int col)
+        : statements(std::move(statements))
     {
         kind = Block;
+        loc = {line, col};
     };
 
   private:
-    std::vector<std::unique_ptr<Stmt>> statements;    ///< The statements in the block
-    SourceLoc                          loc;           ///< Source location
+    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
 };
 
 /**
@@ -143,20 +143,19 @@ class IfChainStmt : public Stmt
      * @param loc Source location
      */
     IfChainStmt(std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches,
-                std::unique_ptr<BlockStmt> elseBranch, SourceLoc loc)
-        : branches(std::move(branches)), elseBranch(std::move(elseBranch)), loc(loc)
+                std::unique_ptr<BlockStmt> elseBranch, int line, int col)
+        : branches(std::move(branches)), elseBranch(std::move(elseBranch))
     {
         kind = IfChain;
+        loc = {line, col};
     };
 
   private:
     /// List of (condition, block) pairs, evaluated in order
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
-    
+
     /// Optional fallback block executed if all conditions are false
     std::optional<std::unique_ptr<BlockStmt>> elseBranch;
-    
-    SourceLoc loc;    ///< Source location
 };
 
 /**
@@ -174,14 +173,14 @@ class WhileStmt : public Stmt
      * @param body The loop body block
      * @param loc Source location
      */
-    WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BlockStmt> body, SourceLoc loc)
-        : condition(std::move(condition)), body(std::move(body)), loc(loc)
+    WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BlockStmt> body, int line, int col)
+        : condition(std::move(condition)), body(std::move(body))
     {
         kind = While;
+        loc = {line, col};
     };
 
   private:
-    std::unique_ptr<Expr> condition;      ///< The loop condition
+    std::unique_ptr<Expr>      condition; ///< The loop condition
     std::unique_ptr<BlockStmt> body;      ///< The loop body
-    SourceLoc             loc;            ///< Source location
 };
