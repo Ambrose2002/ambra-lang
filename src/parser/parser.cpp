@@ -388,6 +388,46 @@ std::unique_ptr<Stmt> Parser::parseSayStatement()
     return std::make_unique<SayStmt>(std::move(expression), loc.line, loc.column);
 }
 
+std::unique_ptr<Stmt> Parser::parseSummonStatement()
+{
+    Token          summonToken = advance();
+    SourceLocation loc = summonToken.getLocation();
+
+    // expect identifier
+    if (!check(IDENTIFIER))
+    {
+        reportError(peek(), "Expected identifier after 'summon'");
+        return nullptr;
+    }
+
+    Token       nameToken = advance();
+    std::string variableName = nameToken.getLexeme();
+
+    // expect '='
+    if (!match(EQUAL))
+    {
+        reportError(peek(), "Expected '=' after variable name in summon statement");
+        return nullptr;
+    }
+
+    // parse initializer expression
+    std::unique_ptr<Expr> initializer = parseExpression();
+    if (!initializer)
+    {
+        reportError(peek(), "Expected initializer expression after '='");
+        return nullptr;
+    }
+
+    // expect ';'
+    if (!match(SEMI_COLON))
+    {
+        reportError(peek(), "Expected ';' after summon statement");
+        return nullptr;
+    }
+
+    return std::make_unique<SummonStmt>(variableName, std::move(initializer), loc.line, loc.column);
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement()
 {
     Token token = peek();
@@ -399,6 +439,9 @@ std::unique_ptr<Stmt> Parser::parseStatement()
         return parseSayStatement();
     }
     case SUMMON:
+    {
+        return parseSummonStatement();
+    }
     default:
         return nullptr;
     }
