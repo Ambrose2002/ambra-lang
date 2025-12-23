@@ -251,6 +251,10 @@ class IdentifierExpr : public Expr
         return std::string("Ident(") + name + ")";
     }
 
+    std::string getName() const {
+        return name;
+    }
+
   private:
     std::string name; ///< The identifier name
 };
