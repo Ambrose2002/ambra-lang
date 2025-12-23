@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 
 Token Parser::peek()
@@ -118,6 +119,18 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         // Parse grouping: '(' expression ')'.
         // If the closing ')' is missing, report error and return nullptr.
         advance();
+
+        TokenType type = peek().getType();
+
+        std::unordered_set<TokenType> allowedTokens{
+            INTEGER, BOOL, STRING, MULTILINE_STRING, IDENTIFIER, LEFT_PAREN, NOT, MINUS};
+
+        if (!allowedTokens.count(type))
+        {
+            reportError(peek(), "This token is not allowed here");
+            return nullptr;
+        }
+
         auto expression = parseExpression();
         if (!expression)
         {
@@ -157,6 +170,17 @@ std::unique_ptr<Expr> Parser::parsePrimary()
         while (peek().getType() == INTERP_START)
         {
             Token interpStart = advance(); // consume '{'
+
+            TokenType type = peek().getType();
+
+            std::unordered_set<TokenType> allowedTokens{
+                INTEGER, BOOL, STRING, MULTILINE_STRING, IDENTIFIER, LEFT_PAREN, NOT, MINUS};
+
+            if (!allowedTokens.count(type))
+            {
+                reportError(peek(), "This token is not allowed here");
+                return nullptr;
+            }
 
             std::unique_ptr<Expr> expr = parseExpression();
 
@@ -369,8 +393,20 @@ std::unique_ptr<Expr> Parser::parseExpression()
 
 std::unique_ptr<Stmt> Parser::parseSayStatement()
 {
-    Token                 sayToken = advance();
-    SourceLocation        loc = sayToken.getLocation();
+    Token          sayToken = advance();
+    SourceLocation loc = sayToken.getLocation();
+
+    TokenType type = peek().getType();
+
+    std::unordered_set<TokenType> allowedTokens{INTEGER,    BOOL,       STRING, MULTILINE_STRING,
+                                                IDENTIFIER, LEFT_PAREN, NOT,    MINUS};
+
+    if (!allowedTokens.count(type))
+    {
+        reportError(peek(), "This token is not allowed here");
+        return nullptr;
+    }
+
     std::unique_ptr<Expr> expression = parseExpression();
 
     if (!expression)
@@ -407,6 +443,17 @@ std::unique_ptr<Stmt> Parser::parseSummonStatement()
     if (!match(EQUAL))
     {
         reportError(peek(), "Expected '=' after variable name in summon statement");
+        return nullptr;
+    }
+
+    TokenType type = peek().getType();
+
+    std::unordered_set<TokenType> allowedTokens{INTEGER,    BOOL,       STRING, MULTILINE_STRING,
+                                                IDENTIFIER, LEFT_PAREN, NOT,    MINUS};
+
+    if (!allowedTokens.count(type))
+    {
+        reportError(peek(), "This token is not allowed here");
         return nullptr;
     }
 
