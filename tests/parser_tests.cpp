@@ -670,24 +670,24 @@ TEST(ExpressionComparison, LessEqual)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
-TEST(Statement, SayStatement) {
-    std::vector<Token> tokens = {
-        Token("say", SAY, std::monostate{}, 1, 1),
-        Token("\"Hello \"", STRING, "Hello", 1, 4),
-        Token(",", SEMI_COLON, std::monostate{}, 1, 9),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 10)
-    };
+TEST(Statement, SayStatement)
+{
+    std::vector<Token> tokens = {Token("say", SAY, std::monostate{}, 1, 1),
+                                 Token("\"Hello \"", STRING, "Hello", 1, 4),
+                                 Token(",", SEMI_COLON, std::monostate{}, 1, 9),
+                                 Token("", EOF_TOKEN, std::monostate{}, 1, 10)};
 
-    Parser parser(tokens);
+    Parser     parser(tokens);
     const auto actual = parser.parseStatement();
 
     std::vector<StringPart> parts;
-    StringPart s1;
+    StringPart              s1;
     s1.kind = StringPart::TEXT;
     s1.text = "Hello";
     parts.push_back(std::move(s1));
 
-    std::unique_ptr<Stmt> expected = std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 4), 1, 1);
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 4), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -702,12 +702,10 @@ TEST(Statement, SayIntLiteral)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected =
-        std::make_unique<SayStmt>(
-            std::make_unique<IntLiteralExpr>(42, 1, 5),
-            1, 1);
+        std::make_unique<SayStmt>(std::make_unique<IntLiteralExpr>(42, 1, 5), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -722,12 +720,10 @@ TEST(Statement, SayIdentifier)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected =
-        std::make_unique<SayStmt>(
-            std::make_unique<IdentifierExpr>("x", 1, 5),
-            1, 1);
+        std::make_unique<SayStmt>(std::make_unique<IdentifierExpr>("x", 1, 5), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -744,16 +740,12 @@ TEST(Statement, SayBinaryExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<SayStmt>(
-            std::make_unique<BinaryExpr>(
-                std::make_unique<IntLiteralExpr>(1, 1, 5),
-                Add,
-                std::make_unique<IntLiteralExpr>(2, 1, 9),
-                1, 7),
-            1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<SayStmt>(
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 5), Add,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 9), 1, 7),
+        1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -767,7 +759,7 @@ TEST(StatementErrors, SayMissingSemicolon)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -782,7 +774,7 @@ TEST(StatementErrors, SayMissingExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -798,8 +790,27 @@ TEST(StatementErrors, SayInvalidExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
+}
+
+TEST(Statement, SummonIntLiteral)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 14),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
 }
