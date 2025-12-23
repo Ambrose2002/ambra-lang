@@ -810,7 +810,250 @@ TEST(Statement, SummonIntLiteral)
     Parser parser(tokens);
     auto   actual = parser.parseStatement();
 
-    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1);
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// === Summon statement tests ===
+
+// Parses a summon statement with a boolean initializer.
+TEST(Statement, SummonBoolLiteral)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("flag", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 13),
+        Token("affirmative", BOOL, true, 1, 15),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 26),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 27),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 1, 15), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement with an identifier initializer.
+TEST(Statement, SummonIdentifierInitializer)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("y", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 14),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("y", std::make_unique<IdentifierExpr>("x", 1, 12), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement with a binary expression initializer to test precedence/AST wiring.
+TEST(Statement, SummonBinaryInitializerPrecedence)
+{
+    // summon x = 1 + 2 * 3;
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token("+", PLUS, std::monostate{}, 1, 14),
+        Token("2", INTEGER, 2, 1, 16),
+        Token("*", STAR, std::monostate{}, 1, 18),
+        Token("3", INTEGER, 3, 1, 20),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 21),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 22),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto expectedInitializer = std::make_unique<BinaryExpr>(
+        std::make_unique<IntLiteralExpr>(1, 1, 12), Add,
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(2, 1, 16), Multiply,
+                                     std::make_unique<IntLiteralExpr>(3, 1, 20), 1, 18),
+        1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("x", std::move(expectedInitializer), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement whose initializer uses grouping to override precedence.
+TEST(Statement, SummonGroupedInitializer)
+{
+    // summon x = (1 + 2) * 3;
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 12),
+        Token("1", INTEGER, 1, 1, 13),
+        Token("+", PLUS, std::monostate{}, 1, 15),
+        Token("2", INTEGER, 2, 1, 17),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 18),
+        Token("*", STAR, std::monostate{}, 1, 20),
+        Token("3", INTEGER, 3, 1, 22),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 23),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 24),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto grouped = std::make_unique<GroupingExpr>(
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 13), Add,
+                                     std::make_unique<IntLiteralExpr>(2, 1, 17), 1, 15),
+        1, 12);
+
+    auto expectedInitializer = std::make_unique<BinaryExpr>(
+        std::move(grouped), Multiply, std::make_unique<IntLiteralExpr>(3, 1, 22), 1, 20);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("x", std::move(expectedInitializer), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement with a unary initializer.
+TEST(Statement, SummonUnaryInitializer)
+{
+    // summon x = -1;
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("-", MINUS, std::monostate{}, 1, 12),
+        Token("1", INTEGER, 1, 1, 13),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        "x",
+        std::make_unique<UnaryExpr>(ArithmeticNegate, std::make_unique<IntLiteralExpr>(1, 1, 13), 1,
+                                    12),
+        1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement with a comparison initializer.
+TEST(Statement, SummonComparisonInitializer)
+{
+    // summon ok = 2 < 3;
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("ok", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 11),
+        Token("2", INTEGER, 2, 1, 13),
+        Token("<", LESS, std::monostate{}, 1, 15),
+        Token("3", INTEGER, 3, 1, 17),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 18),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 19),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        "ok",
+        std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(2, 1, 13), Less,
+                                     std::make_unique<IntLiteralExpr>(3, 1, 17), 1, 15),
+        1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement with equality initializer to test precedence relative to comparisons.
+TEST(Statement, SummonEqualityInitializer)
+{
+    // summon eq = 1 < 2 == affirmative;
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("eq", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 11),
+        Token("1", INTEGER, 1, 1, 13),
+        Token("<", LESS, std::monostate{}, 1, 15),
+        Token("2", INTEGER, 2, 1, 17),
+        Token("==", EQUAL_EQUAL, std::monostate{}, 1, 19),
+        Token("affirmative", BOOL, true, 1, 22),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 33),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 34),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto lhs = std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 1, 13), Less,
+                                            std::make_unique<IntLiteralExpr>(2, 1, 17), 1, 15);
+
+    auto expectedInitializer = std::make_unique<BinaryExpr>(
+        std::move(lhs), EqualEqual, std::make_unique<BoolLiteralExpr>(true, 1, 22), 1, 19);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("eq", std::move(expectedInitializer), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a summon statement whose initializer is a string interpolation expression.
+TEST(Statement, SummonInterpolatedStringInitializer)
+{
+    // summon msg = "hi {name}";
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("msg", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 12),
+        Token("\"hi \"", STRING, "hi ", 1, 14),
+        Token("{", INTERP_START, std::monostate{}, 1, 19),
+        Token("name", IDENTIFIER, std::monostate{}, 1, 20),
+        Token("}", INTERP_END, std::monostate{}, 1, 24),
+        Token("\"\"", STRING, "", 1, 25),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 27),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 28),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<StringPart> parts;
+
+    StringPart t1;
+    t1.kind = StringPart::TEXT;
+    t1.text = "hi ";
+    parts.push_back(std::move(t1));
+
+    StringPart e1;
+    e1.kind = StringPart::EXPR;
+    e1.expr = std::make_unique<IdentifierExpr>("name", 1, 20);
+    parts.push_back(std::move(e1));
+
+    StringPart t2;
+    t2.kind = StringPart::TEXT;
+    t2.text = "";
+    parts.push_back(std::move(t2));
+
+    auto expectedInitializer = std::make_unique<StringExpr>(std::move(parts), 1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<SummonStmt>("msg", std::move(expectedInitializer), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
