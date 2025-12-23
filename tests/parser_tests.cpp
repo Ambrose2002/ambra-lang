@@ -1057,3 +1057,98 @@ TEST(Statement, SummonInterpolatedStringInitializer)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+
+// --- Error cases ---
+
+// Fails when the identifier after 'summon' is missing.
+TEST(StatementErrors, SummonMissingIdentifier)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("=", EQUAL, std::monostate{}, 1, 8),
+        Token("10", INTEGER, 10, 1, 10),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+// Fails when '=' is missing after the identifier.
+TEST(StatementErrors, SummonMissingEqual)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("10", INTEGER, 10, 1, 10),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+// Fails when initializer expression is missing (e.g. 'summon x = ;').
+TEST(StatementErrors, SummonMissingInitializer)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+// Fails when semicolon is missing at end of summon statement.
+TEST(StatementErrors, SummonMissingSemicolon)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("10", INTEGER, 10, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 14),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+// Fails if the initializer expression is malformed (e.g. 'summon x = + 1;').
+TEST(StatementErrors, SummonInvalidInitializerExpression)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("+", PLUS, std::monostate{}, 1, 12),
+        Token("1", INTEGER, 1, 1, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 15),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 16),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
