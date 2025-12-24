@@ -476,29 +476,32 @@ std::unique_ptr<Stmt> Parser::parseSummonStatement()
     return std::make_unique<SummonStmt>(variableName, std::move(initializer), loc.line, loc.column);
 }
 
-std::unique_ptr<Stmt> Parser::parseBlockStatement() {
+std::unique_ptr<Stmt> Parser::parseBlockStatement()
+{
 
-    Token leftBraceToken = advance();
+    Token          leftBraceToken = advance();
     SourceLocation loc = leftBraceToken.getLocation();
 
     std::vector<std::unique_ptr<Stmt>> statements;
 
-    while (peek().getType() != LEFT_BRACE) {
+    while (peek().getType() != LEFT_BRACE)
+    {
 
-        if (peek().getType() == EOF_TOKEN) {
-            reportError(peek(), "Closing right brace expected");
+        if (peek().getType() == EOF_TOKEN)
+        {
+            reportError(peek(), "Expected } to close block");
             return nullptr;
         }
         std::unique_ptr<Stmt> statement = parseStatement();
-        if (!statement) {
+        if (!statement)
+        {
             return nullptr;
         }
         statements.push_back(std::move(statement));
     }
-    consume(RIGHT_BRACE, "Closing right brace expected");
+    consume(RIGHT_BRACE, "Expected } to close block");
 
     return std::make_unique<BlockStmt>(std::move(statements), loc.line, loc.column);
-
 }
 
 std::unique_ptr<Stmt> Parser::parseStatement()
