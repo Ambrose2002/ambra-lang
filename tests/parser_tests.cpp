@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -1058,7 +1059,6 @@ TEST(Statement, SummonInterpolatedStringInitializer)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-
 // --- Error cases ---
 
 // Fails when the identifier after 'summon' is missing.
@@ -1073,7 +1073,7 @@ TEST(StatementErrors, SummonMissingIdentifier)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1091,7 +1091,7 @@ TEST(StatementErrors, SummonMissingEqual)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1109,7 +1109,7 @@ TEST(StatementErrors, SummonMissingInitializer)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1127,7 +1127,7 @@ TEST(StatementErrors, SummonMissingSemicolon)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1147,8 +1147,33 @@ TEST(StatementErrors, SummonInvalidInitializerExpression)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
+}
+
+TEST(Statement, BlockStatementSimple)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("summon", SUMMON, std::monostate{}, 1, 2),
+        Token("flag", IDENTIFIER, std::monostate{}, 1, 9),
+        Token("=", EQUAL, std::monostate{}, 1, 14),
+        Token("affirmative", BOOL, true, 1, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 17),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 17),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 18),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> summonExpression;
+    summonExpression.push_back(
+        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 1, 16), 1, 2));
+
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(summonExpression), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
 }
