@@ -194,4 +194,6 @@ class Parser
     std::unique_ptr<Stmt> parseSayStatement();
 
     std::unique_ptr<Stmt> parseSummonStatement();
+
+    std::unique_ptr<Stmt> parseBlockStatement();
 };

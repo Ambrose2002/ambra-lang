@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 Token Parser::peek()
 {
@@ -475,6 +476,31 @@ std::unique_ptr<Stmt> Parser::parseSummonStatement()
     return std::make_unique<SummonStmt>(variableName, std::move(initializer), loc.line, loc.column);
 }
 
+std::unique_ptr<Stmt> Parser::parseBlockStatement() {
+
+    Token leftBraceToken = advance();
+    SourceLocation loc = leftBraceToken.getLocation();
+
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    while (peek().getType() != LEFT_BRACE) {
+
+        if (peek().getType() == EOF_TOKEN) {
+            reportError(peek(), "Closing right brace expected");
+            return nullptr;
+        }
+        std::unique_ptr<Stmt> statement = parseStatement();
+        if (!statement) {
+            return nullptr;
+        }
+        statements.push_back(std::move(statement));
+    }
+    consume(RIGHT_BRACE, "Closing right brace expected");
+
+    return std::make_unique<BlockStmt>(std::move(statements), loc.line, loc.column);
+
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement()
 {
     Token token = peek();
@@ -488,6 +514,10 @@ std::unique_ptr<Stmt> Parser::parseStatement()
     case SUMMON:
     {
         return parseSummonStatement();
+    }
+    case LEFT_BRACE:
+    {
+        return parseBlockStatement();
     }
     default:
         return nullptr;
