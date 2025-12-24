@@ -1363,3 +1363,44 @@ TEST(Statement, BlockStatementSayInterpolatedString)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+// Reports an error if EOF is reached before encountering a closing '}'.
+TEST(StatementErrors, BlockStatementMissingRightBraceEOF)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("say", SAY, std::monostate{}, 1, 3),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 11),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 12),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_EQ(actual, nullptr);
+    ASSERT_TRUE(parser.hadError());
+}
+
+// If a statement inside the block fails (e.g., missing semicolon), block parsing fails fast.
+TEST(StatementErrors, BlockStatementInnerStatementError)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+
+        Token("summon", SUMMON, std::monostate{}, 1, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        Token("=", EQUAL, std::monostate{}, 1, 12),
+        Token("10", INTEGER, 10, 1, 14),
+        // Missing ';' here
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 16),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 17),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_EQ(actual, nullptr);
+    ASSERT_TRUE(parser.hadError());
+}
