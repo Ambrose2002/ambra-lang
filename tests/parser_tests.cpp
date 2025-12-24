@@ -1177,3 +1177,189 @@ TEST(Statement, BlockStatementSimple)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+// Parses an empty block: { }
+TEST(Statement, BlockStatementEmpty)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 2),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 3),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a block with multiple statements (summon + say).
+TEST(Statement, BlockStatementTwoStatements)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+
+        Token("summon", SUMMON, std::monostate{}, 1, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        Token("=", EQUAL, std::monostate{}, 1, 12),
+        Token("10", INTEGER, 10, 1, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 16),
+
+        Token("say", SAY, std::monostate{}, 1, 18),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 22),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 26),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 28),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 29),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    statements.push_back(
+        std::make_unique<SummonStmt>(
+            "x",
+            std::make_unique<IntLiteralExpr>(10, 1, 14),
+            1, 3));
+
+    std::vector<StringPart> parts;
+    StringPart p;
+    p.kind = StringPart::TEXT;
+    p.text = "hi";
+    parts.push_back(std::move(p));
+
+    statements.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 22),
+            1, 18));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses nested blocks: { { } }
+TEST(Statement, BlockStatementNestedEmptyBlock)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 3),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 5),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 7),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 8),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    // inner block
+    std::vector<std::unique_ptr<Stmt>> innerStatements;
+    auto inner = std::make_unique<BlockStmt>(std::move(innerStatements), 1, 3);
+
+    // outer block contains inner block stmt
+    std::vector<std::unique_ptr<Stmt>> outerStatements;
+    outerStatements.push_back(std::move(inner));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses nested block with content: { { summon x = 1; } }
+TEST(Statement, BlockStatementNestedWithSummon)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 3),
+        Token("summon", SUMMON, std::monostate{}, 1, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 12),
+        Token("=", EQUAL, std::monostate{}, 1, 14),
+        Token("1", INTEGER, 1, 1, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 17),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 19),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 21),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 22),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> innerStatements;
+    innerStatements.push_back(
+        std::make_unique<SummonStmt>(
+            "x",
+            std::make_unique<IntLiteralExpr>(1, 1, 16),
+            1, 5));
+
+    auto innerBlock =
+        std::make_unique<BlockStmt>(std::move(innerStatements), 1, 3);
+
+    std::vector<std::unique_ptr<Stmt>> outerStatements;
+    outerStatements.push_back(std::move(innerBlock));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// Parses a block with a say statement using string interpolation parts.
+TEST(Statement, BlockStatementSayInterpolatedString)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+
+        Token("say", SAY, std::monostate{}, 1, 3),
+        Token("\"hi \"", STRING, std::string("hi "), 1, 7),
+        Token("{", INTERP_START, std::monostate{}, 1, 13),
+        Token("name", IDENTIFIER, std::monostate{}, 1, 14),
+        Token("}", INTERP_END, std::monostate{}, 1, 18),
+        Token("\"\"", STRING, std::string(""), 1, 19),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 21),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 23),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 24),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    std::vector<StringPart> parts;
+
+    StringPart t1;
+    t1.kind = StringPart::TEXT;
+    t1.text = "hi ";
+    parts.push_back(std::move(t1));
+
+    StringPart e1;
+    e1.kind = StringPart::EXPR;
+    e1.expr = std::make_unique<IdentifierExpr>("name", 1, 14);
+    parts.push_back(std::move(e1));
+
+    StringPart t2;
+    t2.kind = StringPart::TEXT;
+    t2.text = "";
+    parts.push_back(std::move(t2));
+
+    statements.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 7),
+            1, 3));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
