@@ -1404,3 +1404,28 @@ TEST(StatementErrors, BlockStatementInnerStatementError)
     ASSERT_EQ(actual, nullptr);
     ASSERT_TRUE(parser.hadError());
 }
+
+// Parses a block and leaves remaining tokens for later parsing (program-level tests later).
+TEST(Statement, BlockStatementStopsAtRightBrace)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 2),
+
+        // Trailing statement tokens (not parsed by this single parseStatement() call)
+        Token("say", SAY, std::monostate{}, 1, 4),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 8),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<std::unique_ptr<Stmt>> statements;
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
