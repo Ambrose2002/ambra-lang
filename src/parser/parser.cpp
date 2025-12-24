@@ -484,7 +484,7 @@ std::unique_ptr<Stmt> Parser::parseBlockStatement()
 
     std::vector<std::unique_ptr<Stmt>> statements;
 
-    while (peek().getType() != LEFT_BRACE)
+    while (peek().getType() != RIGHT_BRACE)
     {
 
         if (peek().getType() == EOF_TOKEN)
@@ -499,8 +499,11 @@ std::unique_ptr<Stmt> Parser::parseBlockStatement()
         }
         statements.push_back(std::move(statement));
     }
-    consume(RIGHT_BRACE, "Expected } to close block");
-
+    if (!match(RIGHT_BRACE))
+    {
+        reportError(peek(), "Expected } to close block");
+        return nullptr;
+    }
     return std::make_unique<BlockStmt>(std::move(statements), loc.line, loc.column);
 }
 
