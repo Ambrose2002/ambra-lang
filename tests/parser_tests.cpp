@@ -1774,3 +1774,129 @@ TEST(IfChain, MultipleElseIf_WithElse)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+/**
+ * should x) { ... }
+ * Error: missing '(' immediately after should.
+ */
+TEST(IfChainErrors, MissingLeftParenAfterShould)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 9),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * should (x { ... }
+ * Error: missing ')' after condition expression.
+ */
+TEST(IfChainErrors, MissingRightParenAfterCondition)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * should (x) say "hi";
+ * Error: expected '{' to start block after condition.
+ */
+TEST(IfChainErrors, MissingLeftBraceAfterCondition)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("say", SAY, std::monostate{}, 1, 12),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 20),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 21),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * should (x) { } otherwise say "no";
+ * Error: 'otherwise' must be followed by '{' (else block required).
+ */
+TEST(IfChainErrors, OtherwiseMissingLeftBrace)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 13),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 15),
+        Token("say", SAY, std::monostate{}, 1, 25),
+        Token("\"no\"", STRING, std::string("no"), 1, 29),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 33),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 34),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * should (x) { } otherwise (y) { }
+ * Error: 'otherwise' followed by '(' is invalid; must be "otherwise should (...)" or "otherwise {...}".
+ */
+TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 13),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 15),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 25),
+        Token("y", IDENTIFIER, std::monostate{}, 1, 26),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 27),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 29),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 30),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 31),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
