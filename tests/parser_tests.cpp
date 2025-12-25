@@ -1608,3 +1608,169 @@ TEST(IfChain, WithElseBranch)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+/**
+ * should (x) { say "a"; } otherwise should (y) { say "b"; }
+ * Standard: two branches, no trailing else.
+ */
+TEST(IfChain, OneElseIf_NoElse)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("say", SAY, std::monostate{}, 1, 14),
+        Token("\"a\"", STRING, std::string("a"), 1, 18),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 21),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 23),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 25),
+        Token("should", SHOULD, std::monostate{}, 1, 35),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 42),
+        Token("y", IDENTIFIER, std::monostate{}, 1, 43),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 44),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 46),
+        Token("say", SAY, std::monostate{}, 1, 48),
+        Token("\"b\"", STRING, std::string("b"), 1, 52),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 55),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 57),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 58),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+
+    // Branch 1: (x) { say "a"; }
+    {
+        auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
+
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<StringPart> parts;
+        StringPart p; p.kind = StringPart::TEXT; p.text = "a";
+        parts.push_back(std::move(p));
+        stmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 18),
+            1, 14));
+
+        auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 12);
+        branches.emplace_back(std::move(cond), std::move(block));
+    }
+
+    // Branch 2: (y) { say "b"; }
+    {
+        auto cond = std::make_unique<IdentifierExpr>("y", 1, 43);
+
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<StringPart> parts;
+        StringPart p; p.kind = StringPart::TEXT; p.text = "b";
+        parts.push_back(std::move(p));
+        stmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 52),
+            1, 48));
+
+        auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 46);
+        branches.emplace_back(std::move(cond), std::move(block));
+    }
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * should (x) {...} otherwise should (y) {...} otherwise should (z) {...} otherwise {...}
+ * Full chain: multiple else-if branches and a trailing else.
+ */
+TEST(IfChain, MultipleElseIf_WithElse)
+{
+    std::vector<Token> tokens = {
+        // should (x) { say "a"; }
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("say", SAY, std::monostate{}, 1, 14),
+        Token("\"a\"", STRING, std::string("a"), 1, 18),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 21),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 23),
+
+        // otherwise should (y) { say "b"; }
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 25),
+        Token("should", SHOULD, std::monostate{}, 1, 35),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 42),
+        Token("y", IDENTIFIER, std::monostate{}, 1, 43),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 44),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 46),
+        Token("say", SAY, std::monostate{}, 1, 48),
+        Token("\"b\"", STRING, std::string("b"), 1, 52),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 55),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 57),
+
+        // otherwise should (z) { say "c"; }
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 59),
+        Token("should", SHOULD, std::monostate{}, 1, 69),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 76),
+        Token("z", IDENTIFIER, std::monostate{}, 1, 77),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 78),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 80),
+        Token("say", SAY, std::monostate{}, 1, 82),
+        Token("\"c\"", STRING, std::string("c"), 1, 86),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 89),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 91),
+
+        // otherwise { say "d"; }
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 93),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 103),
+        Token("say", SAY, std::monostate{}, 1, 105),
+        Token("\"d\"", STRING, std::string("d"), 1, 109),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 112),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 114),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 115),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+
+    auto mkSayBlock = [&](const std::string& text, int braceLine, int braceCol, int sayLine, int sayCol, int strLine, int strCol) {
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<StringPart> parts;
+        StringPart p; p.kind = StringPart::TEXT; p.text = text;
+        parts.push_back(std::move(p));
+        stmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), strLine, strCol),
+            sayLine, sayCol));
+        return std::make_unique<BlockStmt>(std::move(stmts), braceLine, braceCol);
+    };
+
+    // x -> "a"
+    branches.emplace_back(
+        std::make_unique<IdentifierExpr>("x", 1, 9),
+        mkSayBlock("a", 1, 12, 1, 14, 1, 18));
+
+    // y -> "b"
+    branches.emplace_back(
+        std::make_unique<IdentifierExpr>("y", 1, 43),
+        mkSayBlock("b", 1, 46, 1, 48, 1, 52));
+
+    // z -> "c"
+    branches.emplace_back(
+        std::make_unique<IdentifierExpr>("z", 1, 77),
+        mkSayBlock("c", 1, 80, 1, 82, 1, 86));
+
+    auto elseBranch = mkSayBlock("d", 1, 103, 1, 105, 1, 109);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBranch), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
