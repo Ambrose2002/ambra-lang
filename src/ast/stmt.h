@@ -45,13 +45,13 @@ class Stmt
     virtual ~Stmt() {};
 
     virtual bool operator==(const Stmt& other) const = 0;
-        /**
-         * @brief Return a human-readable representation of this statement.
-         *
-         * Used by tests and debugging output. Derived classes must implement a
-         * concise serialization suitable for debugging (not necessarily reversible).
-         */
-        virtual std::string toString() const = 0;
+    /**
+     * @brief Return a human-readable representation of this statement.
+     *
+     * Used by tests and debugging output. Derived classes must implement a
+     * concise serialization suitable for debugging (not necessarily reversible).
+     */
+    virtual std::string toString() const = 0;
 };
 
 /**
@@ -158,13 +158,14 @@ class SayStmt : public Stmt
         return *expression == *o.expression;
     }
 
-    private:
-        std::unique_ptr<Expr> expression; ///< The expression to print
+  private:
+    std::unique_ptr<Expr> expression; ///< The expression to print
 
-    public:
-        std::string toString() const override
+  public:
+    std::string toString() const override
     {
-        return std::string("Say(") + (expression ? expression->toString() : std::string("null")) + ")";
+        return std::string("Say(") + (expression ? expression->toString() : std::string("null")) +
+               ")";
     }
 };
 
@@ -225,14 +226,14 @@ class BlockStmt : public Stmt
         return true;
     }
 
-    private:
-        std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
+  private:
+    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
 
-    public:
-        std::string toString() const override
+  public:
+    std::string toString() const override
     {
         std::string out = "Block([";
-        bool first  = true;
+        bool        first = true;
         for (const auto& s : statements)
         {
             if (!first)
@@ -283,10 +284,12 @@ class IfChainStmt : public Stmt
     /// Optional fallback block executed if all conditions are false
     std::optional<std::unique_ptr<BlockStmt>> elseBranch;
 
+  public:
     /**
      * @brief Compares two IfChainStmt nodes for equality.
      * @param other The other statement to compare with
-     * @return True if both have the same branches and else branch in the same order and source location
+     * @return True if both have the same branches and else branch in the same order and source
+     * location
      */
     bool operator==(const Stmt& other) const override
     {
@@ -345,7 +348,6 @@ class IfChainStmt : public Stmt
         return true;
     }
 
-  public:
     std::string toString() const override
     {
         std::string out = "IfChain([";
@@ -354,7 +356,7 @@ class IfChainStmt : public Stmt
             if (i > 0)
                 out += ", ";
             const auto& cond = std::get<0>(branches[i]);
-            const auto& blk  = std::get<1>(branches[i]);
+            const auto& blk = std::get<1>(branches[i]);
             out += "(";
             out += (cond ? cond->toString() : std::string("null"));
             out += ", ";
@@ -427,8 +429,7 @@ class WhileStmt : public Stmt
   public:
     std::string toString() const override
     {
-        return std::string("While(") +
-               (condition ? condition->toString() : std::string("null")) + ", " +
-               (body ? body->toString() : std::string("null")) + ")";
+        return std::string("While(") + (condition ? condition->toString() : std::string("null")) +
+               ", " + (body ? body->toString() : std::string("null")) + ")";
     }
 };
