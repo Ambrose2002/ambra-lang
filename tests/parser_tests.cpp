@@ -1541,3 +1541,70 @@ TEST(IfChain, SingleBranch_EmptyBlock)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+/**
+ * should (x) { say "a"; } otherwise { say "b"; }
+ * Standard: else-branch exists, no else-if branches.
+ */
+TEST(IfChain, WithElseBranch)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("say", SAY, std::monostate{}, 1, 14),
+        Token("\"a\"", STRING, std::string("a"), 1, 18),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 21),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 23),
+        Token("otherwise", OTHERWISE, std::monostate{}, 1, 25),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 35),
+        Token("say", SAY, std::monostate{}, 1, 37),
+        Token("\"b\"", STRING, std::string("b"), 1, 41),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 44),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 46),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 47),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    // First branch
+    auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
+
+    std::vector<std::unique_ptr<Stmt>> thenStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart p{ };
+        p.kind = StringPart::TEXT;
+        p.text = "a";
+        parts.push_back(std::move(p));
+        thenStmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 18),
+            1, 14));
+    }
+    auto thenBlock = std::make_unique<BlockStmt>(std::move(thenStmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::move(cond), std::move(thenBlock));
+
+    // Else branch
+    std::vector<std::unique_ptr<Stmt>> elseStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart p{ };
+        p.kind = StringPart::TEXT;
+        p.text = "b";
+        parts.push_back(std::move(p));
+        elseStmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 41),
+            1, 37));
+    }
+    auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 1, 35);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBlock), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
