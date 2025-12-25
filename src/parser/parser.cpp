@@ -4,6 +4,7 @@
 #include "ast/stmt.h"
 
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <tuple>
 #include <unordered_set>
@@ -13,13 +14,23 @@
 Token Parser::peek()
 {
     // Returns the current token without consuming it.
-    // Undefined behavior if current is out of bounds, but tokens always end with EOF_TOKEN.
+    // returns EOF token if current is out of bounds.
+    if (current >= tokens.size()) {
+        return tokens.back();
+    }
     return tokens[current];
 }
 
 Token Parser::peekAhead(int pos)
 {
-    return tokens[current + pos];
+    size_t index = current + pos;
+
+    if (index >= tokens.size())
+    {
+        // return the EOF token
+        return tokens.back();
+    }
+    return tokens[index];
 }
 
 Token Parser::previous()

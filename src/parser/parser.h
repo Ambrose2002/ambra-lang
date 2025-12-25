@@ -58,7 +58,7 @@ class Parser
      * @brief Look at the current token without consuming it.
      *
      * Does not advance the parser position.
-     * Undefined behavior if `current` is out of bounds, but tokens always end with EOF token.
+     * if `current` is out of bounds, return EOF token.
      *
      * @return The current token.
      */
@@ -68,7 +68,7 @@ class Parser
      * @brief Look at the (current + pos) token without consuming it.
      *
      * Does not advance the parser position.
-     * Undefined behavior if `current` is out of bounds, but tokens always end with EOF token.
+     * if `current + pos` is out of bounds, return EOF token.
      *
      * @return The (current + pos) token.
      */
