@@ -1162,8 +1162,8 @@ TEST(Statement, BlockStatementSimple)
         Token("=", EQUAL, std::monostate{}, 1, 14),
         Token("affirmative", BOOL, true, 1, 16),
         Token(";", SEMI_COLON, std::monostate{}, 1, 17),
-        Token("}", RIGHT_BRACE, std::monostate{}, 1, 17),
-        Token("", EOF_TOKEN, std::monostate{}, 1, 18),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 18),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 19),
     };
 
     Parser parser(tokens);
