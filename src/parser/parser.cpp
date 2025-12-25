@@ -17,6 +17,11 @@ Token Parser::peek()
     return tokens[current];
 }
 
+Token Parser::peekAhead(int pos)
+{
+    return tokens[current + pos];
+}
+
 Token Parser::previous()
 {
     // Returns the previously consumed token.
@@ -571,7 +576,7 @@ std::unique_ptr<Stmt> Parser::parseIfChainStatement()
         // Lookahead to distinguish:
         //   otherwise should (...) { ... }
         //   otherwise { ... }
-        if (tokens[current + 1].getType() != SHOULD)
+        if (peekAhead(1).getType() != SHOULD)
         {
             break;
         }

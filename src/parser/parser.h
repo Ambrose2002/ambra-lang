@@ -65,6 +65,16 @@ class Parser
     Token peek();
 
     /**
+     * @brief Look at the (current + pos) token without consuming it.
+     *
+     * Does not advance the parser position.
+     * Undefined behavior if `current` is out of bounds, but tokens always end with EOF token.
+     *
+     * @return The (current + pos) token.
+     */
+    Token peekAhead(int pos);
+
+    /**
      * @brief Return the most recently consumed token.
      *
      * Assumes at least one token has been consumed; behavior is undefined if called before any
