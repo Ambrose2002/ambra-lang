@@ -1478,3 +1478,53 @@ TEST(Statement, IfChainSimple)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+/**
+ * should (x) { say "yes"; }
+ * Baseline: single-branch if-chain with a single statement in the block.
+ */
+TEST(IfChain, SingleBranch_SayString)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("say", SAY, std::monostate{}, 1, 14),
+        Token("\"yes\"", STRING, std::string("yes"), 1, 18),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 23),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 25),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 26),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    // Condition: Identifier(x)
+    auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
+
+    // Body: { say "yes"; }
+    std::vector<std::unique_ptr<Stmt>> bodyStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart p;
+        p.kind = StringPart::TEXT;
+        p.text = "yes";
+        parts.push_back(std::move(p));
+
+        bodyStmts.push_back(
+            std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 1, 18),
+                1, 14));
+    }
+    auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::move(cond), std::move(body));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
