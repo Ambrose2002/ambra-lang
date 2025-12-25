@@ -1223,24 +1223,18 @@ TEST(Statement, BlockStatementTwoStatements)
     std::vector<std::unique_ptr<Stmt>> statements;
 
     statements.push_back(
-        std::make_unique<SummonStmt>(
-            "x",
-            std::make_unique<IntLiteralExpr>(10, 1, 14),
-            1, 3));
+        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 3));
 
     std::vector<StringPart> parts;
-    StringPart p;
+    StringPart              p;
     p.kind = StringPart::TEXT;
     p.text = "hi";
     parts.push_back(std::move(p));
 
     statements.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 22),
-            1, 18));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 22), 1, 18));
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(statements), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1267,8 +1261,7 @@ TEST(Statement, BlockStatementNestedEmptyBlock)
     std::vector<std::unique_ptr<Stmt>> outerStatements;
     outerStatements.push_back(std::move(inner));
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1296,19 +1289,14 @@ TEST(Statement, BlockStatementNestedWithSummon)
 
     std::vector<std::unique_ptr<Stmt>> innerStatements;
     innerStatements.push_back(
-        std::make_unique<SummonStmt>(
-            "x",
-            std::make_unique<IntLiteralExpr>(1, 1, 16),
-            1, 5));
+        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(1, 1, 16), 1, 5));
 
-    auto innerBlock =
-        std::make_unique<BlockStmt>(std::move(innerStatements), 1, 3);
+    auto innerBlock = std::make_unique<BlockStmt>(std::move(innerStatements), 1, 3);
 
     std::vector<std::unique_ptr<Stmt>> outerStatements;
     outerStatements.push_back(std::move(innerBlock));
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(outerStatements), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1354,12 +1342,9 @@ TEST(Statement, BlockStatementSayInterpolatedString)
     parts.push_back(std::move(t2));
 
     statements.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 7),
-            1, 3));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 7), 1, 3));
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(statements), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1424,8 +1409,7 @@ TEST(Statement, BlockStatementStopsAtRightBrace)
     auto   actual = parser.parseStatement();
 
     std::vector<std::unique_ptr<Stmt>> statements;
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<BlockStmt>(std::move(statements), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(statements), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1446,7 +1430,7 @@ TEST(Statement, IfChainSimple)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     // Build expected AST
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
@@ -1458,15 +1442,13 @@ TEST(Statement, IfChainSimple)
     std::vector<std::unique_ptr<Stmt>> bodyStmts;
     {
         std::vector<StringPart> parts;
-        StringPart p;
+        StringPart              p;
         p.kind = StringPart::TEXT;
         p.text = "yes";
         parts.push_back(std::move(p));
 
-        bodyStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 1, 18),
-                1, 14));
+        bodyStmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 18), 1, 14));
     }
 
     auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 12);
@@ -1499,7 +1481,7 @@ TEST(IfChain, SingleBranch_SayString)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     // Condition: Identifier(x)
     auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
@@ -1508,17 +1490,48 @@ TEST(IfChain, SingleBranch_SayString)
     std::vector<std::unique_ptr<Stmt>> bodyStmts;
     {
         std::vector<StringPart> parts;
-        StringPart p;
+        StringPart              p;
         p.kind = StringPart::TEXT;
         p.text = "yes";
         parts.push_back(std::move(p));
 
-        bodyStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 1, 18),
-                1, 14));
+        bodyStmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 18), 1, 14));
     }
     auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::move(cond), std::move(body));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * should (affirmative) { }
+ * Edge: empty block should parse and produce a BlockStmt with 0 statements.
+ */
+TEST(IfChain, SingleBranch_EmptyBlock)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("affirmative", BOOL, true, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 20),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 22),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 24),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 25),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto cond = std::make_unique<BoolLiteralExpr>(true, 1, 9);
+
+    std::vector<std::unique_ptr<Stmt>> bodyStmts;
+    auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 22);
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
     branches.emplace_back(std::move(cond), std::move(body));
