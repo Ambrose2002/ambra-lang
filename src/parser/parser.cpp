@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -507,6 +508,110 @@ std::unique_ptr<Stmt> Parser::parseBlockStatement()
     return std::make_unique<BlockStmt>(std::move(statements), loc.line, loc.column);
 }
 
+std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> Parser::parseConditionAndBlock()
+{
+    // Expect '('
+    if (!match(LEFT_PAREN))
+    {
+        reportError(peek(), "Expected '(' after 'should'");
+        return {nullptr, nullptr};
+    }
+
+    // Parse condition expression
+    std::unique_ptr<Expr> condition = parseExpression();
+    if (!condition)
+    {
+        return {nullptr, nullptr};
+    }
+
+    // Expect ')'
+    if (!match(RIGHT_PAREN))
+    {
+        reportError(peek(), "Expected ')' after condition");
+        return {nullptr, nullptr};
+    }
+
+    if (!check(LEFT_BRACE))
+    {
+        reportError(peek(), "Expected '{' to start block");
+        return {nullptr, nullptr};
+    }
+
+    std::unique_ptr<Stmt> stmt = parseBlockStatement();
+    if (!stmt)
+    {
+        return {nullptr, nullptr};
+    }
+
+    auto block = std::unique_ptr<BlockStmt>(static_cast<BlockStmt*>(stmt.release()));
+
+    return {std::move(condition), std::move(block)};
+}
+
+std::unique_ptr<Stmt> Parser::parseIfChainStatement()
+{
+    // Consume 'should'
+    Token          shouldToken = advance();
+    SourceLocation loc = shouldToken.getLocation();
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+
+    // Parse first should-branch
+    auto [condition, block] = parseConditionAndBlock();
+    if (!condition || !block)
+    {
+        return nullptr;
+    }
+
+    branches.emplace_back(std::move(condition), std::move(block));
+
+    // Parse zero or more "otherwise should" branches
+    while (check(OTHERWISE))
+    {
+        // Lookahead to distinguish:
+        //   otherwise should (...) { ... }
+        //   otherwise { ... }
+        if (tokens[current + 1].getType() != SHOULD)
+        {
+            break;
+        }
+
+        advance(); // consume OTHERWISE
+        advance(); // consume SHOULD
+
+        auto [elseIfCond, elseIfBlock] = parseConditionAndBlock();
+        if (!elseIfCond || !elseIfBlock)
+        {
+            return nullptr;
+        }
+
+        branches.emplace_back(std::move(elseIfCond), std::move(elseIfBlock));
+    }
+
+    // Optional trailing else-branch
+    std::unique_ptr<BlockStmt> elseBranch = nullptr;
+
+    if (match(OTHERWISE))
+    {
+        if (!check(LEFT_BRACE))
+        {
+            reportError(peek(), "Expected '{' after 'otherwise'");
+            return nullptr;
+        }
+
+        std::unique_ptr<Stmt> stmt = parseBlockStatement();
+        if (!stmt)
+        {
+            return nullptr;
+        }
+
+        elseBranch = std::unique_ptr<BlockStmt>(static_cast<BlockStmt*>(stmt.release()));
+    }
+
+    return std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBranch), loc.line,
+                                         loc.column);
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement()
 {
     Token token = peek();
@@ -525,7 +630,12 @@ std::unique_ptr<Stmt> Parser::parseStatement()
     {
         return parseBlockStatement();
     }
+    case SHOULD:
+    {
+        return parseIfChainStatement();
+    }
     default:
+        reportError(peek(), "Unexpected token");
         return nullptr;
     }
 }
