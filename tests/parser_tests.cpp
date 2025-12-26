@@ -3430,3 +3430,157 @@ TEST(ParseProgram_Basics, MixedStatements)
     ASSERT_FALSE(parser.hadError());
     ASSERT_EQ(program.size(), 2);
 }
+
+TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
+{
+    std::vector<Token> tokens = {
+        // summon age = 10;
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("age", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 12),
+        Token("10", INTEGER, 10, 1, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 16),
+
+        // should (age >= 10) {
+        Token("should", SHOULD, std::monostate{}, 2, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 8),
+        Token("age", IDENTIFIER, std::monostate{}, 2, 9),
+        Token(">=", GREATER_EQUAL, std::monostate{}, 2, 13),
+        Token("10", INTEGER, 10, 2, 16),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 18),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 20),
+
+        // say "You are allowed to play the game";
+        Token("say", SAY, std::monostate{}, 3, 5),
+        Token("\"You are allowed to play the game\"", STRING,
+              std::string("You are allowed to play the game"), 3, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 45),
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 1),
+
+        // otherwise should (age > 5) {
+        Token("otherwise", OTHERWISE, std::monostate{}, 5, 1),
+        Token("should", SHOULD, std::monostate{}, 5, 11),
+        Token("(", LEFT_PAREN, std::monostate{}, 5, 18),
+        Token("age", IDENTIFIER, std::monostate{}, 5, 19),
+        Token(">", GREATER, std::monostate{}, 5, 23),
+        Token("5", INTEGER, 5, 5, 25),
+        Token(")", RIGHT_PAREN, std::monostate{}, 5, 26),
+        Token("{", LEFT_BRACE, std::monostate{}, 5, 28),
+
+        // say "You can go tomorrow";
+        Token("say", SAY, std::monostate{}, 6, 5),
+        Token("\"You can go tomorrow\"", STRING,
+              std::string("You can go tomorrow"), 6, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 6, 32),
+        Token("}", RIGHT_BRACE, std::monostate{}, 7, 1),
+
+        // otherwise {
+        Token("otherwise", OTHERWISE, std::monostate{}, 8, 1),
+        Token("{", LEFT_BRACE, std::monostate{}, 8, 11),
+
+        // say "You are not allowed to go ever";
+        Token("say", SAY, std::monostate{}, 9, 5),
+        Token("\"You are not allowed to go ever\"", STRING,
+              std::string("You are not allowed to go ever"), 9, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 9, 43),
+        Token("}", RIGHT_BRACE, std::monostate{}, 10, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 10, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // -------- Expected AST --------
+
+    std::vector<std::unique_ptr<Stmt>> expectedStatements;
+
+    // summon age = 10;
+    expectedStatements.push_back(
+        std::make_unique<SummonStmt>(
+            "age",
+            std::make_unique<IntLiteralExpr>(10, 1, 14),
+            1, 1));
+
+    // --- IF CHAIN ---
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+
+    // Branch 1: age >= 10
+    {
+        auto condition = std::make_unique<BinaryExpr>(
+            std::make_unique<IdentifierExpr>("age", 2, 9),
+            GreaterEqual,
+            std::make_unique<IntLiteralExpr>(10, 2, 16),
+            2, 13);
+
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        {
+            std::vector<StringPart> parts;
+            parts.push_back({StringPart::TEXT,
+                             "You are allowed to play the game",
+                             nullptr});
+
+            stmts.push_back(std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 3, 9),
+                3, 5));
+        }
+
+        branches.emplace_back(
+            std::move(condition),
+            std::make_unique<BlockStmt>(std::move(stmts), 2, 20));
+    }
+
+    // Branch 2: age > 5
+    {
+        auto condition = std::make_unique<BinaryExpr>(
+            std::make_unique<IdentifierExpr>("age", 5, 19),
+            Greater,
+            std::make_unique<IntLiteralExpr>(5, 5, 25),
+            5, 23);
+
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        {
+            std::vector<StringPart> parts;
+            parts.push_back({StringPart::TEXT, "You can go tomorrow", nullptr});
+
+            stmts.push_back(std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 6, 9),
+                6, 5));
+        }
+
+        branches.emplace_back(
+            std::move(condition),
+            std::make_unique<BlockStmt>(std::move(stmts), 5, 28));
+    }
+
+    // Else branch
+    std::unique_ptr<BlockStmt> elseBranch;
+    {
+        std::vector<std::unique_ptr<Stmt>> stmts;
+        std::vector<StringPart> parts;
+        parts.push_back({StringPart::TEXT,
+                         "You are not allowed to go ever",
+                         nullptr});
+
+        stmts.push_back(std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 9, 9),
+            9, 5));
+
+        elseBranch = std::make_unique<BlockStmt>(std::move(stmts), 8, 11);
+    }
+
+    expectedStatements.push_back(
+        std::make_unique<IfChainStmt>(
+            std::move(branches),
+            std::move(elseBranch),
+            2, 1));
+
+    Program expected(
+        std::move(expectedStatements),
+        false,
+        {1, 1},
+        {10, 2});
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
