@@ -60,7 +60,7 @@ bool Parser::check(TokenType t)
     // Returns true if the current token is of type t.
     // Returns false if at EOF_TOKEN.
     // Does not consume the token.
-    if (isAtEnd())
+    if (isAtEnd() && t != EOF_TOKEN)
     {
         return false;
     }
