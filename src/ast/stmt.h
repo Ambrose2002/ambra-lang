@@ -39,17 +39,25 @@ class Stmt
 {
   public:
     StmtKind  kind; ///< The concrete type of this statement
-    SourceLoc loc;
+    SourceLoc loc;  ///< The source location of this statement
 
     /// Virtual destructor for polymorphic deletion
     virtual ~Stmt() {};
 
+    /**
+     * @brief Compares two Stmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both statements are equivalent
+     */
     virtual bool operator==(const Stmt& other) const = 0;
+
     /**
      * @brief Return a human-readable representation of this statement.
      *
      * Used by tests and debugging output. Derived classes must implement a
      * concise serialization suitable for debugging (not necessarily reversible).
+     *
+     * @return String representation of this statement
      */
     virtual std::string toString() const = 0;
 };
@@ -100,6 +108,10 @@ class SummonStmt : public Stmt
         return *initializer == *o.initializer;
     }
 
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
     std::string toString() const override
     {
         std::string out = "Summon(";
@@ -162,6 +174,10 @@ class SayStmt : public Stmt
     std::unique_ptr<Expr> expression; ///< The expression to print
 
   public:
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
     std::string toString() const override
     {
         return std::string("Say(") + (expression ? expression->toString() : std::string("null")) +
@@ -230,6 +246,10 @@ class BlockStmt : public Stmt
     std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
 
   public:
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
     std::string toString() const override
     {
         std::string out = "Block([";
@@ -348,6 +368,10 @@ class IfChainStmt : public Stmt
         return true;
     }
 
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
     std::string toString() const override
     {
         std::string out = "IfChain([";
@@ -427,6 +451,10 @@ class WhileStmt : public Stmt
     }
 
   public:
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
     std::string toString() const override
     {
         return std::string("While(") + (condition ? condition->toString() : std::string("null")) +

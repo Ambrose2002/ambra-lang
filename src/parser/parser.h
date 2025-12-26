@@ -42,10 +42,20 @@ class Parser
      */
     std::unique_ptr<Expr> parseExpression();
 
+    /**
+     * @brief Parse the next statement from the token stream.
+     *
+     * This is the top-level entry point for statement parsing. It dispatches to
+     * the appropriate statement parser based on the current token.
+     *
+     * @return unique_ptr to the parsed `Stmt`, or nullptr if parsing failed.
+     */
     std::unique_ptr<Stmt> parseStatement();
 
     /**
      * @brief Returns true if a parse error was encountered.
+     *
+     * @return true if an error was detected during parsing, false otherwise.
      */
     bool hadError();
 
@@ -201,15 +211,59 @@ class Parser
      */
     std::unique_ptr<Expr> parsePrimary();
 
+    /**
+     * @brief Parse a say (output/print) statement.
+     *
+     * Handles the say statement grammar, returning nullptr on failure.
+     *
+     * @return Parsed `SayStmt` or nullptr on error.
+     */
     std::unique_ptr<Stmt> parseSayStatement();
 
+    /**
+     * @brief Parse a summon (variable declaration) statement.
+     *
+     * Handles the summon statement grammar, returning nullptr on failure.
+     *
+     * @return Parsed `SummonStmt` or nullptr on error.
+     */
     std::unique_ptr<Stmt> parseSummonStatement();
 
+    /**
+     * @brief Parse a block statement (sequence of statements in braces).
+     *
+     * Handles the block statement grammar, returning nullptr on failure.
+     *
+     * @return Parsed `BlockStmt` or nullptr on error.
+     */
     std::unique_ptr<Stmt> parseBlockStatement();
 
+    /**
+     * @brief Parse an if-chain statement (if-else-if-else structure).
+     *
+     * Handles the if-chain statement grammar with multiple branches and an optional
+     * else clause, returning nullptr on failure.
+     *
+     * @return Parsed `IfChainStmt` or nullptr on error.
+     */
     std::unique_ptr<Stmt> parseIfChainStatement();
 
+    /**
+     * @brief Parse a while loop statement.
+     *
+     * Handles the while loop statement grammar, returning nullptr on failure.
+     *
+     * @return Parsed `WhileStmt` or nullptr on error.
+     */
     std::unique_ptr<Stmt> parseWhileStatement();
 
+    /**
+     * @brief Parse a condition and associated block statement.
+     *
+     * Helper method for parsing control flow statements that require a condition
+     * expression followed by a block statement. Used by if and while statements.
+     *
+     * @return Tuple of parsed condition `Expr` and block `BlockStmt`, both nullptr on error.
+     */
     std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> parseConditionAndBlock();
 };

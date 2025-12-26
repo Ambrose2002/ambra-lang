@@ -2238,7 +2238,7 @@ TEST(WhileStatement, IdentifierConditionSingleSay)
 
 /**
  * aslongas ((x + 1) * 2 > 3 == affirmative) { }
- * Tests full precedence stack inside while condition (same style as your if-chain test).
+ * Tests full precedence stack inside while condition.
  */
 TEST(WhileStatement, ComplexConditionFullPrecedence)
 {
