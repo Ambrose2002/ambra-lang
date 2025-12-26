@@ -1977,3 +1977,69 @@ TEST(IfChain, NestedIfInsideBlock)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+/**
+ * should ((x + 1) * 2 > 3 == affirmative) { }
+ *
+ * Tests full precedence stack inside a condition expression.
+ */
+TEST(IfChain, ConditionWithFullExpressionPrecedence)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 9),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        Token("+", PLUS, std::monostate{}, 1, 12),
+        Token("1", INTEGER, 1, 1, 14),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 15),
+        Token("*", STAR, std::monostate{}, 1, 17),
+        Token("2", INTEGER, 2, 1, 19),
+        Token(">", GREATER, std::monostate{}, 1, 21),
+        Token("3", INTEGER, 3, 1, 23),
+        Token("==", EQUAL_EQUAL, std::monostate{}, 1, 25),
+        Token("affirmative", BOOL, true, 1, 28),
+
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 40),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 42),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 43),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 44),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    // (((x + 1) * 2) > 3) == true
+    auto expr =
+        std::make_unique<BinaryExpr>(
+            std::make_unique<BinaryExpr>(
+                std::make_unique<BinaryExpr>(
+                    std::make_unique<GroupingExpr>(
+                        std::make_unique<BinaryExpr>(
+                            std::make_unique<IdentifierExpr>("x", 1, 10),
+                            Add,
+                            std::make_unique<IntLiteralExpr>(1, 1, 14),
+                            1, 12),
+                        1, 9),
+                    Multiply,
+                    std::make_unique<IntLiteralExpr>(2, 1, 19),
+                    1, 17),
+                Greater,
+                std::make_unique<IntLiteralExpr>(3, 1, 23),
+                1, 21),
+            EqualEqual,
+            std::make_unique<BoolLiteralExpr>(true, 1, 28),
+            1, 25);
+
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 42);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::move(expr), std::move(block));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
