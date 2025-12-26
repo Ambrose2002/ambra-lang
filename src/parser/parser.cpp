@@ -707,6 +707,11 @@ Program Parser::parseProgram()
                 continue;
             }
 
+            if (match(RIGHT_BRACE))
+            {
+                continue;
+            }
+
             if (check(EOF_TOKEN))
             {
                 break;
