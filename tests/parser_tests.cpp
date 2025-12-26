@@ -3277,3 +3277,156 @@ TEST(ParseProgram_Basics, SummonThenSayWithInterpolation)
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
+
+TEST(ParseProgram_Recovery, StrayRightBraceAtTopLevel)
+{
+    std::vector<Token> tokens = {
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 2),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 0);
+}
+
+TEST(ParseProgram_Recovery, ErrorThenRightBraceTerminates)
+{
+    std::vector<Token> tokens = {
+        // Invalid statement
+        Token("+", PLUS, std::monostate{}, 1, 1),
+
+        // Stray brace
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 2),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 3),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 0);
+}
+
+TEST(ParseProgram_Recovery, ErrorAtEOF)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("1", INTEGER, 1, 1, 5),
+        // missing semicolon
+        Token("", EOF_TOKEN, std::monostate{}, 1, 6),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 0);
+}
+
+TEST(ParseProgram_Recovery, InvalidStatementDropped)
+{
+    std::vector<Token> tokens = {
+        // Invalid say (missing expression)
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 4),
+
+        // Valid statement
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("1", INTEGER, 1, 2, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 13),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 14),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 1);
+}
+
+TEST(ParseProgram_Recovery, MultipleSemicolonsAfterError)
+{
+    std::vector<Token> tokens = {
+        Token("+", PLUS, std::monostate{}, 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 2),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 3),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("5", INTEGER, 5, 2, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 13),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 14),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 1);
+}
+
+TEST(ParseProgram_Recovery, ErrorBeforeBlock)
+{
+    std::vector<Token> tokens = {
+        Token("+", PLUS, std::monostate{}, 1, 1),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 1),
+        Token("}", RIGHT_BRACE, std::monostate{}, 2, 2),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 3),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 1); // block survives
+}
+
+TEST(ParseProgram_Recovery, GarbageTokensTerminate)
+{
+    std::vector<Token> tokens = {
+        Token("+", PLUS, std::monostate{}, 1, 1),
+        Token("+", PLUS, std::monostate{}, 1, 2),
+        Token("+", PLUS, std::monostate{}, 1, 3),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 4),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(program.size(), 0);
+}
+
+TEST(ParseProgram_Basics, MixedStatements)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("say", SAY, std::monostate{}, 2, 1),
+        Token("\"hi\"", STRING, std::string("hi"), 2, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 9),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 10),
+    };
+
+    Parser parser(tokens);
+    Program program = parser.parseProgram();
+
+    ASSERT_FALSE(parser.hadError());
+    ASSERT_EQ(program.size(), 2);
+}
