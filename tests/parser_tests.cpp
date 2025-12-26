@@ -2941,3 +2941,339 @@ TEST(ParseProgram_Recovery, UnterminatedBlockStopsAtEOF)
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
 }
+
+// Only stray semicolons -> no statements, hadError = true.
+TEST(ParseProgram_Basics, OnlySemicolons_NoStatements)
+{
+    std::vector<Token> tokens = {
+        Token(";", SEMI_COLON, std::monostate{}, 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 2),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 3),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 3};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
+
+// Leading semicolons are skipped; then a valid say statement is parsed.
+TEST(ParseProgram_Basics, LeadingSemicolonsThenSay)
+{
+    std::vector<Token> tokens = {
+        Token(";", SEMI_COLON, std::monostate{}, 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 2),
+
+        Token("say", SAY, std::monostate{}, 1, 4),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 8),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // Expected: single say statement
+    std::vector<StringPart> parts;
+    StringPart p; p.kind = StringPart::TEXT; p.text = "hi";
+    parts.push_back(std::move(p));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 8),
+            1, 4));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 13};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
+
+// Two top-level blocks: first empty, second with a say.
+TEST(ParseProgram_Blocks, TwoBlocks_EmptyThenSay)
+{
+    std::vector<Token> tokens = {
+        // Block 1: {}
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 2),
+
+        // Block 2:
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 1),
+        Token("say", SAY, std::monostate{}, 3, 3),
+        Token("\"hi\"", STRING, std::string("hi"), 3, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 4, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // Expected block 1: empty
+    std::vector<std::unique_ptr<Stmt>> block1Stmts;
+    auto block1 = std::make_unique<BlockStmt>(std::move(block1Stmts), 1, 1);
+
+    // Expected block 2: say "hi";
+    std::vector<StringPart> parts;
+    StringPart p; p.kind = StringPart::TEXT; p.text = "hi";
+    parts.push_back(std::move(p));
+
+    std::vector<std::unique_ptr<Stmt>> block2Stmts;
+    block2Stmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 3, 7),
+            3, 3));
+    auto block2 = std::make_unique<BlockStmt>(std::move(block2Stmts), 2, 1);
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(std::move(block1));
+    expectedStmts.push_back(std::move(block2));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{4, 2};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Single if-chain program: should (x) { }
+TEST(ParseProgram_ControlFlow, IfChain_NoElse_SingleBranch)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
+    std::vector<std::unique_ptr<Stmt>> bodyStmts;
+    auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::move(cond), std::move(body));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 15};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Program with while, then if-chain, then a block.
+TEST(ParseProgram_ControlFlow, While_ThenIf_ThenBlock)
+{
+    std::vector<Token> tokens = {
+        // while: aslongas (x) { say "w"; }
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"w\"", STRING, std::string("w"), 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+
+        // if: should (affirmative) { }
+        Token("should", SHOULD, std::monostate{}, 3, 3),
+        Token("(", LEFT_PAREN, std::monostate{}, 3, 10),
+        Token("affirmative", BOOL, true, 3, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 3, 23),
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 25),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 26),
+
+        // block: { say "b"; }
+        Token("{", LEFT_BRACE, std::monostate{}, 4, 1),
+        Token("say", SAY, std::monostate{}, 5, 3),
+        Token("\"b\"", STRING, std::string("b"), 5, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 5, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 6, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 6, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // while
+    auto wcond = std::make_unique<IdentifierExpr>("x", 1, 11);
+    std::vector<StringPart> wparts;
+    StringPart wp; wp.kind = StringPart::TEXT; wp.text = "w";
+    wparts.push_back(std::move(wp));
+    std::vector<std::unique_ptr<Stmt>> wbodyStmts;
+    wbodyStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(wparts), 2, 7),
+            2, 3));
+    auto wblock = std::make_unique<BlockStmt>(std::move(wbodyStmts), 1, 14);
+
+    // if
+    auto icond = std::make_unique<BoolLiteralExpr>(true, 3, 11);
+    std::vector<std::unique_ptr<Stmt>> ibodyStmts;
+    auto iblock = std::make_unique<BlockStmt>(std::move(ibodyStmts), 3, 25);
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> ibranches;
+    ibranches.emplace_back(std::move(icond), std::move(iblock));
+
+    // block
+    std::vector<StringPart> bparts;
+    StringPart bp; bp.kind = StringPart::TEXT; bp.text = "b";
+    bparts.push_back(std::move(bp));
+    std::vector<std::unique_ptr<Stmt>> bbodyStmts;
+    bbodyStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(bparts), 5, 7),
+            5, 3));
+    auto bblock = std::make_unique<BlockStmt>(std::move(bbodyStmts), 4, 1);
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<WhileStmt>(std::move(wcond), std::move(wblock), 1, 1));
+    expectedStmts.push_back(
+        std::make_unique<IfChainStmt>(std::move(ibranches), nullptr, 3, 3));
+    expectedStmts.push_back(std::move(bblock));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{6, 2};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Top-level error: say missing semicolon before EOF -> no statements, hadError = true.
+TEST(ParseProgram_Errors, TopLevelSayMissingSemicolonEOF)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 5),
+        // Missing ';'
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 7};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
+
+// Recovery: ERROR, then semicolon boundary, then a valid say.
+TEST(ParseProgram_Recovery, ErrorThenSemicolonThenSay)
+{
+    std::vector<Token> tokens = {
+        Token("@", ERROR, std::string("Unexpected character"), 1, 1),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 2),
+
+        Token("say", SAY, std::monostate{}, 1, 4),
+        Token("\"ok\"", STRING, std::string("ok"), 1, 8),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<StringPart> parts;
+    StringPart t; t.kind = StringPart::TEXT; t.text = "ok";
+    parts.push_back(std::move(t));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 8),
+            1, 4));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 13};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
+
+// Summon then say with interpolation at top level.
+TEST(ParseProgram_Basics, SummonThenSayWithInterpolation)
+{
+    std::vector<Token> tokens = {
+        // summon a = 1;
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("a", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        // say "total: {1+2}";
+        Token("say", SAY, std::monostate{}, 2, 1),
+        Token("\"total: \"", STRING, std::string("total: "), 2, 5),
+        Token("{", INTERP_START, std::monostate{}, 2, 13),
+        Token("1", INTEGER, 1, 2, 14),
+        Token("+", PLUS, std::monostate{}, 2, 16),
+        Token("2", INTEGER, 2, 2, 18),
+        Token("}", INTERP_END, std::monostate{}, 2, 19),
+        Token("\"\"", STRING, std::string(""), 2, 20),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 22),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 23),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // Expected summon
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<SummonStmt>(
+            "a",
+            std::make_unique<IntLiteralExpr>(1, 1, 12),
+            1, 1));
+
+    // Expected say with interpolation
+    std::vector<StringPart> parts;
+    parts.push_back({StringPart::TEXT, "total: ", nullptr});
+    parts.push_back({
+        StringPart::EXPR, "",
+        std::make_unique<BinaryExpr>(
+            std::make_unique<IntLiteralExpr>(1, 2, 14),
+            Add,
+            std::make_unique<IntLiteralExpr>(2, 2, 18),
+            2, 16)});
+    parts.push_back({StringPart::TEXT, "", nullptr});
+
+    expectedStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 2, 5),
+            2, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{2, 23};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
