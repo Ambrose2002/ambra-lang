@@ -2872,3 +2872,72 @@ TEST(ParseProgram_ControlFlow, WhileLoopSimple)
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
+
+// A bad top-level token (ERROR) should not prevent parsing a following block.
+// parseProgram recovery should stop at LEFT_BRACE and allow parseStatement() to handle it.
+TEST(ParseProgram_Recovery, RecoverAtLeftBraceAndParseBlock)
+{
+    std::vector<Token> tokens = {
+        Token("@", ERROR, std::string("Unexpected character"), 1, 1),
+
+        // Recovery boundary: block begins
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 3),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"ok\"", STRING, std::string("ok"), 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 11),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> blockStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart t; t.kind = StringPart::TEXT; t.text = "ok";
+        parts.push_back(std::move(t));
+        blockStmts.push_back(
+            std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 2, 7),
+                2, 3));
+    }
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<BlockStmt>(std::move(blockStmts), 1, 3));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{3, 2};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
+
+// Unterminated block should set error and stop at EOF.
+// Expected: no statements collected (since block parse fails).
+TEST(ParseProgram_Recovery, UnterminatedBlockStopsAtEOF)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"oops\"", STRING, std::string("oops"), 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 13),
+
+        // Missing RIGHT_BRACE
+        Token("", EOF_TOKEN, std::monostate{}, 3, 1),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts; // nothing retained
+    SourceLoc start{1, 1};
+    SourceLoc end{3, 1};
+    Program expected(std::move(expectedStmts), true, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
