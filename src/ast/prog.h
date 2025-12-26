@@ -24,12 +24,36 @@ class Program
         return statements.size() == 0;
     }
 
-    bool operator==(Program other) {
-
+    bool operator==(Program other)
+    {
+        if (statements.size() != other.statements.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < statements.size(); ++i)
+        {
+            if (!(*statements[i] == *other.statements[i]))
+            {
+                return false;
+            }
+        }
+        return hasError == other.hasError;
     }
 
-    std::string toString() {
-        
+    std::string toString()
+    {
+        std::string result = "Program(\n";
+        for (size_t i = 0; i < statements.size(); ++i)
+        {
+            result += "  " + statements[i]->toString();
+            if (i < statements.size() - 1)
+            {
+                result += ",";
+            }
+            result += "\n";
+        }
+        result += ")";
+        return result;
     }
 
   private:
