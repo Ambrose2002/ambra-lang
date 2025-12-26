@@ -2456,3 +2456,149 @@ TEST(WhileStatement, IfChainInsideBody)
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
+
+// === While error tests ===
+
+/**
+ * aslongas x) { }
+ * Missing '(' after aslongas -> should error and return nullptr.
+ */
+TEST(WhileErrors, MissingLeftParen)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 10),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 11),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 13),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * aslongas (x { }
+ * Missing ')' after condition -> should error and return nullptr.
+ */
+TEST(WhileErrors, MissingRightParen)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 13),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * aslongas (x) say "hi";
+ * Missing '{' after condition -> should error and return nullptr.
+ */
+TEST(WhileErrors, MissingLeftBrace)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+
+        Token("say", SAY, std::monostate{}, 1, 14),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 18),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 22),
+
+        Token("", EOF_TOKEN, std::monostate{}, 1, 23),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * aslongas () { }
+ * Empty condition -> parseExpression should fail -> error + nullptr.
+ */
+TEST(WhileErrors, EmptyCondition)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 11),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 13),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * aslongas (x) {
+ *   say "hi"
+ * }
+ * Missing semicolon inside body -> should error and return nullptr.
+ */
+TEST(WhileErrors, BodyStatementMissingSemicolon)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"hi\"", STRING, std::string("hi"), 2, 7),
+        // Missing SEMI_COLON
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * aslongas (x) {  EOF
+ * Unterminated block -> should error and return nullptr.
+ */
+TEST(WhileErrors, UnterminatedBlockEOF)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 15),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    ASSERT_TRUE(parser.hadError());
+    ASSERT_EQ(actual, nullptr);
+}
