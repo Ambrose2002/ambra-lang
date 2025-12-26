@@ -1911,7 +1911,7 @@ TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
  *
  * Tests nested if-chain parsing inside a block.
  */
-TEST(IfChain, NestedIfInsideBlock)
+TEST(Statement, NestedIfInsideBlock)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1977,7 +1977,7 @@ TEST(IfChain, NestedIfInsideBlock)
  *
  * Tests full precedence stack inside a condition expression.
  */
-TEST(IfChain, ConditionWithFullExpressionPrecedence)
+TEST(Statement, ConditionWithFullExpressionPrecedence)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -2035,7 +2035,7 @@ TEST(IfChain, ConditionWithFullExpressionPrecedence)
  *
  * Tests interpolation inside say statement inside if-branch.
  */
-TEST(IfChain, InterpolatedStringInsideBranch)
+TEST(Statement, InterpolatedStringInsideBranch)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -2075,6 +2075,88 @@ TEST(IfChain, InterpolatedStringInsideBranch)
 
     std::unique_ptr<Stmt> expected =
         std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * should (x) {
+ *   should (y) { say "a"; }
+ * } otherwise { say "b"; }
+ *
+ * Ensures else binds to the outer should, not the inner one.
+ */
+TEST(Statement, DanglingElseAttachesToOuter)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+
+        Token("should", SHOULD, std::monostate{}, 2, 3),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 10),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 14),
+        Token("say", SAY, std::monostate{}, 3, 5),
+        Token("\"a\"", STRING, std::string("a"), 3, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 3),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 5, 3),
+        Token("{", LEFT_BRACE, std::monostate{}, 5, 13),
+        Token("say", SAY, std::monostate{}, 6, 5),
+        Token("\"b\"", STRING, std::string("b"), 6, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 6, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 7, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 7, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    // Inner if
+    std::vector<std::unique_ptr<Stmt>> innerStmts;
+    {
+        std::vector<StringPart> parts;
+        parts.push_back({StringPart::TEXT, "a", nullptr});
+        innerStmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 3, 9), 3, 5));
+    }
+
+    auto innerBlock = std::make_unique<BlockStmt>(std::move(innerStmts), 2, 14);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> innerBranches;
+    innerBranches.emplace_back(std::make_unique<IdentifierExpr>("y", 2, 11), std::move(innerBlock));
+
+    auto innerIf = std::make_unique<IfChainStmt>(std::move(innerBranches), nullptr, 2, 3);
+
+    // Outer then block
+    std::vector<std::unique_ptr<Stmt>> outerThen;
+    outerThen.push_back(std::move(innerIf));
+
+    auto outerThenBlock = std::make_unique<BlockStmt>(std::move(outerThen), 1, 12);
+
+    // Else block
+    std::vector<std::unique_ptr<Stmt>> elseStmts;
+    {
+        std::vector<StringPart> parts;
+        parts.push_back({StringPart::TEXT, "b", nullptr});
+        elseStmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 6, 9), 6, 5));
+    }
+    auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 5, 13);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::make_unique<IdentifierExpr>("x", 1, 9), std::move(outerThenBlock));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBlock), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
