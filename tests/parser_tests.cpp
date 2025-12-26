@@ -1465,7 +1465,7 @@ TEST(Statement, IfChainSimple)
  * should (x) { say "yes"; }
  * Baseline: single-branch if-chain with a single statement in the block.
  */
-TEST(IfChain, SingleBranch_SayString)
+TEST(Statement, SingleBranch_SayString)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1513,7 +1513,7 @@ TEST(IfChain, SingleBranch_SayString)
  * should (affirmative) { }
  * Edge: empty block should parse and produce a BlockStmt with 0 statements.
  */
-TEST(IfChain, SingleBranch_EmptyBlock)
+TEST(Statement, SingleBranch_EmptyBlock)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1546,7 +1546,7 @@ TEST(IfChain, SingleBranch_EmptyBlock)
  * should (x) { say "a"; } otherwise { say "b"; }
  * Standard: else-branch exists, no else-if branches.
  */
-TEST(IfChain, WithElseBranch)
+TEST(Statement, WithElseBranch)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1613,7 +1613,7 @@ TEST(IfChain, WithElseBranch)
  * should (x) { say "a"; } otherwise should (y) { say "b"; }
  * Standard: two branches, no trailing else.
  */
-TEST(IfChain, OneElseIf_NoElse)
+TEST(Statement, OneElseIf_NoElse)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1687,7 +1687,7 @@ TEST(IfChain, OneElseIf_NoElse)
  * should (x) {...} otherwise should (y) {...} otherwise should (z) {...} otherwise {...}
  * Full chain: multiple else-if branches and a trailing else.
  */
-TEST(IfChain, MultipleElseIf_WithElse)
+TEST(Statement, MultipleElseIf_WithElse)
 {
     std::vector<Token> tokens = {
         // should (x) { say "a"; }
@@ -1899,4 +1899,81 @@ TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
+}
+
+/**
+ * should (x) {
+ *   should (y) {
+ *     say "inner";
+ *   }
+ * }
+ *
+ * Tests nested if-chain parsing inside a block.
+ */
+TEST(IfChain, NestedIfInsideBlock)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+
+        Token("should", SHOULD, std::monostate{}, 2, 3),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 10),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 14),
+        Token("say", SAY, std::monostate{}, 3, 5),
+        Token("\"inner\"", STRING, std::string("inner"), 3, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 16),
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 3),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 5, 2),
+    };
+
+    Parser parser(tokens);
+    auto actual = parser.parseStatement();
+
+    // Inner if
+    std::vector<std::unique_ptr<Stmt>> innerStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart p; p.kind = StringPart::TEXT; p.text = "inner";
+        parts.push_back(std::move(p));
+
+        innerStmts.push_back(
+            std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 3, 9),
+                3, 5));
+    }
+
+    auto innerBlock =
+        std::make_unique<BlockStmt>(std::move(innerStmts), 2, 14);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> innerBranches;
+    innerBranches.emplace_back(
+        std::make_unique<IdentifierExpr>("y", 2, 11),
+        std::move(innerBlock));
+
+    auto innerIf =
+        std::make_unique<IfChainStmt>(std::move(innerBranches), nullptr, 2, 3);
+
+    // Outer block
+    std::vector<std::unique_ptr<Stmt>> outerStmts;
+    outerStmts.push_back(std::move(innerIf));
+
+    auto outerBlock =
+        std::make_unique<BlockStmt>(std::move(outerStmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> outerBranches;
+    outerBranches.emplace_back(
+        std::make_unique<IdentifierExpr>("x", 1, 9),
+        std::move(outerBlock));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(outerBranches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
 }
