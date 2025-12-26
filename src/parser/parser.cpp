@@ -15,7 +15,8 @@ Token Parser::peek()
 {
     // Returns the current token without consuming it.
     // returns EOF token if current is out of bounds.
-    if (current >= tokens.size()) {
+    if (current >= tokens.size())
+    {
         return tokens.back();
     }
     return tokens[current];
@@ -529,7 +530,7 @@ std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> Parser::parseCondi
     // Expect '('
     if (!match(LEFT_PAREN))
     {
-        reportError(peek(), "Expected '(' after 'should'");
+        reportError(peek(), "Expected '('");
         return {nullptr, nullptr};
     }
 
@@ -628,6 +629,22 @@ std::unique_ptr<Stmt> Parser::parseIfChainStatement()
                                          loc.column);
 }
 
+std::unique_ptr<Stmt> Parser::parseWhileStatement()
+{
+    Token          aslongasToken = advance();
+    SourceLocation loc = aslongasToken.getLocation();
+
+    auto [condition, block] = parseConditionAndBlock();
+
+    if (!condition || !block)
+    {
+        return nullptr;
+    }
+
+    return std::make_unique<WhileStmt>(std::move(condition), std::move(block), loc.line,
+                                       loc.column);
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement()
 {
     Token token = peek();
@@ -649,6 +666,10 @@ std::unique_ptr<Stmt> Parser::parseStatement()
     case SHOULD:
     {
         return parseIfChainStatement();
+    }
+    case ASLONGAS:
+    {
+        return parseWhileStatement();
     }
     default:
         reportError(peek(), "Unexpected token");

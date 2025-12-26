@@ -209,5 +209,7 @@ class Parser
 
     std::unique_ptr<Stmt> parseIfChainStatement();
 
+    std::unique_ptr<Stmt> parseWhileStatement();
+
     std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> parseConditionAndBlock();
 };
