@@ -62,6 +62,28 @@ class Program
         return result;
     }
 
+    using StmtIterator = std::vector<std::unique_ptr<Stmt>>::const_iterator;
+
+    StmtIterator begin() const
+    {
+        return statements.begin();
+    }
+
+    StmtIterator end() const
+    {
+        return statements.end();
+    }
+
+    StmtIterator cbegin() const
+    {
+        return statements.cbegin();
+    }
+
+    StmtIterator cend() const
+    {
+        return statements.cend();
+    }
+
   private:
     std::vector<std::unique_ptr<Stmt>> statements;
     SourceLoc                          startLoc;
