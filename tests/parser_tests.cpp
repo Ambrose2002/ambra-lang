@@ -2751,3 +2751,124 @@ TEST(ParseProgram_Blocks, TopLevelBlock)
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
+
+// Parses: should (x > 0) { say "pos"; } otherwise { say "neg"; }
+TEST(ParseProgram_ControlFlow, IfChainWithElse)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(">", GREATER, std::monostate{}, 1, 11),
+        Token("0", INTEGER, 0, 1, 13),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 14),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 16),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"pos\"", STRING, std::string("pos"), 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 3, 3),
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 13),
+        Token("say", SAY, std::monostate{}, 4, 3),
+        Token("\"neg\"", STRING, std::string("neg"), 4, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 4, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 5, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    // Condition: x > 0
+    auto cond = std::make_unique<BinaryExpr>(
+        std::make_unique<IdentifierExpr>("x", 1, 9),
+        Greater,
+        std::make_unique<IntLiteralExpr>(0, 1, 13),
+        1, 11);
+
+    // then block: { say "pos"; }
+    std::vector<std::unique_ptr<Stmt>> thenStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart t; t.kind = StringPart::TEXT; t.text = "pos";
+        parts.push_back(std::move(t));
+        thenStmts.push_back(
+            std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 2, 7),
+                2, 3));
+    }
+    auto thenBlock = std::make_unique<BlockStmt>(std::move(thenStmts), 1, 16);
+
+    // else block: { say "neg"; }
+    std::vector<std::unique_ptr<Stmt>> elseStmts;
+    {
+        std::vector<StringPart> parts;
+        StringPart t; t.kind = StringPart::TEXT; t.text = "neg";
+        parts.push_back(std::move(t));
+        elseStmts.push_back(
+            std::make_unique<SayStmt>(
+                std::make_unique<StringExpr>(std::move(parts), 4, 7),
+                4, 3));
+    }
+    auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 3, 13);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.push_back(std::make_tuple(std::move(cond), std::move(thenBlock)));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBlock), 1, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{5, 2};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Parses: aslongas (x < 3) { say x; }
+TEST(ParseProgram_ControlFlow, WhileLoopSimple)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token("<", LESS, std::monostate{}, 1, 13),
+        Token("3", INTEGER, 3, 1, 15),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 16),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 18),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 8),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    auto cond = std::make_unique<BinaryExpr>(
+        std::make_unique<IdentifierExpr>("x", 1, 11),
+        Less,
+        std::make_unique<IntLiteralExpr>(3, 1, 15),
+        1, 13);
+
+    std::vector<std::unique_ptr<Stmt>> bodyStmts;
+    bodyStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<IdentifierExpr>("x", 2, 7),
+            2, 3));
+    auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 18);
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<WhileStmt>(std::move(cond), std::move(body), 1, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{3, 2};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
