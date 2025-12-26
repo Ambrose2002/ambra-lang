@@ -671,7 +671,7 @@ TEST(ExpressionComparison, LessEqual)
     ASSERT_TRUE(isEqualExpression(actual, expected));
 }
 
-TEST(Statement, SayStatement)
+TEST(SayStatement, SayStatement)
 {
     std::vector<Token> tokens = {Token("say", SAY, std::monostate{}, 1, 1),
                                  Token("\"Hello \"", STRING, "Hello", 1, 4),
@@ -693,7 +693,7 @@ TEST(Statement, SayStatement)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-TEST(Statement, SayIntLiteral)
+TEST(SayStatement, SayIntLiteral)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -711,7 +711,7 @@ TEST(Statement, SayIntLiteral)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-TEST(Statement, SayIdentifier)
+TEST(SayStatement, SayIdentifier)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -729,7 +729,7 @@ TEST(Statement, SayIdentifier)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-TEST(Statement, SayBinaryExpression)
+TEST(SayStatement, SayBinaryExpression)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -751,7 +751,7 @@ TEST(Statement, SayBinaryExpression)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-TEST(StatementErrors, SayMissingSemicolon)
+TEST(SayStatementErrors, SayMissingSemicolon)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -766,7 +766,7 @@ TEST(StatementErrors, SayMissingSemicolon)
     ASSERT_EQ(actual, nullptr);
 }
 
-TEST(StatementErrors, SayMissingExpression)
+TEST(SayStatementErrors, SayMissingExpression)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -781,7 +781,7 @@ TEST(StatementErrors, SayMissingExpression)
     ASSERT_EQ(actual, nullptr);
 }
 
-TEST(StatementErrors, SayInvalidExpression)
+TEST(SayStatementErrors, SayInvalidExpression)
 {
     std::vector<Token> tokens = {
         Token("say", SAY, std::monostate{}, 1, 1),
@@ -797,7 +797,7 @@ TEST(StatementErrors, SayInvalidExpression)
     ASSERT_EQ(actual, nullptr);
 }
 
-TEST(Statement, SummonIntLiteral)
+TEST(SummonStatement, SummonIntLiteral)
 {
     std::vector<Token> tokens = {
         Token("summon", SUMMON, std::monostate{}, 1, 1),
@@ -820,7 +820,7 @@ TEST(Statement, SummonIntLiteral)
 // === Summon statement tests ===
 
 // Parses a summon statement with a boolean initializer.
-TEST(Statement, SummonBoolLiteral)
+TEST(SummonStatement, SummonBoolLiteral)
 {
     std::vector<Token> tokens = {
         Token("summon", SUMMON, std::monostate{}, 1, 1),
@@ -841,7 +841,7 @@ TEST(Statement, SummonBoolLiteral)
 }
 
 // Parses a summon statement with an identifier initializer.
-TEST(Statement, SummonIdentifierInitializer)
+TEST(SummonStatement, SummonIdentifierInitializer)
 {
     std::vector<Token> tokens = {
         Token("summon", SUMMON, std::monostate{}, 1, 1),
@@ -862,7 +862,7 @@ TEST(Statement, SummonIdentifierInitializer)
 }
 
 // Parses a summon statement with a binary expression initializer to test precedence/AST wiring.
-TEST(Statement, SummonBinaryInitializerPrecedence)
+TEST(SummonStatement, SummonBinaryInitializerPrecedence)
 {
     // summon x = 1 + 2 * 3;
     std::vector<Token> tokens = {
@@ -894,7 +894,7 @@ TEST(Statement, SummonBinaryInitializerPrecedence)
 }
 
 // Parses a summon statement whose initializer uses grouping to override precedence.
-TEST(Statement, SummonGroupedInitializer)
+TEST(SummonStatement, SummonGroupedInitializer)
 {
     // summon x = (1 + 2) * 3;
     std::vector<Token> tokens = {
@@ -930,7 +930,7 @@ TEST(Statement, SummonGroupedInitializer)
 }
 
 // Parses a summon statement with a unary initializer.
-TEST(Statement, SummonUnaryInitializer)
+TEST(SummonStatement, SummonUnaryInitializer)
 {
     // summon x = -1;
     std::vector<Token> tokens = {
@@ -956,7 +956,7 @@ TEST(Statement, SummonUnaryInitializer)
 }
 
 // Parses a summon statement with a comparison initializer.
-TEST(Statement, SummonComparisonInitializer)
+TEST(SummonStatement, SummonComparisonInitializer)
 {
     // summon ok = 2 < 3;
     std::vector<Token> tokens = {
@@ -983,7 +983,7 @@ TEST(Statement, SummonComparisonInitializer)
 }
 
 // Parses a summon statement with equality initializer to test precedence relative to comparisons.
-TEST(Statement, SummonEqualityInitializer)
+TEST(SummonStatement, SummonEqualityInitializer)
 {
     // summon eq = 1 < 2 == affirmative;
     std::vector<Token> tokens = {
@@ -1015,7 +1015,7 @@ TEST(Statement, SummonEqualityInitializer)
 }
 
 // Parses a summon statement whose initializer is a string interpolation expression.
-TEST(Statement, SummonInterpolatedStringInitializer)
+TEST(SummonStatement, SummonInterpolatedStringInitializer)
 {
     // summon msg = "hi {name}";
     std::vector<Token> tokens = {
@@ -1153,7 +1153,7 @@ TEST(StatementErrors, SummonInvalidInitializerExpression)
     ASSERT_EQ(actual, nullptr);
 }
 
-TEST(Statement, BlockStatementSimple)
+TEST(BlockStatement, BlockStatementSimple)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1179,7 +1179,7 @@ TEST(Statement, BlockStatementSimple)
 }
 
 // Parses an empty block: { }
-TEST(Statement, BlockStatementEmpty)
+TEST(BlockStatement, BlockStatementEmpty)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1198,7 +1198,7 @@ TEST(Statement, BlockStatementEmpty)
 }
 
 // Parses a block with multiple statements (summon + say).
-TEST(Statement, BlockStatementTwoStatements)
+TEST(BlockStatement, BlockStatementTwoStatements)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1240,7 +1240,7 @@ TEST(Statement, BlockStatementTwoStatements)
 }
 
 // Parses nested blocks: { { } }
-TEST(Statement, BlockStatementNestedEmptyBlock)
+TEST(BlockStatement, BlockStatementNestedEmptyBlock)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1267,7 +1267,7 @@ TEST(Statement, BlockStatementNestedEmptyBlock)
 }
 
 // Parses nested block with content: { { summon x = 1; } }
-TEST(Statement, BlockStatementNestedWithSummon)
+TEST(BlockStatement, BlockStatementNestedWithSummon)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1302,7 +1302,7 @@ TEST(Statement, BlockStatementNestedWithSummon)
 }
 
 // Parses a block with a say statement using string interpolation parts.
-TEST(Statement, BlockStatementSayInterpolatedString)
+TEST(BlockStatement, BlockStatementSayInterpolatedString)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1368,7 +1368,7 @@ TEST(StatementErrors, BlockStatementMissingRightBraceEOF)
 }
 
 // If a statement inside the block fails (e.g., missing semicolon), block parsing fails fast.
-TEST(StatementErrors, BlockStatementInnerStatementError)
+TEST(BlockStatementErrors, BlockStatementInnerStatementError)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1391,7 +1391,7 @@ TEST(StatementErrors, BlockStatementInnerStatementError)
 }
 
 // Parses a block and leaves remaining tokens for later parsing (program-level tests later).
-TEST(Statement, BlockStatementStopsAtRightBrace)
+TEST(BlockStatement, BlockStatementStopsAtRightBrace)
 {
     std::vector<Token> tokens = {
         Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
@@ -1414,7 +1414,7 @@ TEST(Statement, BlockStatementStopsAtRightBrace)
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
 
-TEST(Statement, IfChainSimple)
+TEST(IfStatement, IfChainSimple)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1465,7 +1465,7 @@ TEST(Statement, IfChainSimple)
  * should (x) { say "yes"; }
  * Baseline: single-branch if-chain with a single statement in the block.
  */
-TEST(Statement, SingleBranch_SayString)
+TEST(IfStatement, SingleBranch_SayString)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1513,7 +1513,7 @@ TEST(Statement, SingleBranch_SayString)
  * should (affirmative) { }
  * Edge: empty block should parse and produce a BlockStmt with 0 statements.
  */
-TEST(Statement, SingleBranch_EmptyBlock)
+TEST(IfStatement, SingleBranch_EmptyBlock)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1546,7 +1546,7 @@ TEST(Statement, SingleBranch_EmptyBlock)
  * should (x) { say "a"; } otherwise { say "b"; }
  * Standard: else-branch exists, no else-if branches.
  */
-TEST(Statement, WithElseBranch)
+TEST(IfStatement, WithElseBranch)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1611,7 +1611,7 @@ TEST(Statement, WithElseBranch)
  * should (x) { say "a"; } otherwise should (y) { say "b"; }
  * Standard: two branches, no trailing else.
  */
-TEST(Statement, OneElseIf_NoElse)
+TEST(IfStatement, OneElseIf_NoElse)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1687,7 +1687,7 @@ TEST(Statement, OneElseIf_NoElse)
  * should (x) {...} otherwise should (y) {...} otherwise should (z) {...} otherwise {...}
  * Full chain: multiple else-if branches and a trailing else.
  */
-TEST(Statement, MultipleElseIf_WithElse)
+TEST(IfStatement, MultipleElseIf_WithElse)
 {
     std::vector<Token> tokens = {
         // should (x) { say "a"; }
@@ -1911,7 +1911,7 @@ TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
  *
  * Tests nested if-chain parsing inside a block.
  */
-TEST(Statement, NestedIfInsideBlock)
+TEST(IfStatement, NestedIfInsideBlock)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -1977,7 +1977,7 @@ TEST(Statement, NestedIfInsideBlock)
  *
  * Tests full precedence stack inside a condition expression.
  */
-TEST(Statement, ConditionWithFullExpressionPrecedence)
+TEST(IfStatement, ConditionWithFullExpressionPrecedence)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -2035,7 +2035,7 @@ TEST(Statement, ConditionWithFullExpressionPrecedence)
  *
  * Tests interpolation inside say statement inside if-branch.
  */
-TEST(Statement, InterpolatedStringInsideBranch)
+TEST(IfStatement, InterpolatedStringInsideBranch)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -2086,7 +2086,7 @@ TEST(Statement, InterpolatedStringInsideBranch)
  *
  * Ensures else binds to the outer should, not the inner one.
  */
-TEST(Statement, DanglingElseAttachesToOuter)
+TEST(IfStatement, DanglingElseAttachesToOuter)
 {
     std::vector<Token> tokens = {
         Token("should", SHOULD, std::monostate{}, 1, 1),
@@ -2157,6 +2157,302 @@ TEST(Statement, DanglingElseAttachesToOuter)
 
     std::unique_ptr<Stmt> expected =
         std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBlock), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+// === While / aslongas statement tests ===
+
+/**
+ * aslongas (affirmative) { }
+ * Tests simplest while-loop with a boolean literal condition and empty block.
+ */
+TEST(WhileStatement, EmptyBlockBoolCondition)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("affirmative", BOOL, true, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 23),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 25),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 26),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 27),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto                               condition = std::make_unique<BoolLiteralExpr>(true, 1, 11);
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    auto                               block = std::make_unique<BlockStmt>(std::move(stmts), 1, 25);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(condition), std::move(block), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * aslongas (x) { say "hi"; }
+ * Tests identifier condition and a single statement in the body.
+ */
+TEST(WhileStatement, IdentifierConditionSingleSay)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+
+        Token("say", SAY, std::monostate{}, 1, 16),
+        Token("\"hi\"", STRING, std::string("hi"), 1, 20),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 24),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 26),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 27),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto condition = std::make_unique<IdentifierExpr>("x", 1, 11);
+
+    std::vector<StringPart> parts;
+    StringPart              p;
+    p.kind = StringPart::TEXT;
+    p.text = "hi";
+    parts.push_back(std::move(p));
+
+    std::vector<std::unique_ptr<Stmt>> body;
+    body.push_back(
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 20), 1, 16));
+
+    auto block = std::make_unique<BlockStmt>(std::move(body), 1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(condition), std::move(block), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * aslongas ((x + 1) * 2 > 3 == affirmative) { }
+ * Tests full precedence stack inside while condition (same style as your if-chain test).
+ */
+TEST(WhileStatement, ComplexConditionFullPrecedence)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 11),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 12),
+        Token("+", PLUS, std::monostate{}, 1, 14),
+        Token("1", INTEGER, 1, 1, 16),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 17),
+        Token("*", STAR, std::monostate{}, 1, 19),
+        Token("2", INTEGER, 2, 1, 21),
+        Token(">", GREATER, std::monostate{}, 1, 23),
+        Token("3", INTEGER, 3, 1, 25),
+        Token("==", EQUAL_EQUAL, std::monostate{}, 1, 27),
+        Token("affirmative", BOOL, true, 1, 30),
+
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 42),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 44),
+        Token("}", RIGHT_BRACE, std::monostate{}, 1, 45),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 46),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto cond = std::make_unique<BinaryExpr>(
+        std::make_unique<BinaryExpr>(
+            std::make_unique<BinaryExpr>(
+                std::make_unique<GroupingExpr>(
+                    std::make_unique<BinaryExpr>(std::make_unique<IdentifierExpr>("x", 1, 12), Add,
+                                                 std::make_unique<IntLiteralExpr>(1, 1, 16), 1, 14),
+                    1, 11),
+                Multiply, std::make_unique<IntLiteralExpr>(2, 1, 21), 1, 19),
+            Greater, std::make_unique<IntLiteralExpr>(3, 1, 25), 1, 23),
+        EqualEqual, std::make_unique<BoolLiteralExpr>(true, 1, 30), 1, 27);
+
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    auto                               block = std::make_unique<BlockStmt>(std::move(stmts), 1, 44);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(cond), std::move(block), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * aslongas (x) { summon y = 10; say "ok"; }
+ * Tests multiple statements inside while body (summon + say).
+ */
+TEST(WhileStatement, MultipleStatementsInBody)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 3),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 10),
+        Token("=", EQUAL, std::monostate{}, 2, 12),
+        Token("10", INTEGER, 10, 2, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 16),
+
+        Token("say", SAY, std::monostate{}, 3, 3),
+        Token("\"ok\"", STRING, std::string("ok"), 3, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 11),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 4, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    auto condition = std::make_unique<IdentifierExpr>("x", 1, 11);
+
+    std::vector<std::unique_ptr<Stmt>> body;
+    body.push_back(
+        std::make_unique<SummonStmt>("y", std::make_unique<IntLiteralExpr>(10, 2, 14), 2, 3));
+
+    std::vector<StringPart> parts;
+    parts.push_back({StringPart::TEXT, "ok", nullptr});
+    body.push_back(
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 3, 7), 3, 3));
+
+    auto block = std::make_unique<BlockStmt>(std::move(body), 1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(condition), std::move(block), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * aslongas (x) { aslongas (y) { } }
+ * Tests nested while loops inside the body.
+ */
+TEST(WhileStatement, NestedWhileInBody)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+
+        Token("aslongas", ASLONGAS, std::monostate{}, 2, 3),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 12),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 13),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 14),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 16),
+        Token("}", RIGHT_BRACE, std::monostate{}, 2, 17),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    // inner while
+    auto                               innerCond = std::make_unique<IdentifierExpr>("y", 2, 13);
+    std::vector<std::unique_ptr<Stmt>> innerBody;
+    auto innerBlock = std::make_unique<BlockStmt>(std::move(innerBody), 2, 16);
+    auto innerWhile =
+        std::make_unique<WhileStmt>(std::move(innerCond), std::move(innerBlock), 2, 3);
+
+    // outer while
+    auto                               outerCond = std::make_unique<IdentifierExpr>("x", 1, 11);
+    std::vector<std::unique_ptr<Stmt>> outerBody;
+    outerBody.push_back(std::move(innerWhile));
+    auto outerBlock = std::make_unique<BlockStmt>(std::move(outerBody), 1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(outerCond), std::move(outerBlock), 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * aslongas (x) { should (y) { say "a"; } otherwise { say "b"; } }
+ * Tests if-chain inside a while body.
+ */
+TEST(WhileStatement, IfChainInsideBody)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 10),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 14),
+
+        Token("should", SHOULD, std::monostate{}, 2, 3),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 10),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 11),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 12),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 14),
+
+        Token("say", SAY, std::monostate{}, 3, 5),
+        Token("\"a\"", STRING, std::string("a"), 3, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 4, 3),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 4, 5),
+        Token("{", LEFT_BRACE, std::monostate{}, 4, 15),
+        Token("say", SAY, std::monostate{}, 5, 5),
+        Token("\"b\"", STRING, std::string("b"), 5, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 5, 12),
+        Token("}", RIGHT_BRACE, std::monostate{}, 6, 3),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 7, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 7, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    // If then block: say "a";
+    std::vector<std::unique_ptr<Stmt>> thenStmts;
+    {
+        std::vector<StringPart> parts;
+        parts.push_back({StringPart::TEXT, "a", nullptr});
+        thenStmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 3, 9), 3, 5));
+    }
+    auto thenBlock = std::make_unique<BlockStmt>(std::move(thenStmts), 2, 14);
+
+    // Else block: say "b";
+    std::vector<std::unique_ptr<Stmt>> elseStmts;
+    {
+        std::vector<StringPart> parts;
+        parts.push_back({StringPart::TEXT, "b", nullptr});
+        elseStmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 5, 9), 5, 5));
+    }
+    auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 4, 15);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::make_unique<IdentifierExpr>("y", 2, 11), std::move(thenBlock));
+
+    auto ifStmt = std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBlock), 2, 3);
+
+    // While body contains the if
+    auto                               cond = std::make_unique<IdentifierExpr>("x", 1, 11);
+    std::vector<std::unique_ptr<Stmt>> whileBody;
+    whileBody.push_back(std::move(ifStmt));
+    auto block = std::make_unique<BlockStmt>(std::move(whileBody), 1, 14);
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<WhileStmt>(std::move(cond), std::move(block), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
