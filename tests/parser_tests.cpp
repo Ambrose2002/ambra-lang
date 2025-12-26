@@ -2625,3 +2625,93 @@ TEST(WhileErrors, UnterminatedBlockEOF)
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
 }
+
+// Parses an empty file: should produce an empty Program with hadError=false.
+TEST(ParseProgram_Basics, EmptyInput)
+{
+    std::vector<Token> tokens = {
+        Token("", EOF_TOKEN, std::monostate{}, 1, 1),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 1};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Parses a one-statement program: say "hello";
+TEST(ParseProgram_Basics, SingleSayStatement)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("\"hello\"", STRING, std::string("hello"), 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 12),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 13),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<StringPart> parts;
+    StringPart t;
+    t.kind = StringPart::TEXT;
+    t.text = "hello";
+    parts.push_back(std::move(t));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<StringExpr>(std::move(parts), 1, 5),
+            1, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{1, 13};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
+// Parses a multi-statement program: summon x = 10; say x;
+TEST(ParseProgram_Basics, MultipleStatementsMixed)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 14),
+
+        Token("say", SAY, std::monostate{}, 2, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 6),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 7),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<SummonStmt>(
+            "x",
+            std::make_unique<IntLiteralExpr>(10, 1, 12),
+            1, 1));
+
+    expectedStmts.push_back(
+        std::make_unique<SayStmt>(
+            std::make_unique<IdentifierExpr>("x", 2, 5),
+            2, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{2, 7};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
+
