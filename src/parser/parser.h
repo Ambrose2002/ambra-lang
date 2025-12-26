@@ -268,5 +268,13 @@ class Parser
      */
     std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> parseConditionAndBlock();
 
+    /**
+     * @brief Parse the entire program (all top-level statements).
+     *
+     * This is the main entry point for parsing a complete program. It parses all
+     * statements until EOF is reached, collecting them into a Program object.
+     *
+     * @return Program containing all parsed statements and error status
+     */
     Program parseProgram();
 };
