@@ -676,3 +676,42 @@ std::unique_ptr<Stmt> Parser::parseStatement()
         return nullptr;
     }
 }
+
+Program Parser::parseProgram()
+{
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    // Program start location = first token (may be EOF for empty file)
+    Token     firstToken = peek();
+    SourceLoc startLoc{firstToken.getLocation().line, firstToken.getLocation().column};
+
+    while (!check(EOF_TOKEN))
+    {
+        std::unique_ptr<Stmt> stmt = parseStatement();
+
+        if (stmt)
+        {
+            statements.push_back(std::move(stmt));
+        }
+        else
+        {
+            // Skip tokens until we reach a statement boundary
+            while (!check(EOF_TOKEN) && !check(SEMI_COLON) && !check(LEFT_BRACE) &&
+                   !check(RIGHT_BRACE))
+            {
+                advance();
+            }
+
+            if (match(SEMI_COLON))
+            {
+                continue;
+            }
+        }
+    }
+
+    // Program end location = EOF token
+    Token     lastToken = peek();
+    SourceLoc endLoc{lastToken.getLocation().line, lastToken.getLocation().column};
+
+    return Program(std::move(statements), hasError, startLoc, endLoc);
+}

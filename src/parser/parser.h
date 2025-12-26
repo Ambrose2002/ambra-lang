@@ -8,6 +8,7 @@
  * precedence level.
  */
 #include "ast/expr.h"
+#include "ast/prog.h"
 #include "ast/stmt.h"
 #include "lexer/lexer.h"
 
@@ -266,4 +267,6 @@ class Parser
      * @return Tuple of parsed condition `Expr` and block `BlockStmt`, both nullptr on error.
      */
     std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> parseConditionAndBlock();
+
+    Program parseProgram();
 };
