@@ -2715,3 +2715,39 @@ TEST(ParseProgram_Basics, MultipleStatementsMixed)
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
 
+// Parses a program whose first statement is a block.
+TEST(ParseProgram_Blocks, TopLevelBlock)
+{
+    std::vector<Token> tokens = {
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 1),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 3),
+        Token("flag", IDENTIFIER, std::monostate{}, 2, 10),
+        Token("=", EQUAL, std::monostate{}, 2, 15),
+        Token("affirmative", BOOL, true, 2, 17),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 29),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> blockStmts;
+    blockStmts.push_back(
+        std::make_unique<SummonStmt>(
+            "flag",
+            std::make_unique<BoolLiteralExpr>(true, 2, 17),
+            2, 3));
+
+    std::vector<std::unique_ptr<Stmt>> expectedStmts;
+    expectedStmts.push_back(
+        std::make_unique<BlockStmt>(std::move(blockStmts), 1, 1));
+
+    SourceLoc start{1, 1};
+    SourceLoc end{3, 2};
+    Program expected(std::move(expectedStmts), false, start, end);
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+}
