@@ -706,6 +706,11 @@ Program Parser::parseProgram()
             {
                 continue;
             }
+
+            if (check(EOF_TOKEN))
+            {
+                break;
+            }
         }
     }
 
