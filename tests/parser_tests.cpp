@@ -69,6 +69,29 @@ bool isEqualStatements(const std::unique_ptr<Stmt>& s1, const std::unique_ptr<St
     return true;
 }
 
+/**
+ * @brief Helper function to compare two Program objects and report differences.
+ *
+ * Compares the actual and expected programs for equality. If they don't match,
+ * prints detailed diagnostic information to stderr including the string representations
+ * of both programs to aid in debugging test failures.
+ *
+ * @param actual The actual program result from parsing
+ * @param expected The expected program for comparison
+ * @return true if both programs are equal, false otherwise
+ */
+static bool isEqualProgram(const Program& actual, const Program& expected)
+{
+    if (!(actual == expected))
+    {
+        std::cerr << "Program mismatch:\n";
+        std::cerr << " actual:\n" << actual.toString() << "\n";
+        std::cerr << " expected:\n" << expected.toString() << "\n";
+        return false;
+    }
+    return true;
+}
+
 // === Single-token expressions ===
 
 // Tests parsing of integer literals.
