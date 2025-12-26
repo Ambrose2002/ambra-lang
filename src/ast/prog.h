@@ -6,15 +6,16 @@
 class Program
 {
   public:
-    Program(std::vector<std::unique_ptr<Stmt>> statements, bool hasError)
-        : statements(statements), hasError(hasError) {};
+    Program(std::vector<std::unique_ptr<Stmt>> statements, bool hasError, SourceLoc startLoc,
+            SourceLoc endLoc)
+        : statements(statements), hasError(hasError), startLoc(startLoc), endLoc(endLoc) {};
 
-    bool hadError()
+    bool hadError() const
     {
         return hasError;
     }
 
-    std::vector<std::unique_ptr<Stmt>> getStatements() const
+    const std::vector<std::unique_ptr<Stmt>>& getStatements() const
     {
         return statements;
     }
@@ -24,7 +25,12 @@ class Program
         return statements.size() == 0;
     }
 
-    bool operator==(Program other)
+    int size() const
+    {
+        return statements.size();
+    }
+
+    bool operator==(const Program& other) const
     {
         if (statements.size() != other.statements.size())
         {
@@ -37,10 +43,10 @@ class Program
                 return false;
             }
         }
-        return hasError == other.hasError;
+        return hasError == other.hasError && startLoc == other.startLoc && endLoc == other.endLoc;
     }
 
-    std::string toString()
+    std::string toString() const
     {
         std::string result = "Program(\n";
         for (size_t i = 0; i < statements.size(); ++i)
