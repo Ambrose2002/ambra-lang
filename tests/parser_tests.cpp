@@ -1568,7 +1568,7 @@ TEST(Statement, WithElseBranch)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     // First branch
     auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
@@ -1576,13 +1576,12 @@ TEST(Statement, WithElseBranch)
     std::vector<std::unique_ptr<Stmt>> thenStmts;
     {
         std::vector<StringPart> parts;
-        StringPart p{ };
+        StringPart              p{};
         p.kind = StringPart::TEXT;
         p.text = "a";
         parts.push_back(std::move(p));
         thenStmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 18),
-            1, 14));
+            std::make_unique<StringExpr>(std::move(parts), 1, 18), 1, 14));
     }
     auto thenBlock = std::make_unique<BlockStmt>(std::move(thenStmts), 1, 12);
 
@@ -1593,13 +1592,12 @@ TEST(Statement, WithElseBranch)
     std::vector<std::unique_ptr<Stmt>> elseStmts;
     {
         std::vector<StringPart> parts;
-        StringPart p{ };
+        StringPart              p{};
         p.kind = StringPart::TEXT;
         p.text = "b";
         parts.push_back(std::move(p));
         elseStmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 41),
-            1, 37));
+            std::make_unique<StringExpr>(std::move(parts), 1, 41), 1, 37));
     }
     auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 1, 35);
 
@@ -1641,7 +1639,7 @@ TEST(Statement, OneElseIf_NoElse)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
 
@@ -1650,12 +1648,13 @@ TEST(Statement, OneElseIf_NoElse)
         auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
 
         std::vector<std::unique_ptr<Stmt>> stmts;
-        std::vector<StringPart> parts;
-        StringPart p; p.kind = StringPart::TEXT; p.text = "a";
+        std::vector<StringPart>            parts;
+        StringPart                         p;
+        p.kind = StringPart::TEXT;
+        p.text = "a";
         parts.push_back(std::move(p));
         stmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 18),
-            1, 14));
+            std::make_unique<StringExpr>(std::move(parts), 1, 18), 1, 14));
 
         auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 12);
         branches.emplace_back(std::move(cond), std::move(block));
@@ -1666,12 +1665,13 @@ TEST(Statement, OneElseIf_NoElse)
         auto cond = std::make_unique<IdentifierExpr>("y", 1, 43);
 
         std::vector<std::unique_ptr<Stmt>> stmts;
-        std::vector<StringPart> parts;
-        StringPart p; p.kind = StringPart::TEXT; p.text = "b";
+        std::vector<StringPart>            parts;
+        StringPart                         p;
+        p.kind = StringPart::TEXT;
+        p.text = "b";
         parts.push_back(std::move(p));
         stmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 52),
-            1, 48));
+            std::make_unique<StringExpr>(std::move(parts), 1, 52), 1, 48));
 
         auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 46);
         branches.emplace_back(std::move(cond), std::move(block));
@@ -1737,35 +1737,35 @@ TEST(Statement, MultipleElseIf_WithElse)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
 
-    auto mkSayBlock = [&](const std::string& text, int braceLine, int braceCol, int sayLine, int sayCol, int strLine, int strCol) {
+    auto mkSayBlock = [&](const std::string& text, int braceLine, int braceCol, int sayLine,
+                          int sayCol, int strLine, int strCol)
+    {
         std::vector<std::unique_ptr<Stmt>> stmts;
-        std::vector<StringPart> parts;
-        StringPart p; p.kind = StringPart::TEXT; p.text = text;
+        std::vector<StringPart>            parts;
+        StringPart                         p;
+        p.kind = StringPart::TEXT;
+        p.text = text;
         parts.push_back(std::move(p));
         stmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), strLine, strCol),
-            sayLine, sayCol));
+            std::make_unique<StringExpr>(std::move(parts), strLine, strCol), sayLine, sayCol));
         return std::make_unique<BlockStmt>(std::move(stmts), braceLine, braceCol);
     };
 
     // x -> "a"
-    branches.emplace_back(
-        std::make_unique<IdentifierExpr>("x", 1, 9),
-        mkSayBlock("a", 1, 12, 1, 14, 1, 18));
+    branches.emplace_back(std::make_unique<IdentifierExpr>("x", 1, 9),
+                          mkSayBlock("a", 1, 12, 1, 14, 1, 18));
 
     // y -> "b"
-    branches.emplace_back(
-        std::make_unique<IdentifierExpr>("y", 1, 43),
-        mkSayBlock("b", 1, 46, 1, 48, 1, 52));
+    branches.emplace_back(std::make_unique<IdentifierExpr>("y", 1, 43),
+                          mkSayBlock("b", 1, 46, 1, 48, 1, 52));
 
     // z -> "c"
-    branches.emplace_back(
-        std::make_unique<IdentifierExpr>("z", 1, 77),
-        mkSayBlock("c", 1, 80, 1, 82, 1, 86));
+    branches.emplace_back(std::make_unique<IdentifierExpr>("z", 1, 77),
+                          mkSayBlock("c", 1, 80, 1, 82, 1, 86));
 
     auto elseBranch = mkSayBlock("d", 1, 103, 1, 105, 1, 109);
 
@@ -1791,7 +1791,7 @@ TEST(IfChainErrors, MissingLeftParenAfterShould)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1813,7 +1813,7 @@ TEST(IfChainErrors, MissingRightParenAfterCondition)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1837,7 +1837,7 @@ TEST(IfChainErrors, MissingLeftBraceAfterCondition)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1865,7 +1865,7 @@ TEST(IfChainErrors, OtherwiseMissingLeftBrace)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1873,7 +1873,8 @@ TEST(IfChainErrors, OtherwiseMissingLeftBrace)
 
 /**
  * should (x) { } otherwise (y) { }
- * Error: 'otherwise' followed by '(' is invalid; must be "otherwise should (...)" or "otherwise {...}".
+ * Error: 'otherwise' followed by '(' is invalid; must be "otherwise should (...)" or "otherwise
+ * {...}".
  */
 TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
 {
@@ -1895,7 +1896,7 @@ TEST(IfChainErrors, OtherwiseThenParenIsInvalid)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     ASSERT_TRUE(parser.hadError());
     ASSERT_EQ(actual, nullptr);
@@ -1934,43 +1935,36 @@ TEST(IfChain, NestedIfInsideBlock)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     // Inner if
     std::vector<std::unique_ptr<Stmt>> innerStmts;
     {
         std::vector<StringPart> parts;
-        StringPart p; p.kind = StringPart::TEXT; p.text = "inner";
+        StringPart              p;
+        p.kind = StringPart::TEXT;
+        p.text = "inner";
         parts.push_back(std::move(p));
 
         innerStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 3, 9),
-                3, 5));
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 3, 9), 3, 5));
     }
 
-    auto innerBlock =
-        std::make_unique<BlockStmt>(std::move(innerStmts), 2, 14);
+    auto innerBlock = std::make_unique<BlockStmt>(std::move(innerStmts), 2, 14);
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> innerBranches;
-    innerBranches.emplace_back(
-        std::make_unique<IdentifierExpr>("y", 2, 11),
-        std::move(innerBlock));
+    innerBranches.emplace_back(std::make_unique<IdentifierExpr>("y", 2, 11), std::move(innerBlock));
 
-    auto innerIf =
-        std::make_unique<IfChainStmt>(std::move(innerBranches), nullptr, 2, 3);
+    auto innerIf = std::make_unique<IfChainStmt>(std::move(innerBranches), nullptr, 2, 3);
 
     // Outer block
     std::vector<std::unique_ptr<Stmt>> outerStmts;
     outerStmts.push_back(std::move(innerIf));
 
-    auto outerBlock =
-        std::make_unique<BlockStmt>(std::move(outerStmts), 1, 12);
+    auto outerBlock = std::make_unique<BlockStmt>(std::move(outerStmts), 1, 12);
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> outerBranches;
-    outerBranches.emplace_back(
-        std::make_unique<IdentifierExpr>("x", 1, 9),
-        std::move(outerBlock));
+    outerBranches.emplace_back(std::make_unique<IdentifierExpr>("x", 1, 9), std::move(outerBlock));
 
     std::unique_ptr<Stmt> expected =
         std::make_unique<IfChainStmt>(std::move(outerBranches), nullptr, 1, 1);
@@ -2008,35 +2002,76 @@ TEST(IfChain, ConditionWithFullExpressionPrecedence)
     };
 
     Parser parser(tokens);
-    auto actual = parser.parseStatement();
+    auto   actual = parser.parseStatement();
 
     // (((x + 1) * 2) > 3) == true
-    auto expr =
+    auto expr = std::make_unique<BinaryExpr>(
         std::make_unique<BinaryExpr>(
             std::make_unique<BinaryExpr>(
-                std::make_unique<BinaryExpr>(
-                    std::make_unique<GroupingExpr>(
-                        std::make_unique<BinaryExpr>(
-                            std::make_unique<IdentifierExpr>("x", 1, 10),
-                            Add,
-                            std::make_unique<IntLiteralExpr>(1, 1, 14),
-                            1, 12),
-                        1, 9),
-                    Multiply,
-                    std::make_unique<IntLiteralExpr>(2, 1, 19),
-                    1, 17),
-                Greater,
-                std::make_unique<IntLiteralExpr>(3, 1, 23),
-                1, 21),
-            EqualEqual,
-            std::make_unique<BoolLiteralExpr>(true, 1, 28),
-            1, 25);
+                std::make_unique<GroupingExpr>(
+                    std::make_unique<BinaryExpr>(std::make_unique<IdentifierExpr>("x", 1, 10), Add,
+                                                 std::make_unique<IntLiteralExpr>(1, 1, 14), 1, 12),
+                    1, 9),
+                Multiply, std::make_unique<IntLiteralExpr>(2, 1, 19), 1, 17),
+            Greater, std::make_unique<IntLiteralExpr>(3, 1, 23), 1, 21),
+        EqualEqual, std::make_unique<BoolLiteralExpr>(true, 1, 28), 1, 25);
 
     std::vector<std::unique_ptr<Stmt>> stmts;
-    auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 42);
+    auto                               block = std::make_unique<BlockStmt>(std::move(stmts), 1, 42);
 
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
     branches.emplace_back(std::move(expr), std::move(block));
+
+    std::unique_ptr<Stmt> expected =
+        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
+
+    ASSERT_TRUE(isEqualStatements(actual, expected));
+}
+
+/**
+ * should (x) {
+ *   say "value = {x}";
+ * }
+ *
+ * Tests interpolation inside say statement inside if-branch.
+ */
+TEST(IfChain, InterpolatedStringInsideBranch)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, std::monostate{}, 1, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 1, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 1, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 1, 12),
+
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("\"value = \"", STRING, std::string("value = "), 2, 7),
+        Token("{", INTERP_START, std::monostate{}, 2, 17),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 18),
+        Token("}", INTERP_END, std::monostate{}, 2, 19),
+        Token("\"\"", STRING, std::string(""), 2, 20),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 22),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 3, 2),
+    };
+
+    Parser parser(tokens);
+    auto   actual = parser.parseStatement();
+
+    std::vector<StringPart> parts;
+    parts.push_back({StringPart::TEXT, "value = ", nullptr});
+    parts.push_back({StringPart::EXPR, "", std::make_unique<IdentifierExpr>("x", 2, 18)});
+    parts.push_back({StringPart::TEXT, "", nullptr});
+
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    stmts.push_back(
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 2, 7), 2, 3));
+
+    auto block = std::make_unique<BlockStmt>(std::move(stmts), 1, 12);
+
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+    branches.emplace_back(std::make_unique<IdentifierExpr>("x", 1, 9), std::move(block));
 
     std::unique_ptr<Stmt> expected =
         std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1);
