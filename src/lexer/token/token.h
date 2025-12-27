@@ -25,49 +25,49 @@
 enum TokenType
 {
     // Data types
-    INTEGER,           ///< Integer literal
-    STRING,            ///< String literal (single or double quoted)
-    MULTILINE_STRING,  ///< Multiline string literal (triple quoted)
-    BOOL,              ///< Boolean literal (affirmative/negative)
+    INTEGER,          ///< Integer literal
+    STRING,           ///< String literal (single or double quoted)
+    MULTILINE_STRING, ///< Multiline string literal (triple quoted)
+    BOOL,             ///< Boolean literal (affirmative/negative)
 
-    IDENTIFIER,        ///< User-defined identifier
+    IDENTIFIER, ///< User-defined identifier
 
     // Keywords
-    SUMMON,            ///< Variable declaration keyword
-    SHOULD,            ///< Conditional (if) keyword
-    OTHERWISE,         ///< Else keyword
-    ASLONGAS,          ///< Loop (while) keyword
-    SAY,               ///< Print statement keyword
-    NOT,               ///< Logical negation keyword
+    SUMMON,    ///< Variable declaration keyword
+    SHOULD,    ///< Conditional (if) keyword
+    OTHERWISE, ///< Else keyword
+    ASLONGAS,  ///< Loop (while) keyword
+    SAY,       ///< Print statement keyword
+    NOT,       ///< Logical negation keyword
 
     // Operators
-    PLUS,              ///< Addition operator (+)
-    MINUS,             ///< Subtraction operator (-)
-    STAR,              ///< Multiplication operator (*)
-    SLASH,             ///< Division operator (/)
-    EQUAL,             ///< Assignment operator (=)
-    EQUAL_EQUAL,       ///< Equality comparison (==)
-    BANG_EQUAL,        ///< Inequality comparison (!=)
-    LESS,              ///< Less than (<)
-    LESS_EQUAL,        ///< Less than or equal (<=)
-    GREATER,           ///< Greater than (>)
-    GREATER_EQUAL,     ///< Greater than or equal (>=)
+    PLUS,          ///< Addition operator (+)
+    MINUS,         ///< Subtraction operator (-)
+    STAR,          ///< Multiplication operator (*)
+    SLASH,         ///< Division operator (/)
+    EQUAL,         ///< Assignment operator (=)
+    EQUAL_EQUAL,   ///< Equality comparison (==)
+    BANG_EQUAL,    ///< Inequality comparison (!=)
+    LESS,          ///< Less than (<)
+    LESS_EQUAL,    ///< Less than or equal (<=)
+    GREATER,       ///< Greater than (>)
+    GREATER_EQUAL, ///< Greater than or equal (>=)
 
     // Punctuation
-    LEFT_PAREN,        ///< Opening parenthesis '('
-    RIGHT_PAREN,       ///< Closing parenthesis ')'
-    LEFT_BRACE,        ///< Opening brace '{'
-    RIGHT_BRACE,       ///< Closing brace '}'
-    INTERP_START,      ///< Start of string interpolation '{' (in string context)
-    INTERP_END,        ///< End of string interpolation '}' (in interpolation context)
-    COMMA,             ///< Comma separator ','
-    SEMI_COLON,        ///< Semicolon terminator ';'
+    LEFT_PAREN,   ///< Opening parenthesis '('
+    RIGHT_PAREN,  ///< Closing parenthesis ')'
+    LEFT_BRACE,   ///< Opening brace '{'
+    RIGHT_BRACE,  ///< Closing brace '}'
+    INTERP_START, ///< Start of string interpolation '{' (in string context)
+    INTERP_END,   ///< End of string interpolation '}' (in interpolation context)
+    COMMA,        ///< Comma separator ','
+    SEMI_COLON,   ///< Semicolon terminator ';'
 
     // Special
-    EOF_TOKEN,         ///< End of file marker
-    ERROR,             ///< Error token (contains error message as value)
+    EOF_TOKEN, ///< End of file marker
+    ERROR,     ///< Error token (contains error message as value)
 
-    SKIP               ///< Internal token type for whitespace/comments (not emitted)
+    SKIP ///< Internal token type for whitespace/comments (not emitted)
 };
 
 /**
@@ -78,8 +78,8 @@ enum TokenType
  */
 struct SourceLocation
 {
-    int line;     ///< Line number (1-indexed)
-    int column;   ///< Column number (1-indexed)
+    int line;   ///< Line number (1-indexed)
+    int column; ///< Column number (1-indexed)
 };
 
 /**
@@ -139,8 +139,8 @@ class Token
     SourceLocation getLocation() const;
 
   private:
-    TokenType                                            type;      ///< Token classification
-    std::string                                          lexeme;    ///< Raw source text
-    std::variant<std::monostate, int, bool, std::string> value;     ///< Interpreted value or metadata
-    SourceLocation                                       location;  ///< Source position
+    TokenType                                            type;   ///< Token classification
+    std::string                                          lexeme; ///< Raw source text
+    std::variant<std::monostate, int, bool, std::string> value;  ///< Interpreted value or metadata
+    SourceLocation                                       location; ///< Source position
 };

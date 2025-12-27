@@ -24,24 +24,37 @@ set(CORE_SOURCES
     src/utils/error.cpp
 )
 
-set(CORE_HEADERS
-    src/lexer/lexer.h
-    src/lexer/token/token.h
-    src/parser/parser.h
-    src/ast/ast.h
-    src/sema/analyzer.h
-    src/bytecode/bytecode.h
-    src/bytecode/emitter.h
-    src/vm/vm.h
-    src/vm/value.h
-    src/runtime/builtins.h
-    src/utils/error.h
-    src/utils/string_utils.h
-)
+# Find clang-format
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format)
+
+if(CLANG_FORMAT_EXECUTABLE)
+    message(STATUS "Found clang-format: ${CLANG_FORMAT_EXECUTABLE}")
+    
+    # Collect all source files to format
+    file(GLOB_RECURSE ALL_SOURCE_FILES 
+        ${CMAKE_SOURCE_DIR}/src/*.cpp 
+        ${CMAKE_SOURCE_DIR}/src/*.h
+        ${CMAKE_SOURCE_DIR}/tests/*.cpp
+    )
+    
+    # Create a custom target that runs clang-format
+    add_custom_target(format_code
+        COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${ALL_SOURCE_FILES}
+        COMMENT "Running clang-format on source files..."
+        VERBATIM
+    )
+else()
+    message(WARNING "clang-format not found. Auto-formatting will be skipped.")
+endif()
 
 # Create core library
-add_library(ambra_lang ${CORE_SOURCES} ${CORE_HEADERS})
+add_library(ambra_lang ${CORE_SOURCES})
 target_include_directories(ambra_lang PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# Make formatting run before building the library
+if(CLANG_FORMAT_EXECUTABLE)
+    add_dependencies(ambra_lang format_code)
+endif()
 
 # Compiler executable
 add_executable(ambra_compiler src/cli/compiler_main.cpp)

@@ -133,7 +133,7 @@ Token Lexer::scanNumber(int startLine, int startColumn)
 
     // Valid integer
     std::string lexeme = source.substr(start, current - start);
-    int number = std::stoi(lexeme);
+    int         number = std::stoi(lexeme);
     return makeToken(TokenType::INTEGER, startLine, startColumn, number);
 }
 
@@ -480,13 +480,17 @@ Token Lexer::scanToken()
     int startColumn = column;
     start = current;
     // Interpolation unterminated error check
-    if (mode == INTERP_EXPR_MODE && isAtEnd()) {
+    if (mode == INTERP_EXPR_MODE && isAtEnd())
+    {
         std::string lex = source.substr(interpStart, 1);
-        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine, interpStartColumn);
+        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine,
+                     interpStartColumn);
     }
-    if (mode == INTERP_EXPR_MODE && peek() == '"') {
+    if (mode == INTERP_EXPR_MODE && peek() == '"')
+    {
         std::string lex = source.substr(interpStart, 1);
-        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine, interpStartColumn);
+        return Token(lex, ERROR, std::string("Unterminated interpolation"), interpStartLine,
+                     interpStartColumn);
     }
     if (isAtEnd())
     {

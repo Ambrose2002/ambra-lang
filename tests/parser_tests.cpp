@@ -2633,13 +2633,13 @@ TEST(ParseProgram_Basics, EmptyInput)
         Token("", EOF_TOKEN, std::monostate{}, 1, 1),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    SourceLoc start{1, 1};
-    SourceLoc end{1, 1};
-    Program expected(std::move(expectedStmts), false, start, end);
+    SourceLoc                          start{1, 1};
+    SourceLoc                          end{1, 1};
+    Program                            expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2654,24 +2654,22 @@ TEST(ParseProgram_Basics, SingleSayStatement)
         Token("", EOF_TOKEN, std::monostate{}, 1, 13),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<StringPart> parts;
-    StringPart t;
+    StringPart              t;
     t.kind = StringPart::TEXT;
     t.text = "hello";
     parts.push_back(std::move(t));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 5),
-            1, 1));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 5), 1, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{1, 13};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2693,24 +2691,19 @@ TEST(ParseProgram_Basics, MultipleStatementsMixed)
         Token("", EOF_TOKEN, std::monostate{}, 2, 7),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SummonStmt>(
-            "x",
-            std::make_unique<IntLiteralExpr>(10, 1, 12),
-            1, 1));
+        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1));
 
     expectedStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<IdentifierExpr>("x", 2, 5),
-            2, 1));
+        std::make_unique<SayStmt>(std::make_unique<IdentifierExpr>("x", 2, 5), 2, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{2, 7};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2731,23 +2724,19 @@ TEST(ParseProgram_Blocks, TopLevelBlock)
         Token("", EOF_TOKEN, std::monostate{}, 3, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> blockStmts;
     blockStmts.push_back(
-        std::make_unique<SummonStmt>(
-            "flag",
-            std::make_unique<BoolLiteralExpr>(true, 2, 17),
-            2, 3));
+        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 2, 17), 2, 3));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    expectedStmts.push_back(
-        std::make_unique<BlockStmt>(std::move(blockStmts), 1, 1));
+    expectedStmts.push_back(std::make_unique<BlockStmt>(std::move(blockStmts), 1, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{3, 2};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2778,26 +2767,23 @@ TEST(ParseProgram_ControlFlow, IfChainWithElse)
         Token("", EOF_TOKEN, std::monostate{}, 5, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // Condition: x > 0
-    auto cond = std::make_unique<BinaryExpr>(
-        std::make_unique<IdentifierExpr>("x", 1, 9),
-        Greater,
-        std::make_unique<IntLiteralExpr>(0, 1, 13),
-        1, 11);
+    auto cond = std::make_unique<BinaryExpr>(std::make_unique<IdentifierExpr>("x", 1, 9), Greater,
+                                             std::make_unique<IntLiteralExpr>(0, 1, 13), 1, 11);
 
     // then block: { say "pos"; }
     std::vector<std::unique_ptr<Stmt>> thenStmts;
     {
         std::vector<StringPart> parts;
-        StringPart t; t.kind = StringPart::TEXT; t.text = "pos";
+        StringPart              t;
+        t.kind = StringPart::TEXT;
+        t.text = "pos";
         parts.push_back(std::move(t));
         thenStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 2, 7),
-                2, 3));
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 2, 7), 2, 3));
     }
     auto thenBlock = std::make_unique<BlockStmt>(std::move(thenStmts), 1, 16);
 
@@ -2805,12 +2791,12 @@ TEST(ParseProgram_ControlFlow, IfChainWithElse)
     std::vector<std::unique_ptr<Stmt>> elseStmts;
     {
         std::vector<StringPart> parts;
-        StringPart t; t.kind = StringPart::TEXT; t.text = "neg";
+        StringPart              t;
+        t.kind = StringPart::TEXT;
+        t.text = "neg";
         parts.push_back(std::move(t));
         elseStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 4, 7),
-                4, 3));
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 4, 7), 4, 3));
     }
     auto elseBlock = std::make_unique<BlockStmt>(std::move(elseStmts), 3, 13);
 
@@ -2823,7 +2809,7 @@ TEST(ParseProgram_ControlFlow, IfChainWithElse)
 
     SourceLoc start{1, 1};
     SourceLoc end{5, 2};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2846,29 +2832,23 @@ TEST(ParseProgram_ControlFlow, WhileLoopSimple)
         Token("", EOF_TOKEN, std::monostate{}, 3, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
-    auto cond = std::make_unique<BinaryExpr>(
-        std::make_unique<IdentifierExpr>("x", 1, 11),
-        Less,
-        std::make_unique<IntLiteralExpr>(3, 1, 15),
-        1, 13);
+    auto cond = std::make_unique<BinaryExpr>(std::make_unique<IdentifierExpr>("x", 1, 11), Less,
+                                             std::make_unique<IntLiteralExpr>(3, 1, 15), 1, 13);
 
     std::vector<std::unique_ptr<Stmt>> bodyStmts;
     bodyStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<IdentifierExpr>("x", 2, 7),
-            2, 3));
+        std::make_unique<SayStmt>(std::make_unique<IdentifierExpr>("x", 2, 7), 2, 3));
     auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 18);
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    expectedStmts.push_back(
-        std::make_unique<WhileStmt>(std::move(cond), std::move(body), 1, 1));
+    expectedStmts.push_back(std::make_unique<WhileStmt>(std::move(cond), std::move(body), 1, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{3, 2};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -2890,27 +2870,26 @@ TEST(ParseProgram_Recovery, RecoverAtLeftBraceAndParseBlock)
         Token("", EOF_TOKEN, std::monostate{}, 3, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> blockStmts;
     {
         std::vector<StringPart> parts;
-        StringPart t; t.kind = StringPart::TEXT; t.text = "ok";
+        StringPart              t;
+        t.kind = StringPart::TEXT;
+        t.text = "ok";
         parts.push_back(std::move(t));
         blockStmts.push_back(
-            std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 2, 7),
-                2, 3));
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 2, 7), 2, 3));
     }
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    expectedStmts.push_back(
-        std::make_unique<BlockStmt>(std::move(blockStmts), 1, 3));
+    expectedStmts.push_back(std::make_unique<BlockStmt>(std::move(blockStmts), 1, 3));
 
     SourceLoc start{1, 1};
     SourceLoc end{3, 2};
-    Program expected(std::move(expectedStmts), true, start, end);
+    Program   expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -2930,13 +2909,13 @@ TEST(ParseProgram_Recovery, UnterminatedBlockStopsAtEOF)
         Token("", EOF_TOKEN, std::monostate{}, 3, 1),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts; // nothing retained
-    SourceLoc start{1, 1};
-    SourceLoc end{3, 1};
-    Program expected(std::move(expectedStmts), true, start, end);
+    SourceLoc                          start{1, 1};
+    SourceLoc                          end{3, 1};
+    Program                            expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -2951,13 +2930,13 @@ TEST(ParseProgram_Basics, OnlySemicolons_NoStatements)
         Token("", EOF_TOKEN, std::monostate{}, 1, 3),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    SourceLoc start{1, 1};
-    SourceLoc end{1, 3};
-    Program expected(std::move(expectedStmts), true, start, end);
+    SourceLoc                          start{1, 1};
+    SourceLoc                          end{1, 3};
+    Program                            expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -2977,23 +2956,23 @@ TEST(ParseProgram_Basics, LeadingSemicolonsThenSay)
         Token("", EOF_TOKEN, std::monostate{}, 1, 13),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // Expected: single say statement
     std::vector<StringPart> parts;
-    StringPart p; p.kind = StringPart::TEXT; p.text = "hi";
+    StringPart              p;
+    p.kind = StringPart::TEXT;
+    p.text = "hi";
     parts.push_back(std::move(p));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 8),
-            1, 4));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 8), 1, 4));
 
     SourceLoc start{1, 1};
     SourceLoc end{1, 13};
-    Program expected(std::move(expectedStmts), true, start, end);
+    Program   expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -3017,7 +2996,7 @@ TEST(ParseProgram_Blocks, TwoBlocks_EmptyThenSay)
         Token("", EOF_TOKEN, std::monostate{}, 4, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // Expected block 1: empty
@@ -3026,14 +3005,14 @@ TEST(ParseProgram_Blocks, TwoBlocks_EmptyThenSay)
 
     // Expected block 2: say "hi";
     std::vector<StringPart> parts;
-    StringPart p; p.kind = StringPart::TEXT; p.text = "hi";
+    StringPart              p;
+    p.kind = StringPart::TEXT;
+    p.text = "hi";
     parts.push_back(std::move(p));
 
     std::vector<std::unique_ptr<Stmt>> block2Stmts;
     block2Stmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 3, 7),
-            3, 3));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 3, 7), 3, 3));
     auto block2 = std::make_unique<BlockStmt>(std::move(block2Stmts), 2, 1);
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
@@ -3042,7 +3021,7 @@ TEST(ParseProgram_Blocks, TwoBlocks_EmptyThenSay)
 
     SourceLoc start{1, 1};
     SourceLoc end{4, 2};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -3060,10 +3039,10 @@ TEST(ParseProgram_ControlFlow, IfChain_NoElse_SingleBranch)
         Token("", EOF_TOKEN, std::monostate{}, 1, 15),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
-    auto cond = std::make_unique<IdentifierExpr>("x", 1, 9);
+    auto                               cond = std::make_unique<IdentifierExpr>("x", 1, 9);
     std::vector<std::unique_ptr<Stmt>> bodyStmts;
     auto body = std::make_unique<BlockStmt>(std::move(bodyStmts), 1, 12);
 
@@ -3071,12 +3050,11 @@ TEST(ParseProgram_ControlFlow, IfChain_NoElse_SingleBranch)
     branches.emplace_back(std::move(cond), std::move(body));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    expectedStmts.push_back(
-        std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1));
+    expectedStmts.push_back(std::make_unique<IfChainStmt>(std::move(branches), nullptr, 1, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{1, 15};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -3114,23 +3092,23 @@ TEST(ParseProgram_ControlFlow, While_ThenIf_ThenBlock)
         Token("", EOF_TOKEN, std::monostate{}, 6, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // while
-    auto wcond = std::make_unique<IdentifierExpr>("x", 1, 11);
+    auto                    wcond = std::make_unique<IdentifierExpr>("x", 1, 11);
     std::vector<StringPart> wparts;
-    StringPart wp; wp.kind = StringPart::TEXT; wp.text = "w";
+    StringPart              wp;
+    wp.kind = StringPart::TEXT;
+    wp.text = "w";
     wparts.push_back(std::move(wp));
     std::vector<std::unique_ptr<Stmt>> wbodyStmts;
     wbodyStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(wparts), 2, 7),
-            2, 3));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(wparts), 2, 7), 2, 3));
     auto wblock = std::make_unique<BlockStmt>(std::move(wbodyStmts), 1, 14);
 
     // if
-    auto icond = std::make_unique<BoolLiteralExpr>(true, 3, 11);
+    auto                               icond = std::make_unique<BoolLiteralExpr>(true, 3, 11);
     std::vector<std::unique_ptr<Stmt>> ibodyStmts;
     auto iblock = std::make_unique<BlockStmt>(std::move(ibodyStmts), 3, 25);
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> ibranches;
@@ -3138,25 +3116,23 @@ TEST(ParseProgram_ControlFlow, While_ThenIf_ThenBlock)
 
     // block
     std::vector<StringPart> bparts;
-    StringPart bp; bp.kind = StringPart::TEXT; bp.text = "b";
+    StringPart              bp;
+    bp.kind = StringPart::TEXT;
+    bp.text = "b";
     bparts.push_back(std::move(bp));
     std::vector<std::unique_ptr<Stmt>> bbodyStmts;
     bbodyStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(bparts), 5, 7),
-            5, 3));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(bparts), 5, 7), 5, 3));
     auto bblock = std::make_unique<BlockStmt>(std::move(bbodyStmts), 4, 1);
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    expectedStmts.push_back(
-        std::make_unique<WhileStmt>(std::move(wcond), std::move(wblock), 1, 1));
-    expectedStmts.push_back(
-        std::make_unique<IfChainStmt>(std::move(ibranches), nullptr, 3, 3));
+    expectedStmts.push_back(std::make_unique<WhileStmt>(std::move(wcond), std::move(wblock), 1, 1));
+    expectedStmts.push_back(std::make_unique<IfChainStmt>(std::move(ibranches), nullptr, 3, 3));
     expectedStmts.push_back(std::move(bblock));
 
     SourceLoc start{1, 1};
     SourceLoc end{6, 2};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -3171,13 +3147,13 @@ TEST(ParseProgram_Errors, TopLevelSayMissingSemicolonEOF)
         Token("", EOF_TOKEN, std::monostate{}, 1, 7),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
-    SourceLoc start{1, 1};
-    SourceLoc end{1, 7};
-    Program expected(std::move(expectedStmts), true, start, end);
+    SourceLoc                          start{1, 1};
+    SourceLoc                          end{1, 7};
+    Program                            expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -3197,22 +3173,22 @@ TEST(ParseProgram_Recovery, ErrorThenSemicolonThenSay)
         Token("", EOF_TOKEN, std::monostate{}, 1, 13),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     std::vector<StringPart> parts;
-    StringPart t; t.kind = StringPart::TEXT; t.text = "ok";
+    StringPart              t;
+    t.kind = StringPart::TEXT;
+    t.text = "ok";
     parts.push_back(std::move(t));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 1, 8),
-            1, 4));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 1, 8), 1, 4));
 
     SourceLoc start{1, 1};
     SourceLoc end{1, 13};
-    Program expected(std::move(expectedStmts), true, start, end);
+    Program   expected(std::move(expectedStmts), true, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
     ASSERT_TRUE(actual.hadError());
@@ -3243,37 +3219,29 @@ TEST(ParseProgram_Basics, SummonThenSayWithInterpolation)
         Token("", EOF_TOKEN, std::monostate{}, 2, 23),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // Expected summon
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SummonStmt>(
-            "a",
-            std::make_unique<IntLiteralExpr>(1, 1, 12),
-            1, 1));
+        std::make_unique<SummonStmt>("a", std::make_unique<IntLiteralExpr>(1, 1, 12), 1, 1));
 
     // Expected say with interpolation
     std::vector<StringPart> parts;
     parts.push_back({StringPart::TEXT, "total: ", nullptr});
-    parts.push_back({
-        StringPart::EXPR, "",
-        std::make_unique<BinaryExpr>(
-            std::make_unique<IntLiteralExpr>(1, 2, 14),
-            Add,
-            std::make_unique<IntLiteralExpr>(2, 2, 18),
-            2, 16)});
+    parts.push_back(
+        {StringPart::EXPR, "",
+         std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(1, 2, 14), Add,
+                                      std::make_unique<IntLiteralExpr>(2, 2, 18), 2, 16)});
     parts.push_back({StringPart::TEXT, "", nullptr});
 
     expectedStmts.push_back(
-        std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 2, 5),
-            2, 1));
+        std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 2, 5), 2, 1));
 
     SourceLoc start{1, 1};
     SourceLoc end{2, 23};
-    Program expected(std::move(expectedStmts), false, start, end);
+    Program   expected(std::move(expectedStmts), false, start, end);
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
@@ -3285,7 +3253,7 @@ TEST(ParseProgram_Recovery, StrayRightBraceAtTopLevel)
         Token("", EOF_TOKEN, std::monostate{}, 1, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3304,7 +3272,7 @@ TEST(ParseProgram_Recovery, ErrorThenRightBraceTerminates)
         Token("", EOF_TOKEN, std::monostate{}, 1, 3),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3320,7 +3288,7 @@ TEST(ParseProgram_Recovery, ErrorAtEOF)
         Token("", EOF_TOKEN, std::monostate{}, 1, 6),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3344,7 +3312,7 @@ TEST(ParseProgram_Recovery, InvalidStatementDropped)
         Token("", EOF_TOKEN, std::monostate{}, 2, 14),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3367,7 +3335,7 @@ TEST(ParseProgram_Recovery, MultipleSemicolonsAfterError)
         Token("", EOF_TOKEN, std::monostate{}, 2, 14),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3385,7 +3353,7 @@ TEST(ParseProgram_Recovery, ErrorBeforeBlock)
         Token("", EOF_TOKEN, std::monostate{}, 2, 3),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3401,7 +3369,7 @@ TEST(ParseProgram_Recovery, GarbageTokensTerminate)
         Token("", EOF_TOKEN, std::monostate{}, 1, 4),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_TRUE(parser.hadError());
@@ -3424,13 +3392,23 @@ TEST(ParseProgram_Basics, MixedStatements)
         Token("", EOF_TOKEN, std::monostate{}, 2, 10),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program program = parser.parseProgram();
 
     ASSERT_FALSE(parser.hadError());
     ASSERT_EQ(program.size(), 2);
 }
 
+// summon age = 10;
+// should (age >= 10) {
+//     say "You are allowed to play the game";
+// }
+// otherwise should (age > 5) {
+//     say "You can go tomorrow";
+// }
+// otherwise {
+//     say "You are not allowed to go ever";
+// }
 TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
 {
     std::vector<Token> tokens = {
@@ -3469,8 +3447,7 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
 
         // say "You can go tomorrow";
         Token("say", SAY, std::monostate{}, 6, 5),
-        Token("\"You can go tomorrow\"", STRING,
-              std::string("You can go tomorrow"), 6, 9),
+        Token("\"You can go tomorrow\"", STRING, std::string("You can go tomorrow"), 6, 9),
         Token(";", SEMI_COLON, std::monostate{}, 6, 32),
         Token("}", RIGHT_BRACE, std::monostate{}, 7, 1),
 
@@ -3488,7 +3465,7 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
         Token("", EOF_TOKEN, std::monostate{}, 10, 2),
     };
 
-    Parser parser(tokens);
+    Parser  parser(tokens);
     Program actual = parser.parseProgram();
 
     // -------- Expected AST --------
@@ -3497,10 +3474,7 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
 
     // summon age = 10;
     expectedStatements.push_back(
-        std::make_unique<SummonStmt>(
-            "age",
-            std::make_unique<IntLiteralExpr>(10, 1, 14),
-            1, 1));
+        std::make_unique<SummonStmt>("age", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
 
     // --- IF CHAIN ---
 
@@ -3509,35 +3483,27 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
     // Branch 1: age >= 10
     {
         auto condition = std::make_unique<BinaryExpr>(
-            std::make_unique<IdentifierExpr>("age", 2, 9),
-            GreaterEqual,
-            std::make_unique<IntLiteralExpr>(10, 2, 16),
-            2, 13);
+            std::make_unique<IdentifierExpr>("age", 2, 9), GreaterEqual,
+            std::make_unique<IntLiteralExpr>(10, 2, 16), 2, 13);
 
         std::vector<std::unique_ptr<Stmt>> stmts;
         {
             std::vector<StringPart> parts;
-            parts.push_back({StringPart::TEXT,
-                             "You are allowed to play the game",
-                             nullptr});
+            parts.push_back({StringPart::TEXT, "You are allowed to play the game", nullptr});
 
             stmts.push_back(std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 3, 9),
-                3, 5));
+                std::make_unique<StringExpr>(std::move(parts), 3, 9), 3, 5));
         }
 
-        branches.emplace_back(
-            std::move(condition),
-            std::make_unique<BlockStmt>(std::move(stmts), 2, 20));
+        branches.emplace_back(std::move(condition),
+                              std::make_unique<BlockStmt>(std::move(stmts), 2, 20));
     }
 
     // Branch 2: age > 5
     {
-        auto condition = std::make_unique<BinaryExpr>(
-            std::make_unique<IdentifierExpr>("age", 5, 19),
-            Greater,
-            std::make_unique<IntLiteralExpr>(5, 5, 25),
-            5, 23);
+        auto condition =
+            std::make_unique<BinaryExpr>(std::make_unique<IdentifierExpr>("age", 5, 19), Greater,
+                                         std::make_unique<IntLiteralExpr>(5, 5, 25), 5, 23);
 
         std::vector<std::unique_ptr<Stmt>> stmts;
         {
@@ -3545,42 +3511,30 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
             parts.push_back({StringPart::TEXT, "You can go tomorrow", nullptr});
 
             stmts.push_back(std::make_unique<SayStmt>(
-                std::make_unique<StringExpr>(std::move(parts), 6, 9),
-                6, 5));
+                std::make_unique<StringExpr>(std::move(parts), 6, 9), 6, 5));
         }
 
-        branches.emplace_back(
-            std::move(condition),
-            std::make_unique<BlockStmt>(std::move(stmts), 5, 28));
+        branches.emplace_back(std::move(condition),
+                              std::make_unique<BlockStmt>(std::move(stmts), 5, 28));
     }
 
     // Else branch
     std::unique_ptr<BlockStmt> elseBranch;
     {
         std::vector<std::unique_ptr<Stmt>> stmts;
-        std::vector<StringPart> parts;
-        parts.push_back({StringPart::TEXT,
-                         "You are not allowed to go ever",
-                         nullptr});
+        std::vector<StringPart>            parts;
+        parts.push_back({StringPart::TEXT, "You are not allowed to go ever", nullptr});
 
-        stmts.push_back(std::make_unique<SayStmt>(
-            std::make_unique<StringExpr>(std::move(parts), 9, 9),
-            9, 5));
+        stmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 9, 9), 9, 5));
 
         elseBranch = std::make_unique<BlockStmt>(std::move(stmts), 8, 11);
     }
 
     expectedStatements.push_back(
-        std::make_unique<IfChainStmt>(
-            std::move(branches),
-            std::move(elseBranch),
-            2, 1));
+        std::make_unique<IfChainStmt>(std::move(branches), std::move(elseBranch), 2, 1));
 
-    Program expected(
-        std::move(expectedStatements),
-        false,
-        {1, 1},
-        {10, 2});
+    Program expected(std::move(expectedStatements), false, {1, 1}, {10, 2});
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }

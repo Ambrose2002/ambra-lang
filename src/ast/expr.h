@@ -20,7 +20,7 @@ enum ExprKind
     BoolLiteral,        ///< Boolean literal expression
     StringLiteral,      ///< String literal expression
     InterpolatedString, ///< Interpolated string expression
-    Identifier,           ///< Identifier reference expression
+    Identifier,         ///< Identifier reference expression
     Unary,              ///< Unary operator expression
     Binary,             ///< Binary operator expression
     Grouping            ///< Parenthesized grouping expression
@@ -40,7 +40,7 @@ enum UnaryOpKind
  */
 enum BinaryOpKind
 {
-    EqualEqual,        ///< Equality comparison (==)
+    EqualEqual,   ///< Equality comparison (==)
     NotEqual,     ///< Inequality comparison (!=)
     Less,         ///< Less than (<)
     LessEqual,    ///< Less than or equal (<=)
@@ -179,7 +179,7 @@ class IntLiteralExpr : public Expr
 
     std::string toString() const override
     {
-        return std::string("Int(" ) + std::to_string(value) + ")";
+        return std::string("Int(") + std::to_string(value) + ")";
     }
 
   private:
@@ -251,7 +251,8 @@ class IdentifierExpr : public Expr
         return std::string("Ident(") + name + ")";
     }
 
-    std::string getName() const {
+    std::string getName() const
+    {
         return name;
     }
 
@@ -299,7 +300,8 @@ class UnaryExpr : public Expr
     std::string toString() const override
     {
         std::string opName = (op == LogicalNot) ? "Not" : "Neg";
-        return std::string("Unary(") + opName + ", " + (operand ? operand->toString() : "null") + ")";
+        return std::string("Unary(") + opName + ", " + (operand ? operand->toString() : "null") +
+               ")";
     }
 
   private:
@@ -455,8 +457,7 @@ class StringExpr : public Expr
      * @param parts The sequence of text chunks and expressions
      * @param loc Source location
      */
-    StringExpr(std::vector<StringPart>&& parts, int line, int col)
-        : parts(std::move(parts))
+    StringExpr(std::vector<StringPart>&& parts, int line, int col) : parts(std::move(parts))
     {
         kind = InterpolatedString;
         loc = {line, col};
@@ -473,7 +474,7 @@ class StringExpr : public Expr
     std::string toString() const override
     {
         std::string out = "String(\"";
-        for (const auto &p : parts)
+        for (const auto& p : parts)
         {
             if (p.kind == StringPart::TEXT)
             {

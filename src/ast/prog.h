@@ -30,7 +30,8 @@ class Program
      */
     Program(std::vector<std::unique_ptr<Stmt>> statements, bool hasError, SourceLoc startLoc,
             SourceLoc endLoc)
-        : statements(std::move(statements)), hasError(hasError), startLoc(startLoc), endLoc(endLoc) {};
+        : statements(std::move(statements)), hasError(hasError), startLoc(startLoc),
+          endLoc(endLoc) {};
 
     bool hadError() const
     {

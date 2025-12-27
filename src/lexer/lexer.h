@@ -4,11 +4,12 @@
 #include <unordered_map>
 #include <vector>
 
-enum LexerMode {
-  NORMAL_MODE,
-  STRING_MODE,
-  INTERP_EXPR_MODE,
-  MULTILINE_STRING_MODE
+enum LexerMode
+{
+    NORMAL_MODE,
+    STRING_MODE,
+    INTERP_EXPR_MODE,
+    MULTILINE_STRING_MODE
 };
 /**
  * @brief The Lexer (scanner) for the Ambra language.

@@ -1,6 +1,7 @@
 #include <iostream>
 
-int main() {
+int main()
+{
     std::cout << "Running vm tests...\n";
 
     // TODO: Add test assertions
