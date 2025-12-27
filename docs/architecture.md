@@ -338,29 +338,69 @@ The AST must remain structurally stable after creation; later phases must not mo
 
 ---
 
-## 2.4 Semantic Analysis
+## 2.4 Semantic Analysis — Name Resolution
 
 **Input:** AST  
-**Output:** Annotated AST or validation status
+**Output:** Resolution side table + symbol table + diagnostics
 
-### Responsibilities
+This pass performs **name resolution and scope checking**. It determines which declaration each identifier refers to, reports invalid uses, and records metadata for later phases. The AST shape stays unchanged.
 
-- Resolve identifiers (declaration‑before‑use rule).
-- Track scoped variables:
-  - new variables appear in each block scope
-  - shadowing rules (v0.1: allow or disallow—your choice)
-- Verify:
-  - conditions of `should`/`aslongas` evaluate to booleans
-  - assignments are type‑consistent (int, string, bool)
-  - interpolation references are valid identifiers
-- Prepare any metadata needed by codegen (e.g., constant pools).
+### Goals
+- Enforce declaration‑before‑use
+- Detect invalid identifier usage
+- Build lexical scope information
+- Allow shadowing, block redeclaration errors in the same scope
+- Keep analysis non‑fatal (collect multiple errors)
 
-### Notes
+### Scope Model
+- Lexical (static) scoping
+- New scope for: program, block `{...}`, `should` body, `otherwise should` body, `otherwise` body, `aslongas` body
+- No new scope for condition expressions
+- Each branch body gets its own scope
 
-- v0.1 type system is simple:  
-  Integer, String, Boolean.
-- Consider storing symbol tables as a stack of scopes.
-- Errors caught here improve user experience.
+### Declarations ( `summon` )
+- Inserts a variable symbol into the current scope
+- Name must be unique within that scope
+- Same‑scope redeclaration → error, keep original, ignore redeclared symbol
+- Inner scopes may shadow outer names (no warning)
+
+### Shadowing
+- Allowed without warnings
+- Lookups bind to nearest enclosing declaration
+
+### Identifier Resolution
+Lookup order for each identifier use:
+1. Current scope
+2. Enclosing scopes outward
+3. Program/global scope
+
+If not found: record an error, mark as unresolved, continue analysis to surface more issues.
+
+### Symbol Representation
+- Fields: name, kind (Variable), source location, owning scope
+- Kind is explicit to support future kinds (functions, params, etc.)
+
+### Error Policy
+- Non‑fatal: continue after errors
+- Error cases: undeclared identifier, same‑scope redeclaration
+- Shadowing is allowed
+- Expose `hadError` flag and diagnostics list
+
+### Resolution Side Table
+- Store results outside the AST
+- Map: AST identifier node → resolved symbol (or unresolved marker)
+- Benefits: immutable AST, clear metadata for later phases
+
+### Outputs
+- Hierarchy of symbol tables (scopes)
+- Resolution side table
+- Semantic error list
+- Global `hadError` indicator
+
+### Design Rationale
+- Matches modern compiler architecture
+- Prevents cascading failures while keeping AST stable
+- Clean separation for later phases (type checking, control flow, codegen)
 
 ---
 
