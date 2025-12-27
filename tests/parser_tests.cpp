@@ -3538,3 +3538,83 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
 
     ASSERT_TRUE(isEqualProgram(actual, expected));
 }
+
+// summon age = 10;
+
+// should (age >= 10) {
+//     say "You are allowed to play the game"   // ← missing ;
+// }
+// otherwise {
+//     say "You are not allowed to go ever";
+// }
+TEST(ParseProgram_Recovery, RecoverFromMissingSemicolonInsideIfBlock)
+{
+    std::vector<Token> tokens = {
+        // summon age = 10;
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("age", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 12),
+        Token("10", INTEGER, 10, 1, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 16),
+
+        // should (age >= 10) {
+        Token("should", SHOULD, std::monostate{}, 3, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 3, 8),
+        Token("age", IDENTIFIER, std::monostate{}, 3, 9),
+        Token(">=", GREATER_EQUAL, std::monostate{}, 3, 13),
+        Token("10", INTEGER, 10, 3, 16),
+        Token(")", RIGHT_PAREN, std::monostate{}, 3, 18),
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 20),
+
+        // say "You are allowed to play the game"   (missing ;)
+        Token("say", SAY, std::monostate{}, 4, 5),
+        Token("\"You are allowed to play the game\"", STRING,
+              std::string("You are allowed to play the game"), 4, 9),
+
+        // recovery boundary
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+
+        // otherwise {
+        Token("otherwise", OTHERWISE, std::monostate{}, 6, 1),
+        Token("{", LEFT_BRACE, std::monostate{}, 6, 11),
+
+        // say "You are not allowed to go ever";
+        Token("say", SAY, std::monostate{}, 7, 5),
+        Token("\"You are not allowed to go ever\"", STRING,
+              std::string("You are not allowed to go ever"), 7, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 7, 43),
+        Token("}", RIGHT_BRACE, std::monostate{}, 8, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 8, 2),
+    };
+
+    Parser  parser(tokens);
+    Program actual = parser.parseProgram();
+
+    std::vector<std::unique_ptr<Stmt>> expectedStatements;
+
+    // summon age = 10;
+    expectedStatements.push_back(
+        std::make_unique<SummonStmt>("age", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
+
+    // recovered top-level block
+    {
+        std::vector<std::unique_ptr<Stmt>> blockStmts;
+
+        std::vector<StringPart> parts;
+        StringPart              p;
+        p.kind = StringPart::TEXT;
+        p.text = "You are not allowed to go ever";
+        parts.push_back(std::move(p));
+
+        blockStmts.push_back(
+            std::make_unique<SayStmt>(std::make_unique<StringExpr>(std::move(parts), 7, 9), 7, 5));
+
+        expectedStatements.push_back(std::make_unique<BlockStmt>(std::move(blockStmts), 6, 11));
+    }
+
+    Program expected(std::move(expectedStatements), true, {1, 1}, {8, 2});
+
+    ASSERT_TRUE(isEqualProgram(actual, expected));
+    ASSERT_TRUE(actual.hadError());
+}
