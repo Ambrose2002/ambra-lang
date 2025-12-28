@@ -1,8 +1,19 @@
+/**
+ * Semantic analysis structures.
+ *
+ * Note: `Scope` is a low-level data structure.
+ * It stores symbols and provides deterministic lexical lookup, but it does not
+ * emit diagnostics or make policy decisions.
+ */
+
+#pragma once
+
 #include "ast/expr.h"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 struct Scope;
 struct Diagnostic
@@ -26,17 +37,84 @@ struct Symbol
 
 struct Scope
 {
+    // Non-owning link to the lexically enclosing scope (nullptr for root).
+    Scope* parent = nullptr;
 
-    std::unique_ptr<Scope>                                   parent;
     std::unordered_map<std::string, std::unique_ptr<Symbol>> table;
 
     std::vector<std::unique_ptr<Scope>> children;
 
-    bool declare(std::string& name, std::unique_ptr<Symbol>);
+    /**
+     * @brief Register a new symbol in the current scope.
+     *
+     * This operation affects only the current scope's symbol table. It never
+     * consults parent scopes. Shadowing of outer-scope symbols is allowed.
+     *
+     * If a symbol with the same name already exists in the current scope, this
+     * function returns false and leaves the existing symbol unchanged.
+     *
+     * Scope does not emit diagnostics; the caller is responsible for reporting
+     * redeclaration errors.
+     *
+     * @param name Symbol name to declare (current-scope only)
+     * @param symbol The symbol to insert on success
+     * @return true if the declaration succeeds, false if the name already exists
+     *         in the current scope
+     */
+    bool declare(const std::string& name, std::unique_ptr<Symbol> symbol)
+    {
+        if (table.find(name) != table.end())
+        {
+            return false;
+        }
+        table.emplace(name, std::move(symbol));
+        return true;
+    };
 
-    const Symbol* lookup(std::string& name) const;
+    /**
+     * @brief Look up a symbol declared directly in the current scope.
+     *
+     * This function searches only the current scope's symbol table and does
+     * not inspect parent scopes.
+     *
+     * @param name Symbol name to search for
+     * @return Pointer to the symbol if found in the current scope, otherwise
+     *         nullptr
+     */
+    const Symbol* lookupLocal(const std::string& name) const
+    {
+        auto found = table.find(name);
+        if (found != table.end())
+        {
+            return found->second.get();
+        }
+        return nullptr;
+    };
 
-    const Symbol* lookupLocal(std::string& name) const;
+    /**
+     * @brief Resolve a symbol using lexical scoping rules.
+     *
+     * Performs a lexically upward search: current scope, then parent scope,
+     * then parent's parent, and so on until the root scope. The search stops
+     * at the first match, naturally implementing shadowing.
+     *
+     * @param name Symbol name to resolve
+     * @return Pointer to the resolved symbol if found in any reachable scope,
+     *         otherwise nullptr
+     */
+    const Symbol* lookup(const std::string& name) const
+    {
+
+        auto foundLocal = lookupLocal(name);
+        if (foundLocal)
+        {
+            return foundLocal;
+        }
+
+        if (parent)
+            return parent->lookup(name);
+        return nullptr;
+    };
 };
 
 struct ResolutionTable
@@ -49,5 +127,8 @@ struct SemanticResult
     std::unique_ptr<Scope>  rootScope;
     std::vector<Diagnostic> diagnostic;
     ResolutionTable         resolutionTable;
-    bool                    hadError() const;
+    bool                    hadError() const
+    {
+        return diagnostic.size() > 0;
+    };
 };
