@@ -252,13 +252,13 @@ class BlockStmt : public Stmt
         return true;
     }
 
-    using BlockStmtIterator = std::vector<std::unique_ptr<Stmt>>::const_iterator;
+    using StmtIterator = std::vector<std::unique_ptr<Stmt>>::const_iterator;
 
     /**
      * @brief Returns an iterator to the beginning of the statements.
      * @return Iterator to the first statement
      */
-    BlockStmtIterator begin() const
+    StmtIterator begin() const
     {
         return statements.begin();
     }
@@ -267,7 +267,7 @@ class BlockStmt : public Stmt
      * @brief Returns an iterator to the end of the statements.
      * @return Iterator past the last statement
      */
-    BlockStmtIterator end() const
+    StmtIterator end() const
     {
         return statements.end();
     }
@@ -276,7 +276,7 @@ class BlockStmt : public Stmt
      * @brief Returns a const iterator to the beginning of the statements.
      * @return Const iterator to the first statement
      */
-    BlockStmtIterator cbegin() const
+    StmtIterator cbegin() const
     {
         return statements.cbegin();
     }
@@ -285,15 +285,11 @@ class BlockStmt : public Stmt
      * @brief Returns a const iterator to the end of the statements.
      * @return Const iterator past the last statement
      */
-    BlockStmtIterator cend() const
+    StmtIterator cend() const
     {
         return statements.cend();
     }
 
-  private:
-    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
-
-  public:
     /**
      * @brief Return a human-readable representation of this statement.
      * @return String representation of this statement
@@ -312,6 +308,9 @@ class BlockStmt : public Stmt
         out += "])";
         return out;
     }
+
+  private:
+    std::vector<std::unique_ptr<Stmt>> statements; ///< The statements in the block
 };
 
 /**
@@ -345,14 +344,6 @@ class IfChainStmt : public Stmt
         loc = {line, col};
     };
 
-  private:
-    /// List of (condition, block) pairs, evaluated in order
-    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
-
-    /// Optional fallback block executed if all conditions are false
-    std::optional<std::unique_ptr<BlockStmt>> elseBranch;
-
-  public:
     /**
      * @brief Compares two IfChainStmt nodes for equality.
      * @param other The other statement to compare with
@@ -445,6 +436,52 @@ class IfChainStmt : public Stmt
         out += ")";
         return out;
     }
+
+    using StmtIterator =
+        std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>>::const_iterator;
+
+    /**
+     * @brief Returns an iterator to the beginning of the statements.
+     * @return Iterator to the first statement
+     */
+    StmtIterator begin() const
+    {
+        return branches.begin();
+    }
+
+    /**
+     * @brief Returns an iterator to the end of the statements.
+     * @return Iterator past the last statement
+     */
+    StmtIterator end() const
+    {
+        return branches.end();
+    }
+
+    /**
+     * @brief Returns a const iterator to the beginning of the statements.
+     * @return Const iterator to the first statement
+     */
+    StmtIterator cbegin() const
+    {
+        return branches.cbegin();
+    }
+
+    /**
+     * @brief Returns a const iterator to the end of the statements.
+     * @return Const iterator past the last statement
+     */
+    StmtIterator cend() const
+    {
+        return branches.cend();
+    }
+
+  private:
+    /// List of (condition, block) pairs, evaluated in order
+    std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
+
+    /// Optional fallback block executed if all conditions are false
+    std::optional<std::unique_ptr<BlockStmt>> elseBranch;
 };
 
 /**
