@@ -121,7 +121,7 @@ struct Scope
 
 struct ResolutionTable
 {
-    std::unordered_map<IdentifierExpr*, Symbol*> mapping;
+    std::unordered_map<const IdentifierExpr*, const Symbol*> mapping;
 };
 
 struct SemanticResult
@@ -129,7 +129,8 @@ struct SemanticResult
     std::unique_ptr<Scope>  rootScope;
     std::vector<Diagnostic> diagnostics;
     ResolutionTable         resolutionTable;
-    bool                    hadError() const
+
+    bool hadError() const
     {
         return diagnostics.size() > 0;
     };
@@ -154,7 +155,7 @@ class Resolver
     void resolveWhileStmt(const WhileStmt& stmt);
 
     void resolveExpression(const Expr& expr);
-    void resolveIdentifierExpr(const Expr& expr);
+    void resolveIdentifierExpression(const IdentifierExpr& expr);
 
     void enterScope();
     void exitScope();

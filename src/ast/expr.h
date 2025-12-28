@@ -546,7 +546,8 @@ class StringExpr : public Expr
         return parts.cend();
     }
 
-    const std::vector<StringPart>& getParts() const {
+    const std::vector<StringPart>& getParts() const
+    {
         return parts;
     }
 

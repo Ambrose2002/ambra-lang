@@ -183,7 +183,8 @@ class SayStmt : public Stmt
      * @brief Retrieves the expression.
      * @return A const reference to the expression.
      */
-    const Expr& getExpression() const {
+    const Expr& getExpression() const
+    {
         return *expression;
     }
 
