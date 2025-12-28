@@ -18,7 +18,6 @@ enum ExprKind
 {
     IntLiteral,         ///< Integer literal expression
     BoolLiteral,        ///< Boolean literal expression
-    StringLiteral,      ///< String literal expression
     InterpolatedString, ///< Interpolated string expression
     Identifier,         ///< Identifier reference expression
     Unary,              ///< Unary operator expression
@@ -304,6 +303,15 @@ class UnaryExpr : public Expr
                ")";
     }
 
+    /**
+     * @brief Retrieves the operand of a unary expression.
+     * @return A const reference to the operand.
+     */
+    const Expr& getOperand() const
+    {
+        return *operand;
+    }
+
   private:
     UnaryOpKind           op;      ///< The unary operator
     std::unique_ptr<Expr> operand; ///< The operand expression
@@ -390,6 +398,24 @@ class BinaryExpr : public Expr
                (right ? right->toString() : "null") + ")";
     }
 
+    /**
+     * @brief Retrieves the left operand of a binary expression.
+     * @return A const reference to the left-hand side expression.
+     */
+    const Expr& getLeft() const
+    {
+        return *left;
+    }
+
+    /**
+     * @brief Retrieves the right operand of a binary expression.
+     * @return A const reference to the right-hand side expression.
+     */
+    const Expr& getRight() const
+    {
+        return *right;
+    }
+
   private:
     std::unique_ptr<Expr> left;  ///< The left operand
     BinaryOpKind          op;    ///< The binary operator
@@ -435,6 +461,14 @@ class GroupingExpr : public Expr
         return std::string("Group(") + (expression ? expression->toString() : "null") + ")";
     }
 
+    /**
+     * @brief Retrieves the nested expression.
+     * @return A const reference to the nested expression.
+     */
+    const Expr& getExpression() const
+    {
+        return *expression;
+    }
   private:
     std::unique_ptr<Expr> expression; ///< The inner expression
 };
