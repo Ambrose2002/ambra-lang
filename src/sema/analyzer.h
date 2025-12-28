@@ -127,11 +127,11 @@ struct ResolutionTable
 struct SemanticResult
 {
     std::unique_ptr<Scope>  rootScope;
-    std::vector<Diagnostic> diagnostic;
+    std::vector<Diagnostic> diagnostics;
     ResolutionTable         resolutionTable;
     bool                    hadError() const
     {
-        return diagnostic.size() > 0;
+        return diagnostics.size() > 0;
     };
 };
 
