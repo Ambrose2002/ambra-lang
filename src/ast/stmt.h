@@ -11,7 +11,6 @@
 #include "expr.h"
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -388,23 +387,12 @@ class IfChainStmt : public Stmt
                 return false;
         }
 
-        if (elseBranch.has_value() != o.elseBranch.has_value())
+        if (!elseBranch && !o.elseBranch)
+            return true;
+        if (!elseBranch || !o.elseBranch)
             return false;
 
-        if (elseBranch && o.elseBranch)
-        {
-            const auto& eb1 = *elseBranch;
-            const auto& eb2 = *o.elseBranch;
-
-            if (!eb1 && !eb2)
-                return true;
-            if (!eb1 || !eb2)
-                return false;
-            if (!(*eb1 == *eb2))
-                return false;
-        }
-
-        return true;
+        return *elseBranch == *o.elseBranch;
     }
 
     /**
@@ -427,11 +415,10 @@ class IfChainStmt : public Stmt
             out += ")";
         }
         out += "]";
-        if (elseBranch.has_value())
+        if (elseBranch)
         {
             out += ", else=";
-            const auto& eb = *elseBranch;
-            out += (eb ? eb->toString() : std::string("null"));
+            out += elseBranch->toString();
         }
         out += ")";
         return out;
@@ -482,7 +469,7 @@ class IfChainStmt : public Stmt
         return branches;
     }
 
-    const std::optional<std::unique_ptr<BlockStmt>>& getElseBranch() const
+    const std::unique_ptr<BlockStmt>& getElseBranch() const
     {
         return elseBranch;
     }
@@ -492,7 +479,7 @@ class IfChainStmt : public Stmt
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
 
     /// Optional fallback block executed if all conditions are false
-    std::optional<std::unique_ptr<BlockStmt>> elseBranch;
+    std::unique_ptr<BlockStmt> elseBranch;
 };
 
 /**
