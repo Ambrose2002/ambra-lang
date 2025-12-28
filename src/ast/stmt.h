@@ -122,11 +122,13 @@ class SummonStmt : public Stmt
         return out;
     }
 
-    const Expr& getInitializer() const {
+    const Expr& getInitializer() const
+    {
         return *initializer;
     }
 
-    const std::string& getName() const {
+    const std::string& getName() const
+    {
         return name;
     }
 
@@ -248,6 +250,44 @@ class BlockStmt : public Stmt
             }
         }
         return true;
+    }
+
+    using BlockStmtIterator = std::vector<std::unique_ptr<Stmt>>::const_iterator;
+
+    /**
+     * @brief Returns an iterator to the beginning of the statements.
+     * @return Iterator to the first statement
+     */
+    BlockStmtIterator begin() const
+    {
+        return statements.begin();
+    }
+
+    /**
+     * @brief Returns an iterator to the end of the statements.
+     * @return Iterator past the last statement
+     */
+    BlockStmtIterator end() const
+    {
+        return statements.end();
+    }
+
+    /**
+     * @brief Returns a const iterator to the beginning of the statements.
+     * @return Const iterator to the first statement
+     */
+    BlockStmtIterator cbegin() const
+    {
+        return statements.cbegin();
+    }
+
+    /**
+     * @brief Returns a const iterator to the end of the statements.
+     * @return Const iterator past the last statement
+     */
+    BlockStmtIterator cend() const
+    {
+        return statements.cend();
     }
 
   private:
