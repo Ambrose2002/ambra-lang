@@ -179,6 +179,14 @@ class SayStmt : public Stmt
         return *expression == *o.expression;
     }
 
+    /**
+     * @brief Retrieves the expression.
+     * @return A const reference to the expression.
+     */
+    const Expr& getExpression() const {
+        return *expression;
+    }
+
   private:
     std::unique_ptr<Expr> expression; ///< The expression to print
 
