@@ -122,6 +122,14 @@ class SummonStmt : public Stmt
         return out;
     }
 
+    const Expr& getInitializer() const {
+        return *initializer;
+    }
+
+    const std::string& getName() const {
+        return name;
+    }
+
   private:
     std::string           name;        ///< The variable name
     std::unique_ptr<Expr> initializer; ///< The initialization expression
