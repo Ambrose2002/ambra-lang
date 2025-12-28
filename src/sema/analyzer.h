@@ -9,6 +9,8 @@
 #pragma once
 
 #include "ast/expr.h"
+#include "ast/prog.h"
+#include "ast/stmt.h"
 
 #include <memory>
 #include <string>
@@ -131,4 +133,40 @@ struct SemanticResult
     {
         return diagnostic.size() > 0;
     };
+};
+
+class Resolver
+{
+  private:
+    ~Resolver() = default;
+
+    Scope*                  currentScope;
+    std::unique_ptr<Scope>  rootScope;
+    ResolutionTable         resolutionTable;
+    std::vector<Diagnostic> diagnostic;
+
+    void resolveProgram(Program program);
+
+    void resolveStatement(Stmt stmt);
+
+    void resolveExpression(Expr expr);
+
+    void enterScope();
+
+    void exitScope();
+
+    void resolveSummonStmt(Stmt stmt);
+
+    void resolveSayStmt(Stmt stmt);
+
+    void resolveBlockStmt(Stmt stmt);
+
+    void resolveIfChainStmt(Stmt stmt);
+
+    void resolveWhileStmt(Stmt stmt);
+
+    void resolveIdentifierExpr(Expr expr);
+
+  public:
+    SemanticResult resolve();
 };
