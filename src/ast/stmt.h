@@ -476,6 +476,17 @@ class IfChainStmt : public Stmt
         return branches.cend();
     }
 
+    const std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>>&
+    getBranches() const
+    {
+        return branches;
+    }
+
+    const std::optional<std::unique_ptr<BlockStmt>>& getElseBranch() const
+    {
+        return elseBranch;
+    }
+
   private:
     /// List of (condition, block) pairs, evaluated in order
     std::vector<std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>>> branches;
@@ -507,6 +518,26 @@ class WhileStmt : public Stmt
         loc = {line, col};
     };
 
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
+    std::string toString() const override
+    {
+        return std::string("While(") + (condition ? condition->toString() : std::string("null")) +
+               ", " + (body ? body->toString() : std::string("null")) + ")";
+    }
+
+    const Expr& getCondition() const
+    {
+        return *condition;
+    }
+
+    const BlockStmt& getBody() const
+    {
+        return *body;
+    }
+
   private:
     std::unique_ptr<Expr>      condition; ///< The loop condition
     std::unique_ptr<BlockStmt> body;      ///< The loop body
@@ -533,16 +564,5 @@ class WhileStmt : public Stmt
             return false;
 
         return *condition == *o.condition && *body == *o.body;
-    }
-
-  public:
-    /**
-     * @brief Return a human-readable representation of this statement.
-     * @return String representation of this statement
-     */
-    std::string toString() const override
-    {
-        return std::string("While(") + (condition ? condition->toString() : std::string("null")) +
-               ", " + (body ? body->toString() : std::string("null")) + ")";
     }
 };
