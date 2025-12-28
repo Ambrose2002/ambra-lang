@@ -6,6 +6,67 @@
 #include <memory>
 #include <utility>
 
+void Resolver::resolveSummonStmt(const SummonStmt& stmt)
+{
+    resolveExpression(stmt.getInitializer());
+
+    Symbol symbol;
+    symbol.kind = Symbol::VARIABLE;
+    symbol.name = stmt.getName();
+    symbol.declLoc = stmt.loc;
+
+    bool isDeclared = currentScope->declare(stmt.getName(), std::make_unique<Symbol>(symbol));
+
+    if (!isDeclared)
+    {
+        reportError("Error declaring variable", stmt.loc);
+    }
+}
+
+void Resolver::resolveSayStmt(const SayStmt& stmt) {}
+void Resolver::resolveBlockStmt(const BlockStmt& stmt)
+{
+    enterScope();
+
+    for (auto& stmt : stmt)
+    {
+        resolveStatement(*stmt);
+    }
+
+    exitScope();
+}
+
+void Resolver::resolveIfChainStmt(const IfChainStmt& stmt)
+{
+    for (auto& branch : stmt.getBranches())
+    {
+        auto& condition = std::get<0>(branch);
+        resolveExpression(*condition);
+        auto& block = std::get<1>(branch);
+        resolveBlockStmt(*block);
+    }
+
+    auto& elseBranch = stmt.getElseBranch();
+    if (elseBranch)
+    {
+        resolveBlockStmt(**elseBranch);
+    }
+}
+void Resolver::resolveWhileStmt(const WhileStmt& stmt)
+{
+    auto& condition = stmt.getCondition();
+    resolveExpression(condition);
+    auto& block = stmt.getBody();
+    resolveBlockStmt(block);
+}
+
+void Resolver::resolveExpression(const Expr& expr) {
+    
+};
+void Resolver::resolveIdentifierExpr(const Expr& expr) {
+
+};
+
 void Resolver::resolveStatement(const Stmt& stmt)
 {
 
