@@ -138,35 +138,31 @@ struct SemanticResult
 class Resolver
 {
   private:
-    ~Resolver() = default;
-
     Scope*                  currentScope;
     std::unique_ptr<Scope>  rootScope;
     ResolutionTable         resolutionTable;
-    std::vector<Diagnostic> diagnostic;
+    std::vector<Diagnostic> diagnostics;
 
-    void resolveProgram(Program program);
+    void resolveProgram(const Program& program);
 
-    void resolveStatement(Stmt stmt);
+    void resolveStatement(const Stmt& stmt);
 
-    void resolveExpression(Expr expr);
+    void resolveSummonStmt(const SummonStmt& stmt);
+    void resolveSayStmt(const SayStmt& stmt);
+    void resolveBlockStmt(const BlockStmt& stmt);
+    void resolveIfChainStmt(const IfChainStmt& stmt);
+    void resolveWhileStmt(const WhileStmt& stmt);
+
+    void resolveExpression(const Expr& expr);
+    void resolveIdentifierExpr(const Expr& expr);
 
     void enterScope();
-
     void exitScope();
 
-    void resolveSummonStmt(Stmt stmt);
-
-    void resolveSayStmt(Stmt stmt);
-
-    void resolveBlockStmt(Stmt stmt);
-
-    void resolveIfChainStmt(Stmt stmt);
-
-    void resolveWhileStmt(Stmt stmt);
-
-    void resolveIdentifierExpr(Expr expr);
+    void reportError(const std::string& message, SourceLoc loc);
 
   public:
-    SemanticResult resolve();
+    Resolver();
+    ~Resolver() = default;
+    SemanticResult resolve(const Program& program);
 };
