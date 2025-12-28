@@ -469,6 +469,7 @@ class GroupingExpr : public Expr
     {
         return *expression;
     }
+
   private:
     std::unique_ptr<Expr> expression; ///< The inner expression
 };
@@ -521,6 +522,28 @@ class StringExpr : public Expr
         }
         out += "\")";
         return out;
+    }
+
+    using StringPartIterator = std::vector<StringPart>::const_iterator;
+
+    StringPartIterator begin() const
+    {
+        return parts.begin();
+    }
+
+    StringPartIterator end() const
+    {
+        return parts.end();
+    }
+
+    StringPartIterator cbegin() const
+    {
+        return parts.cbegin();
+    }
+
+    StringPartIterator cend() const
+    {
+        return parts.cend();
     }
 
   private:
