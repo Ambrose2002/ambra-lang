@@ -835,7 +835,8 @@ TEST(SummonStatement, SummonIntLiteral)
     auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1);
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("x", 1, 8),
+                                     std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -858,7 +859,8 @@ TEST(SummonStatement, SummonBoolLiteral)
     auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 1, 15), 1, 1);
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("flag", 1, 8),
+                                     std::make_unique<BoolLiteralExpr>(true, 1, 15), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -879,7 +881,8 @@ TEST(SummonStatement, SummonIdentifierInitializer)
     auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("y", std::make_unique<IdentifierExpr>("x", 1, 12), 1, 1);
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("y", 1, 8),
+                                     std::make_unique<IdentifierExpr>("x", 1, 12), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -910,8 +913,8 @@ TEST(SummonStatement, SummonBinaryInitializerPrecedence)
                                      std::make_unique<IntLiteralExpr>(3, 1, 20), 1, 18),
         1, 14);
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("x", std::move(expectedInitializer), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        std::make_unique<IdentifierExpr>("x", 1, 8), std::move(expectedInitializer), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -946,8 +949,8 @@ TEST(SummonStatement, SummonGroupedInitializer)
     auto expectedInitializer = std::make_unique<BinaryExpr>(
         std::move(grouped), Multiply, std::make_unique<IntLiteralExpr>(3, 1, 22), 1, 20);
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("x", std::move(expectedInitializer), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        std::make_unique<IdentifierExpr>("x", 1, 8), std::move(expectedInitializer), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -970,7 +973,7 @@ TEST(SummonStatement, SummonUnaryInitializer)
     auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
-        "x",
+        std::make_unique<IdentifierExpr>("x", 1, 8),
         std::make_unique<UnaryExpr>(ArithmeticNegate, std::make_unique<IntLiteralExpr>(1, 1, 13), 1,
                                     12),
         1, 1);
@@ -997,7 +1000,7 @@ TEST(SummonStatement, SummonComparisonInitializer)
     auto   actual = parser.parseStatement();
 
     std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
-        "ok",
+        std::make_unique<IdentifierExpr>("ok", 1, 8),
         std::make_unique<BinaryExpr>(std::make_unique<IntLiteralExpr>(2, 1, 13), Less,
                                      std::make_unique<IntLiteralExpr>(3, 1, 17), 1, 15),
         1, 1);
@@ -1031,8 +1034,8 @@ TEST(SummonStatement, SummonEqualityInitializer)
     auto expectedInitializer = std::make_unique<BinaryExpr>(
         std::move(lhs), EqualEqual, std::make_unique<BoolLiteralExpr>(true, 1, 22), 1, 19);
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("eq", std::move(expectedInitializer), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        std::make_unique<IdentifierExpr>("eq", 1, 8), std::move(expectedInitializer), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1076,8 +1079,8 @@ TEST(SummonStatement, SummonInterpolatedStringInitializer)
 
     auto expectedInitializer = std::make_unique<StringExpr>(std::move(parts), 1, 14);
 
-    std::unique_ptr<Stmt> expected =
-        std::make_unique<SummonStmt>("msg", std::move(expectedInitializer), 1, 1);
+    std::unique_ptr<Stmt> expected = std::make_unique<SummonStmt>(
+        std::make_unique<IdentifierExpr>("msg", 1, 8), std::move(expectedInitializer), 1, 1);
 
     ASSERT_TRUE(isEqualStatements(actual, expected));
 }
@@ -1194,7 +1197,8 @@ TEST(BlockStatement, BlockStatementSimple)
 
     std::vector<std::unique_ptr<Stmt>> summonExpression;
     summonExpression.push_back(
-        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 1, 16), 1, 2));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("flag", 1, 9),
+                                     std::make_unique<BoolLiteralExpr>(true, 1, 16), 1, 2));
 
     std::unique_ptr<Stmt> expected = std::make_unique<BlockStmt>(std::move(summonExpression), 1, 1);
 
@@ -1245,8 +1249,9 @@ TEST(BlockStatement, BlockStatementTwoStatements)
 
     std::vector<std::unique_ptr<Stmt>> statements;
 
-    statements.push_back(
-        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 3));
+    statements.push_back(std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("x", 1, 10),
+                                                      std::make_unique<IntLiteralExpr>(10, 1, 14),
+                                                      1, 3));
 
     std::vector<StringPart> parts;
     StringPart              p;
@@ -1312,7 +1317,8 @@ TEST(BlockStatement, BlockStatementNestedWithSummon)
 
     std::vector<std::unique_ptr<Stmt>> innerStatements;
     innerStatements.push_back(
-        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(1, 1, 16), 1, 5));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("x", 1, 12),
+                                     std::make_unique<IntLiteralExpr>(1, 1, 16), 1, 5));
 
     auto innerBlock = std::make_unique<BlockStmt>(std::move(innerStatements), 1, 3);
 
@@ -2343,8 +2349,8 @@ TEST(WhileStatement, MultipleStatementsInBody)
     auto condition = std::make_unique<IdentifierExpr>("x", 1, 11);
 
     std::vector<std::unique_ptr<Stmt>> body;
-    body.push_back(
-        std::make_unique<SummonStmt>("y", std::make_unique<IntLiteralExpr>(10, 2, 14), 2, 3));
+    body.push_back(std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("y", 2, 10),
+                                                std::make_unique<IntLiteralExpr>(10, 2, 14), 2, 3));
 
     std::vector<StringPart> parts;
     parts.push_back({StringPart::TEXT, "ok", nullptr});
@@ -2696,7 +2702,8 @@ TEST(ParseProgram_Basics, MultipleStatementsMixed)
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SummonStmt>("x", std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("x", 1, 8),
+                                     std::make_unique<IntLiteralExpr>(10, 1, 12), 1, 1));
 
     expectedStmts.push_back(
         std::make_unique<SayStmt>(std::make_unique<IdentifierExpr>("x", 2, 5), 2, 1));
@@ -2729,7 +2736,8 @@ TEST(ParseProgram_Blocks, TopLevelBlock)
 
     std::vector<std::unique_ptr<Stmt>> blockStmts;
     blockStmts.push_back(
-        std::make_unique<SummonStmt>("flag", std::make_unique<BoolLiteralExpr>(true, 2, 17), 2, 3));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("flag", 2, 10),
+                                     std::make_unique<BoolLiteralExpr>(true, 2, 17), 2, 3));
 
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(std::make_unique<BlockStmt>(std::move(blockStmts), 1, 1));
@@ -3225,7 +3233,8 @@ TEST(ParseProgram_Basics, SummonThenSayWithInterpolation)
     // Expected summon
     std::vector<std::unique_ptr<Stmt>> expectedStmts;
     expectedStmts.push_back(
-        std::make_unique<SummonStmt>("a", std::make_unique<IntLiteralExpr>(1, 1, 12), 1, 1));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("a", 1, 8),
+                                     std::make_unique<IntLiteralExpr>(1, 1, 12), 1, 1));
 
     // Expected say with interpolation
     std::vector<StringPart> parts;
@@ -3474,7 +3483,8 @@ TEST(ParseProgram_Basics, SummonThenIfChainWithElseIfAndElse)
 
     // summon age = 10;
     expectedStatements.push_back(
-        std::make_unique<SummonStmt>("age", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("age", 1, 8),
+                                     std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
 
     // --- IF CHAIN ---
 
@@ -3595,7 +3605,8 @@ TEST(ParseProgram_Recovery, RecoverFromMissingSemicolonInsideIfBlock)
 
     // summon age = 10;
     expectedStatements.push_back(
-        std::make_unique<SummonStmt>("age", std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
+        std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>("age", 1, 8),
+                                     std::make_unique<IntLiteralExpr>(10, 1, 14), 1, 1));
 
     // recovered top-level block
     {
