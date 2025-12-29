@@ -17,6 +17,15 @@
 #include <unordered_map>
 #include <vector>
 
+enum Type
+{
+    Int,
+    Bool,
+    String,
+    Void,
+    Error
+};
+
 struct Scope;
 struct Diagnostic
 {
@@ -35,6 +44,8 @@ struct Symbol
     } kind;
 
     SourceLoc declLoc;
+
+    Type type;
 };
 
 struct Scope
@@ -166,4 +177,32 @@ class Resolver
     Resolver();
     ~Resolver() = default;
     SemanticResult resolve(const Program& program);
+};
+
+struct TypeTable
+{
+    std::unordered_map<const Expr*, Type> mapping;
+};
+
+struct TypeCheckerResults
+{
+    TypeTable               typeTable;
+    std::vector<Diagnostic> diagnostics;
+
+    bool hadError() const
+    {
+        return diagnostics.size() > 0;
+    };
+};
+class TypeChecker
+{
+  private:
+    const Scope*            currentScope;
+    const ResolutionTable&  resolutionTable;
+    TypeTable               typeTable;
+    std::vector<Diagnostic> diagnostics;
+
+  public:
+    TypeChecker(const ResolutionTable& resolutionTable, const Scope* rootScope);
+    TypeCheckerResults check(const Program& program);
 };
