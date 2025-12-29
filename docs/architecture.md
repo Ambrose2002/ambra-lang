@@ -404,7 +404,72 @@ If not found: record an error, mark as unresolved, continue analysis to surface 
 
 ---
 
-## 2.5 Bytecode Generation
+## 2.5 Semantic Analysis — Type Checking
+
+**Input:** AST + resolved symbols  
+**Output:** Type annotations + diagnostics
+
+This pass performs **static type checking** after name resolution. It ensures all expressions and statements conform to Ambra's type rules and annotates the AST with type information for bytecode generation.
+
+### Goals
+- Assign types to all expressions
+- Verify type constraints for operators and control flow
+- Detect type mismatches and invalid operations
+- Allow multiple independent errors (error recovery)
+- Annotate symbols with their inferred types
+
+### Type Universe
+Ambra has a closed set of types:
+- **Primitive types:** `Int`, `Bool`, `String`
+- **Special types:** `Void` (statement result), `Error` (internal error recovery)
+
+### Expression Type Rules
+- **Literals:** Integer → `Int`, Boolean → `Bool`, String → `String`
+- **Identifiers:** Type determined by declaration's initializer
+- **Grouping:** Type of inner expression
+- **Unary operators:**
+  - `-` requires `Int`, produces `Int`
+  - `not` requires `Bool`, produces `Bool`
+- **Binary operators:**
+  - Arithmetic (`+`, `-`, `*`, `/`): require `Int`, produce `Int`
+  - Comparison (`<`, `<=`, `>`, `>=`): require `Int`, produce `Bool`
+  - Equality (`==`, `!=`): require same type, produce `Bool`
+- **Interpolated strings:** All embedded expressions must be printable (`Int`, `Bool`, `String`), result is `String`
+
+### Statement Type Rules
+All statements have type `Void`:
+- **Summon:** Initializer type becomes variable's type
+- **Say:** Expression must be printable (`Int`, `Bool`, `String`)
+- **Block:** All inner statements must type‑check
+- **If‑chain:** All conditions must be `Bool`, all branches must type‑check
+- **While:** Condition must be `Bool`, body must type‑check
+
+### Error Recovery
+- Expressions with type errors evaluate to type `Error`
+- `Error` type suppresses cascading diagnostics
+- Multiple independent errors are reported
+- Type checking continues after errors to surface additional issues
+
+### Type Annotation Storage
+- Store type information in a side table mapping AST nodes → types
+- Keep AST immutable
+- Symbol table is augmented with type information for declared variables
+
+### Outputs
+- Type side table (AST node → Type)
+- Updated symbol table with variable types
+- Type error diagnostics
+- Global `hadError` indicator
+
+### Design Rationale
+- Static type checking catches errors before runtime
+- Error recovery prevents diagnostic flooding
+- Side table approach preserves AST immutability
+- Clear separation from name resolution ensures modular design
+
+---
+
+## 2.6 Bytecode Generation
 
 **Input:** AST  
 **Output:** Bytecode module (instruction array + constants)
@@ -441,7 +506,7 @@ If not found: record an error, mark as unresolved, continue analysis to surface 
 
 ---
 
-## 2.6 Bytecode File Format
+## 2.7 Bytecode File Format
 
 The bytecode file contains:
 
