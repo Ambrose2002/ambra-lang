@@ -8,6 +8,13 @@
 #include <memory>
 #include <utility>
 
+Resolver::Resolver() : currentScope(nullptr), rootScope(nullptr) {}
+
+void Resolver::reportError(const std::string& message, SourceLoc loc)
+{
+    diagnostics.emplace_back(Diagnostic{message, loc});
+}
+
 void Resolver::enterScope()
 {
     auto newScope = std::make_unique<Scope>();
@@ -146,7 +153,7 @@ void Resolver::resolveIdentifierExpression(const IdentifierExpr& expr)
         return;
     }
 
-    diagnostics.emplace(diagnostics.end(), Diagnostic{"undeclared identifier", expr.loc});
+    reportError("undeclared identifier", expr.loc);
 };
 
 void Resolver::resolveStatement(const Stmt& stmt)
