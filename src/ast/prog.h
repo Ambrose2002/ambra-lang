@@ -5,6 +5,8 @@
  * The Program class represents a complete parsed program, containing
  * the root-level statements and metadata about the parse result.
  */
+#pragma once
+
 #include "ast/expr.h"
 #include "ast/stmt.h"
 

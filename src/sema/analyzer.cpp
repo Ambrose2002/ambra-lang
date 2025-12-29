@@ -35,17 +35,19 @@ void Resolver::exitScope()
 void Resolver::resolveSummonStmt(const SummonStmt& stmt)
 {
     resolveExpression(stmt.getInitializer());
+    auto identifier = stmt.getIdentifier();
 
     auto symbol = std::make_unique<Symbol>();
     symbol->kind = Symbol::VARIABLE;
-    symbol->name = stmt.getName();
-    symbol->declLoc = stmt.loc;
+    symbol->name = identifier.getName();
+    symbol->declLoc = identifier.loc;
 
-    bool isDeclared = currentScope->declare(stmt.getName(), std::move(symbol));
+    bool isDeclared = currentScope->declare(identifier.getName(), std::move(symbol));
 
     if (!isDeclared)
     {
-        reportError("Redeclaration of variable " + stmt.getName() + " in the same scope", stmt.loc);
+        reportError("Redeclaration of variable " + identifier.getName() + " in the same scope",
+                    stmt.loc);
     }
 }
 
