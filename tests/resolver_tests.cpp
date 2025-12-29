@@ -749,3 +749,686 @@ TEST(Resolver_SingleError, UndeclaredInWhileCondition)
     ASSERT_EQ(result.diagnostics.size(), 1);
     ASSERT_TRUE(result.hadError());
 }
+
+/**
+ * summon x = 1;
+ * { summon y = x; }
+ * say x;
+ *
+ * Tests: inner scope can access outer symbol, outer scope unaffected by inner declarations.
+ */
+TEST(Resolver_Scopes, InnerScopeAccessesOuterThenOuterUsesOwnSymbol)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 1),
+        Token("summon", SUMMON, std::monostate{}, 2, 3),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 10),
+        Token("=", EQUAL, std::monostate{}, 2, 12),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 15),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 1),
+
+        Token("say", SAY, std::monostate{}, 4, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 4, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 4, 6),
+
+        Token("", EOF_TOKEN, std::monostate{}, 4, 7),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto innerX = findIdentAt(ids, "x", 2, 14);
+    auto outerX = findIdentAt(ids, "x", 4, 5);
+
+    ASSERT_NE(innerX, nullptr);
+    ASSERT_NE(outerX, nullptr);
+
+    const Symbol* symInner = resolvedSymbol(res, innerX);
+    const Symbol* symOuter = resolvedSymbol(res, outerX);
+
+    ASSERT_NE(symInner, nullptr);
+    ASSERT_NE(symOuter, nullptr);
+
+    // Both should resolve to same outer x at (1,8)
+    ASSERT_EQ(symInner->declLoc.line, 1);
+    ASSERT_EQ(symInner->declLoc.col, 8);
+    ASSERT_EQ(symOuter->declLoc.line, 1);
+    ASSERT_EQ(symOuter->declLoc.col, 8);
+}
+
+/**
+ * summon x = 1;
+ * { summon x = 2; { summon x = 3; say x; } }
+ *
+ * Tests: triple-nested shadowing, innermost reference resolves to innermost declaration.
+ */
+TEST(Resolver_Scopes, TripleNestedShadowing)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 1),
+        Token("summon", SUMMON, std::monostate{}, 2, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 10),
+        Token("=", EQUAL, std::monostate{}, 2, 12),
+        Token("2", INTEGER, 2, 2, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 15),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 3),
+        Token("summon", SUMMON, std::monostate{}, 3, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 12),
+        Token("=", EQUAL, std::monostate{}, 3, 14),
+        Token("3", INTEGER, 3, 3, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 17),
+
+        Token("say", SAY, std::monostate{}, 4, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 4, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 4, 10),
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 3),
+        Token("}", RIGHT_BRACE, std::monostate{}, 6, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 6, 2),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+    auto useX = findIdentAt(ids, "x", 4, 9);
+    ASSERT_NE(useX, nullptr);
+
+    const Symbol* sym = resolvedSymbol(res, useX);
+    ASSERT_NE(sym, nullptr);
+
+    // Should resolve to innermost x at (3,12)
+    ASSERT_EQ(sym->declLoc.line, 3);
+    ASSERT_EQ(sym->declLoc.col, 12);
+}
+
+/**
+ * summon x = 1;
+ * { say x; summon x = 2; say x; }
+ *
+ * Tests: first use in block sees outer, second use sees shadowing inner.
+ */
+TEST(Resolver_Scopes, ShadowingMidBlock)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 1),
+        Token("say", SAY, std::monostate{}, 2, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 8),
+
+        Token("summon", SUMMON, std::monostate{}, 3, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 10),
+        Token("=", EQUAL, std::monostate{}, 3, 12),
+        Token("2", INTEGER, 2, 3, 14),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 15),
+
+        Token("say", SAY, std::monostate{}, 4, 3),
+        Token("x", IDENTIFIER, std::monostate{}, 4, 7),
+        Token(";", SEMI_COLON, std::monostate{}, 4, 8),
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+
+        Token("", EOF_TOKEN, std::monostate{}, 5, 2),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto firstUse = findIdentAt(ids, "x", 2, 7);
+    auto secondUse = findIdentAt(ids, "x", 4, 7);
+
+    ASSERT_NE(firstUse, nullptr);
+    ASSERT_NE(secondUse, nullptr);
+
+    const Symbol* sym1 = resolvedSymbol(res, firstUse);
+    const Symbol* sym2 = resolvedSymbol(res, secondUse);
+
+    ASSERT_NE(sym1, nullptr);
+    ASSERT_NE(sym2, nullptr);
+
+    // First use sees outer x at (1,8)
+    ASSERT_EQ(sym1->declLoc.line, 1);
+    ASSERT_EQ(sym1->declLoc.col, 8);
+
+    // Second use sees inner x at (3,10)
+    ASSERT_EQ(sym2->declLoc.line, 3);
+    ASSERT_EQ(sym2->declLoc.col, 10);
+}
+
+/**
+ * summon a = 1;
+ * summon b = a + a;
+ *
+ * Tests: multiple uses of same identifier in single expression.
+ */
+TEST(Resolver_Expressions, MultipleUsesInSingleExpression)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("a", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("b", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("a", IDENTIFIER, std::monostate{}, 2, 12),
+        Token("+", PLUS, std::monostate{}, 2, 14),
+        Token("a", IDENTIFIER, std::monostate{}, 2, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 17),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 18),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto firstA = findIdentAt(ids, "a", 2, 12);
+    auto secondA = findIdentAt(ids, "a", 2, 16);
+
+    ASSERT_NE(firstA, nullptr);
+    ASSERT_NE(secondA, nullptr);
+
+    const Symbol* sym1 = resolvedSymbol(res, firstA);
+    const Symbol* sym2 = resolvedSymbol(res, secondA);
+
+    ASSERT_NE(sym1, nullptr);
+    ASSERT_NE(sym2, nullptr);
+
+    // Both should resolve to same declaration at (1,8)
+    ASSERT_EQ(sym1->declLoc.line, 1);
+    ASSERT_EQ(sym1->declLoc.col, 8);
+    ASSERT_EQ(sym2->declLoc.line, 1);
+    ASSERT_EQ(sym2->declLoc.col, 8);
+}
+
+/**
+ * summon x = 1;
+ * summon y = (x + x) * x;
+ *
+ * Tests: nested grouping with multiple identifier references.
+ */
+TEST(Resolver_Expressions, GroupingWithMultipleReferences)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 12),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 13),
+        Token("+", PLUS, std::monostate{}, 2, 15),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 17),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 18),
+        Token("*", STAR, std::monostate{}, 2, 20),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 22),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 23),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 24),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    // All three 'x' uses in the expression
+    auto x1 = findIdentAt(ids, "x", 2, 13);
+    auto x2 = findIdentAt(ids, "x", 2, 17);
+    auto x3 = findIdentAt(ids, "x", 2, 22);
+
+    ASSERT_NE(x1, nullptr);
+    ASSERT_NE(x2, nullptr);
+    ASSERT_NE(x3, nullptr);
+
+    const Symbol* sym1 = resolvedSymbol(res, x1);
+    const Symbol* sym2 = resolvedSymbol(res, x2);
+    const Symbol* sym3 = resolvedSymbol(res, x3);
+
+    ASSERT_NE(sym1, nullptr);
+    ASSERT_NE(sym2, nullptr);
+    ASSERT_NE(sym3, nullptr);
+
+    // All should resolve to (1,8)
+    ASSERT_EQ(sym1->declLoc.line, 1);
+    ASSERT_EQ(sym2->declLoc.line, 1);
+    ASSERT_EQ(sym3->declLoc.line, 1);
+    ASSERT_EQ(sym1->declLoc.col, 8);
+    ASSERT_EQ(sym2->declLoc.col, 8);
+    ASSERT_EQ(sym3->declLoc.col, 8);
+}
+
+/**
+ * summon x = 1;
+ * summon y = 2;
+ * should (x > 0) { say y; } otherwise { say x; }
+ *
+ * Tests: different branches reference different outer symbols.
+ */
+TEST(Resolver_ControlFlow, IfBranchesDifferentOuterReferences)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("2", INTEGER, 2, 2, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 13),
+
+        Token("should", SHOULD, std::monostate{}, 3, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 3, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 9),
+        Token(">", GREATER, std::monostate{}, 3, 11),
+        Token("0", INTEGER, 0, 3, 13),
+        Token(")", RIGHT_PAREN, std::monostate{}, 3, 14),
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 16),
+        Token("say", SAY, std::monostate{}, 3, 18),
+        Token("y", IDENTIFIER, std::monostate{}, 3, 22),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 23),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 25),
+
+        Token("otherwise", OTHERWISE, std::monostate{}, 3, 27),
+        Token("{", LEFT_BRACE, std::monostate{}, 3, 37),
+        Token("say", SAY, std::monostate{}, 3, 39),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 43),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 44),
+        Token("}", RIGHT_BRACE, std::monostate{}, 3, 46),
+
+        Token("", EOF_TOKEN, std::monostate{}, 3, 47),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto condX = findIdentAt(ids, "x", 3, 9);
+    auto thenY = findIdentAt(ids, "y", 3, 22);
+    auto elseX = findIdentAt(ids, "x", 3, 43);
+
+    ASSERT_NE(condX, nullptr);
+    ASSERT_NE(thenY, nullptr);
+    ASSERT_NE(elseX, nullptr);
+
+    const Symbol* symCondX = resolvedSymbol(res, condX);
+    const Symbol* symThenY = resolvedSymbol(res, thenY);
+    const Symbol* symElseX = resolvedSymbol(res, elseX);
+
+    ASSERT_NE(symCondX, nullptr);
+    ASSERT_NE(symThenY, nullptr);
+    ASSERT_NE(symElseX, nullptr);
+
+    ASSERT_EQ(symCondX->declLoc.line, 1);
+    ASSERT_EQ(symCondX->declLoc.col, 8);
+
+    ASSERT_EQ(symThenY->declLoc.line, 2);
+    ASSERT_EQ(symThenY->declLoc.col, 8);
+
+    ASSERT_EQ(symElseX->declLoc.line, 1);
+    ASSERT_EQ(symElseX->declLoc.col, 8);
+}
+
+/**
+ * summon x = 1;
+ * should (x) { summon x = 2; say x; }
+ *
+ * Tests: condition references outer, body shadows and uses inner.
+ */
+TEST(Resolver_ControlFlow, IfConditionOuterBodyInner)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("should", SHOULD, std::monostate{}, 2, 1),
+        Token("(", LEFT_PAREN, std::monostate{}, 2, 8),
+        Token("x", IDENTIFIER, std::monostate{}, 2, 9),
+        Token(")", RIGHT_PAREN, std::monostate{}, 2, 10),
+        Token("{", LEFT_BRACE, std::monostate{}, 2, 12),
+
+        Token("summon", SUMMON, std::monostate{}, 3, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 12),
+        Token("=", EQUAL, std::monostate{}, 3, 14),
+        Token("2", INTEGER, 2, 3, 16),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 17),
+
+        Token("say", SAY, std::monostate{}, 4, 5),
+        Token("x", IDENTIFIER, std::monostate{}, 4, 9),
+        Token(";", SEMI_COLON, std::monostate{}, 4, 10),
+
+        Token("}", RIGHT_BRACE, std::monostate{}, 5, 1),
+        Token("", EOF_TOKEN, std::monostate{}, 5, 2),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto condX = findIdentAt(ids, "x", 2, 9);
+    auto bodyX = findIdentAt(ids, "x", 4, 9);
+
+    ASSERT_NE(condX, nullptr);
+    ASSERT_NE(bodyX, nullptr);
+
+    const Symbol* symCond = resolvedSymbol(res, condX);
+    const Symbol* symBody = resolvedSymbol(res, bodyX);
+
+    ASSERT_NE(symCond, nullptr);
+    ASSERT_NE(symBody, nullptr);
+
+    // Condition sees outer x at (1,8)
+    ASSERT_EQ(symCond->declLoc.line, 1);
+    ASSERT_EQ(symCond->declLoc.col, 8);
+
+    // Body sees inner x at (3,12)
+    ASSERT_EQ(symBody->declLoc.line, 3);
+    ASSERT_EQ(symBody->declLoc.col, 12);
+}
+
+/**
+ * summon name = "Alice";
+ * summon greeting = "Hello {name}, welcome {name}!";
+ *
+ * Tests: multiple interpolations of same identifier in one string.
+ */
+TEST(Resolver_Strings, MultipleInterpolationsOfSameIdentifier)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("name", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 13),
+        Token("\"Alice\"", STRING, std::string("Alice"), 1, 15),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 22),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("greeting", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 17),
+        Token("\"Hello \"", STRING, std::string("Hello "), 2, 19),
+        Token("{", INTERP_START, std::monostate{}, 2, 27),
+        Token("name", IDENTIFIER, std::monostate{}, 2, 28),
+        Token("}", INTERP_END, std::monostate{}, 2, 32),
+        Token("\", welcome \"", STRING, std::string(", welcome "), 2, 33),
+        Token("{", INTERP_START, std::monostate{}, 2, 45),
+        Token("name", IDENTIFIER, std::monostate{}, 2, 46),
+        Token("}", INTERP_END, std::monostate{}, 2, 50),
+        Token("\"!\"", STRING, std::string("!"), 2, 51),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 54),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 55),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto name1 = findIdentAt(ids, "name", 2, 28);
+    auto name2 = findIdentAt(ids, "name", 2, 46);
+
+    ASSERT_NE(name1, nullptr);
+    ASSERT_NE(name2, nullptr);
+
+    const Symbol* sym1 = resolvedSymbol(res, name1);
+    const Symbol* sym2 = resolvedSymbol(res, name2);
+
+    ASSERT_NE(sym1, nullptr);
+    ASSERT_NE(sym2, nullptr);
+
+    // Both should resolve to (1,8)
+    ASSERT_EQ(sym1->declLoc.line, 1);
+    ASSERT_EQ(sym1->declLoc.col, 8);
+    ASSERT_EQ(sym2->declLoc.line, 1);
+    ASSERT_EQ(sym2->declLoc.col, 8);
+}
+
+/**
+ * summon x = 1;
+ * summon y = 2;
+ * summon msg = "{x + y}";
+ *
+ * Tests: complex expression inside string interpolation.
+ */
+TEST(Resolver_Strings, InterpolationWithComplexExpression)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 8),
+        Token("=", EQUAL, std::monostate{}, 1, 10),
+        Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 13),
+
+        Token("summon", SUMMON, std::monostate{}, 2, 1),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 8),
+        Token("=", EQUAL, std::monostate{}, 2, 10),
+        Token("2", INTEGER, 2, 2, 12),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 13),
+
+        Token("summon", SUMMON, std::monostate{}, 3, 1),
+        Token("msg", IDENTIFIER, std::monostate{}, 3, 8),
+        Token("=", EQUAL, std::monostate{}, 3, 12),
+        Token("\"\"", STRING, std::string(""), 3, 14),
+        Token("{", INTERP_START, std::monostate{}, 3, 16),
+        Token("x", IDENTIFIER, std::monostate{}, 3, 17),
+        Token("+", PLUS, std::monostate{}, 3, 19),
+        Token("y", IDENTIFIER, std::monostate{}, 3, 21),
+        Token("}", INTERP_END, std::monostate{}, 3, 22),
+        Token("\"\"", STRING, std::string(""), 3, 23),
+        Token(";", SEMI_COLON, std::monostate{}, 3, 25),
+
+        Token("", EOF_TOKEN, std::monostate{}, 3, 26),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+    ASSERT_FALSE(program.hadError());
+
+    Resolver       resolver;
+    SemanticResult res = resolver.resolve(program);
+
+    ASSERT_FALSE(res.hadError());
+    ASSERT_EQ(res.diagnostics.size(), 0u);
+
+    auto ids = collectIdentifiers(program);
+
+    auto interpX = findIdentAt(ids, "x", 3, 17);
+    auto interpY = findIdentAt(ids, "y", 3, 21);
+
+    ASSERT_NE(interpX, nullptr);
+    ASSERT_NE(interpY, nullptr);
+
+    const Symbol* symX = resolvedSymbol(res, interpX);
+    const Symbol* symY = resolvedSymbol(res, interpY);
+
+    ASSERT_NE(symX, nullptr);
+    ASSERT_NE(symY, nullptr);
+
+    ASSERT_EQ(symX->declLoc.line, 1);
+    ASSERT_EQ(symX->declLoc.col, 8);
+    ASSERT_EQ(symY->declLoc.line, 2);
+    ASSERT_EQ(symY->declLoc.col, 8);
+}
+
+/**
+ * say x;
+ * say y;
+ *
+ * Error: multiple undeclared identifiers should generate multiple errors.
+ */
+TEST(Resolver_MultipleErrors, TwoUndeclaredIdentifiers)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 6),
+
+        Token("say", SAY, std::monostate{}, 2, 1),
+        Token("y", IDENTIFIER, std::monostate{}, 2, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 2, 6),
+
+        Token("", EOF_TOKEN, std::monostate{}, 2, 7),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 2u);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * summon x = 1;
+ * summon x = 2;
+ * summon x = 3;
+ *
+ * Error: redeclaration generates error for each duplicate.
+ */
+TEST(Resolver_MultipleErrors, MultipleRedeclarations)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 13),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("x", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("2", INTEGER, 2, 2, 12),
+        Token(";", SEMI_COLON, {}, 2, 13),
+
+        Token("summon", SUMMON, {}, 3, 1), Token("x", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 10),      Token("3", INTEGER, 3, 3, 12),
+        Token(";", SEMI_COLON, {}, 3, 13),
+
+        Token("", EOF_TOKEN, {}, 3, 14),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 2u);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * summon x = a + b;
+ *
+ * Error: both a and b undeclared, should generate two errors.
+ */
+TEST(Resolver_MultipleErrors, MultipleUndeclaredInExpression)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("a", IDENTIFIER, {}, 1, 12),
+        Token("+", PLUS, {}, 1, 14),       Token("b", IDENTIFIER, {}, 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 17), Token("", EOF_TOKEN, {}, 1, 18),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 2u);
+    ASSERT_TRUE(result.hadError());
+}
