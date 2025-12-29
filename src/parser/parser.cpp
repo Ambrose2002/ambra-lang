@@ -455,8 +455,8 @@ std::unique_ptr<Stmt> Parser::parseSummonStatement()
         return nullptr;
     }
 
-    Token       nameToken = advance();
-    std::string variableName = nameToken.getLexeme();
+    Token          nameToken = advance();
+    SourceLocation nameTokenLoc = nameToken.getLocation();
 
     // expect '='
     if (!match(EQUAL))
@@ -491,7 +491,10 @@ std::unique_ptr<Stmt> Parser::parseSummonStatement()
         return nullptr;
     }
 
-    return std::make_unique<SummonStmt>(variableName, std::move(initializer), loc.line, loc.column);
+    return std::make_unique<SummonStmt>(std::make_unique<IdentifierExpr>(nameToken.getLexeme(),
+                                                                         nameTokenLoc.line,
+                                                                         nameTokenLoc.column),
+                                        std::move(initializer), loc.line, loc.column);
 }
 
 std::unique_ptr<Stmt> Parser::parseBlockStatement()
