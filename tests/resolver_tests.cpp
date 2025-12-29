@@ -602,3 +602,150 @@ TEST(Resolver_ControlFlow, IfChainAllBranchesResolveOuterSymbols)
         ASSERT_EQ(sym->declLoc.col, 8);
     }
 }
+
+/**
+ * say x;
+ * Error: x is not declared.
+ */
+TEST(Resolver_SingleError, UndeclaredIdentifier)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, std::monostate{}, 1, 1),
+        Token("x", IDENTIFIER, std::monostate{}, 1, 5),
+        Token(";", SEMI_COLON, std::monostate{}, 1, 6),
+        Token("", EOF_TOKEN, std::monostate{}, 1, 7),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * summon x = 1;
+ * summon x = 2;
+ * Error: redeclaration of x in same scope.
+ */
+TEST(Resolver_SingleError, RedeclarationSameScope)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("1", INTEGER, 1, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 13),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("x", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("2", INTEGER, 2, 2, 12),
+        Token(";", SEMI_COLON, {}, 2, 13),
+
+        Token("", EOF_TOKEN, {}, 2, 14),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * summon x = y;
+ * Error: y is not declared.
+ */
+TEST(Resolver_SingleError, UndeclaredInInitializer)
+{
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("y", IDENTIFIER, {}, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 13), Token("", EOF_TOKEN, {}, 1, 14),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * should (x) { }
+ * Error: x is not declared.
+ */
+TEST(Resolver_SingleError, UndeclaredInIfCondition)
+{
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, {}, 1, 1), Token("(", LEFT_PAREN, {}, 1, 8),
+        Token("x", IDENTIFIER, {}, 1, 9),  Token(")", RIGHT_PAREN, {}, 1, 10),
+        Token("{", LEFT_BRACE, {}, 1, 12), Token("}", RIGHT_BRACE, {}, 1, 13),
+        Token("", EOF_TOKEN, {}, 1, 14),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * say "hello {x}";
+ * Error: x is not declared.
+ */
+TEST(Resolver_SingleError, UndeclaredInInterpolatedString)
+{
+    std::vector<Token> tokens = {
+        Token("say", SAY, {}, 1, 1),
+        Token("\"hello \"", STRING, std::string("hello "), 1, 5),
+        Token("{", INTERP_START, {}, 1, 13),
+        Token("x", IDENTIFIER, {}, 1, 14),
+        Token("}", INTERP_END, {}, 1, 15),
+        Token("\"\"", STRING, std::string(""), 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 18),
+        Token("", EOF_TOKEN, {}, 1, 19),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
+
+/**
+ * aslongas (x) { }
+ * Error: x is not declared.
+ */
+TEST(Resolver_SingleError, UndeclaredInWhileCondition)
+{
+    std::vector<Token> tokens = {
+        Token("aslongas", ASLONGAS, {}, 1, 1), Token("(", LEFT_PAREN, {}, 1, 10),
+        Token("x", IDENTIFIER, {}, 1, 11),     Token(")", RIGHT_PAREN, {}, 1, 12),
+        Token("{", LEFT_BRACE, {}, 1, 14),     Token("}", RIGHT_BRACE, {}, 1, 15),
+        Token("", EOF_TOKEN, {}, 1, 16),
+    };
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult result = resolver.resolve(program);
+
+    ASSERT_EQ(result.diagnostics.size(), 1);
+    ASSERT_TRUE(result.hadError());
+}
