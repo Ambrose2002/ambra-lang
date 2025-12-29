@@ -392,73 +392,6 @@ TEST(Resolver_Scopes, ShadowingInInnerBlockResolvesToNearest)
 }
 
 /**
- * should (x) { summon y = x; say y; }
- * summon x = 1;
- *
- * This is still happy-path only if your language allows forward reference in conditions.
- * Most languages do NOT. Your current resolver processes in source order, so "x" would be
- * undeclared here. Therefore we DO NOT include forward-reference happy tests.
- *
- * Instead: declare first, then use in condition and body.
- */
-TEST(Resolver_ControlFlow, IfConditionAndBodyResolveOuterSymbols)
-{
-    // summon age = 10;
-    // should (age >= 10) { say age; }
-    std::vector<Token> tokens = {
-        Token("summon", SUMMON, std::monostate{}, 1, 1),
-        Token("age", IDENTIFIER, std::monostate{}, 1, 8),
-        Token("=", EQUAL, std::monostate{}, 1, 12),
-        Token("10", INTEGER, 10, 1, 14),
-        Token(";", SEMI_COLON, std::monostate{}, 1, 16),
-
-        Token("should", SHOULD, std::monostate{}, 2, 1),
-        Token("(", LEFT_PAREN, std::monostate{}, 2, 8),
-        Token("age", IDENTIFIER, std::monostate{}, 2, 9),
-        Token(">=", GREATER_EQUAL, std::monostate{}, 2, 13),
-        Token("10", INTEGER, 10, 2, 16),
-        Token(")", RIGHT_PAREN, std::monostate{}, 2, 18),
-        Token("{", LEFT_BRACE, std::monostate{}, 2, 20),
-        Token("say", SAY, std::monostate{}, 3, 5),
-        Token("age", IDENTIFIER, std::monostate{}, 3, 9),
-        Token(";", SEMI_COLON, std::monostate{}, 3, 12),
-        Token("}", RIGHT_BRACE, std::monostate{}, 4, 1),
-
-        Token("", EOF_TOKEN, std::monostate{}, 4, 2),
-    };
-
-    Parser  parser(tokens);
-    Program program = parser.parseProgram();
-    ASSERT_FALSE(program.hadError());
-
-    Resolver       resolver;
-    SemanticResult res = resolver.resolve(program);
-
-    ASSERT_FALSE(res.hadError());
-    ASSERT_EQ(res.diagnostics.size(), 0u);
-
-    auto ids = collectIdentifiers(program);
-
-    auto condAge = findIdentAt(ids, "age", 2, 9);
-    ASSERT_NE(condAge, nullptr);
-
-    auto sayAge = findIdentAt(ids, "age", 3, 9);
-    ASSERT_NE(sayAge, nullptr);
-
-    const Symbol* symCond = resolvedSymbol(res, condAge);
-    const Symbol* symSay = resolvedSymbol(res, sayAge);
-
-    ASSERT_NE(symCond, nullptr);
-    ASSERT_NE(symSay, nullptr);
-
-    ASSERT_EQ(symCond->declLoc.line, 1);
-    ASSERT_EQ(symCond->declLoc.col, 8);
-
-    ASSERT_EQ(symSay->declLoc.line, 1);
-    ASSERT_EQ(symSay->declLoc.col, 8);
-}
-
-/**
  * should (age >= 10) { summon msg = "hi {age}"; say msg; }
  *
  * Tests: resolution inside interpolated strings within control flow.
@@ -585,6 +518,9 @@ TEST(Resolver_ControlFlow, WhileConditionAndBodyResolveOuterSymbol)
 
     ASSERT_EQ(symCond->declLoc.line, 1);
     ASSERT_EQ(symSay->declLoc.line, 1);
+
+    ASSERT_EQ(symCond->declLoc.col, 8);
+    ASSERT_EQ(symSay->declLoc.col, 8);
 }
 
 /**
