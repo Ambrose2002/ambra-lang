@@ -77,8 +77,9 @@ class SummonStmt : public Stmt
      * @param line Source line number
      * @param col Source column number
      */
-    SummonStmt(std::string name, std::unique_ptr<Expr> initializer, int line, int col)
-        : name(name), initializer(std::move(initializer))
+    SummonStmt(std::unique_ptr<IdentifierExpr> identifier, std::unique_ptr<Expr> initializer,
+               int line, int col)
+        : identifier(std::move(identifier)), initializer(std::move(initializer))
     {
         kind = Summon;
         loc = {line, col};
@@ -95,10 +96,11 @@ class SummonStmt : public Stmt
         if (other.kind != kind)
             return false;
         auto& o = static_cast<const SummonStmt&>(other);
-        if (o.name != name || !(o.loc == loc))
-        {
+        if (!identifier && !o.identifier)
+            return true;
+        if (!identifier || !o.identifier)
             return false;
-        }
+        return *identifier == *o.identifier;
 
         if (!initializer && !o.initializer)
             return true;
@@ -114,7 +116,7 @@ class SummonStmt : public Stmt
     std::string toString() const override
     {
         std::string out = "Summon(";
-        out += name;
+        out += identifier->toString();
         out += ", ";
         out += initializer ? initializer->toString() : std::string("null");
         out += ")";
@@ -126,14 +128,14 @@ class SummonStmt : public Stmt
         return *initializer;
     }
 
-    const std::string& getName() const
+    const IdentifierExpr& getIdentifier() const
     {
-        return name;
+        return *identifier;
     }
 
   private:
-    std::string           name;        ///< The variable name
-    std::unique_ptr<Expr> initializer; ///< The initialization expression
+    std::unique_ptr<IdentifierExpr> identifier;  ///< The identifier
+    std::unique_ptr<Expr>           initializer; ///< The initialization expression
 };
 
 /**
