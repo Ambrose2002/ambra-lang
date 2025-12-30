@@ -250,7 +250,7 @@ void TypeChecker::checkStatement(const Stmt& stmt)
     case Summon:
     {
         auto& s = static_cast<const SummonStmt&>(stmt);
-        checkSummonSatement(s);
+        checkSummonStatement(s);
         return;
     }
     case Say:
@@ -281,25 +281,21 @@ void TypeChecker::checkStatement(const Stmt& stmt)
         return;
     }
 };
-void TypeChecker::checkSummonSatement(const SummonStmt& stmt)
+void TypeChecker::checkSummonStatement(const SummonStmt& stmt)
 {
     auto& initializer = stmt.getInitializer();
     Type  type = checkExpression(initializer);
 
-    if (type == Void || type == Error)
+    if (type == Void)
     {
-        diagnostics.emplace(diagnostics.end(), "Error type", initializer.loc);
+        diagnostics.emplace(diagnostics.end(), "Variable initializer cannot be void",
+                            initializer.loc);
     }
 };
 void TypeChecker::checkSayStatement(const SayStmt& stmt)
 {
     auto& expr = stmt.getExpression();
-    Type  type = checkExpression(expr);
-
-    if (type == Void || type == Error)
-    {
-        diagnostics.emplace(diagnostics.end(), "Error type", expr.loc);
-    }
+    checkExpression(expr);
 };
 void TypeChecker::checkBlockStatement(const BlockStmt& stmt)
 {
@@ -314,11 +310,11 @@ void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt)
 
     for (auto& branch : stmt.getBranches())
     {
-        auto& condition = std::get<0>(branch);
-        Type  t = checkExpression(*condition);
-        if (t != Bool)
+        auto& condition = *std::get<0>(branch);
+        Type  t = checkExpression(condition);
+        if (t != Bool && t != Error)
         {
-            diagnostics.emplace(diagnostics.end(), "Condition must be a boolean", condition->loc);
+            diagnostics.emplace(diagnostics.end(), "If condition must be a boolean", condition.loc);
         }
         auto& block = std::get<1>(branch);
         checkBlockStatement(*block);
@@ -330,7 +326,19 @@ void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt)
         checkBlockStatement(*elseBlock);
     }
 };
-void checkWhileStatement(const WhileStmt& stmt);
+void TypeChecker::checkWhileStatement(const WhileStmt& stmt)
+{
+    auto& condition = stmt.getCondition();
+    Type  t = checkExpression(condition);
+
+    if (t != Bool && t != Error)
+    {
+        diagnostics.emplace(diagnostics.end(), "While condition must be a boolean", condition.loc);
+    }
+
+    auto& block = stmt.getBody();
+    checkBlockStatement(block);
+};
 
 Type TypeChecker::checkExpression(const Expr& expr) {};
 Type TypeChecker::checkUnaryExpression(const UnaryExpr& expr) {};

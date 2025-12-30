@@ -204,7 +204,7 @@ class TypeChecker
 
     void checkProgram(const Program& program);
     void checkStatement(const Stmt& stmt);
-    void checkSummonSatement(const SummonStmt& stmt);
+    void checkSummonStatement(const SummonStmt& stmt);
     void checkSayStatement(const SayStmt& stmt);
     void checkBlockStatement(const BlockStmt& stmt);
     void checkIfChainStatement(const IfChainStmt& stmt);
