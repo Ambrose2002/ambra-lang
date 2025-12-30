@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 enum Type
@@ -202,6 +203,8 @@ class TypeChecker
     TypeTable               typeTable;
     std::vector<Diagnostic> diagnostics;
 
+    std::unordered_set<const Expr*> activeDeclarations;
+
     void checkProgram(const Program& program);
     void checkStatement(const Stmt& stmt);
     void checkSummonStatement(const SummonStmt& stmt);
@@ -220,7 +223,6 @@ class TypeChecker
 
   public:
     TypeChecker(const ResolutionTable& resolutionTable, const Scope* rootScope);
-    TypeCheckerResults check(const Program& program);
 
-    void typeCheck(const Program& program);
+    TypeCheckerResults typeCheck(const Program& program);
 };
