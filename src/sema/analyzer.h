@@ -45,7 +45,7 @@ struct Symbol
 
     SourceLoc declLoc;
 
-    Type type;
+    const SummonStmt* declStmt;
 };
 
 struct Scope
