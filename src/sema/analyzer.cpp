@@ -41,6 +41,7 @@ void Resolver::resolveSummonStmt(const SummonStmt& stmt)
     symbol->kind = Symbol::VARIABLE;
     symbol->name = identifier.getName();
     symbol->declLoc = identifier.loc;
+    symbol->declStmt = &stmt;
 
     bool isDeclared = currentScope->declare(identifier.getName(), std::move(symbol));
 
@@ -288,8 +289,8 @@ void TypeChecker::checkSummonStatement(const SummonStmt& stmt)
 
     if (type == Void)
     {
-        diagnostics.emplace(diagnostics.end(), "Variable initializer cannot be void",
-                            initializer.loc);
+        diagnostics.emplace_back(
+            Diagnostic{"Variable initializer cannot be void", initializer.loc});
     }
 };
 void TypeChecker::checkSayStatement(const SayStmt& stmt)
@@ -314,7 +315,7 @@ void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt)
         Type  t = checkExpression(condition);
         if (t != Bool && t != Error)
         {
-            diagnostics.emplace(diagnostics.end(), "If condition must be a boolean", condition.loc);
+            diagnostics.emplace_back(Diagnostic{"If condition must be a boolean", condition.loc});
         }
         auto& block = std::get<1>(branch);
         checkBlockStatement(*block);
@@ -333,19 +334,172 @@ void TypeChecker::checkWhileStatement(const WhileStmt& stmt)
 
     if (t != Bool && t != Error)
     {
-        diagnostics.emplace(diagnostics.end(), "While condition must be a boolean", condition.loc);
+        diagnostics.emplace_back(Diagnostic{"While condition must be a boolean", condition.loc});
     }
 
     auto& block = stmt.getBody();
     checkBlockStatement(block);
 };
 
-Type TypeChecker::checkExpression(const Expr& expr) {};
-Type TypeChecker::checkUnaryExpression(const UnaryExpr& expr) {};
-Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr) {};
-Type TypeChecker::checkGroupingExpression(const GroupingExpr& expr) {};
-Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr) {};
-Type TypeChecker::checkStringExpression(const StringExpr& expr) {};
+Type TypeChecker::checkExpression(const Expr& expr)
+{
+    Type t;
+    switch (expr.kind)
+    {
+    case IntLiteral:
+    case BoolLiteral:
+    {
+        t = checkLiteralExpression(expr);
+        break;
+    }
+    case Identifier:
+    {
+        auto& ex = static_cast<const IdentifierExpr&>(expr);
+        t = checkIdentifierExpression(ex);
+        break;
+    }
+    case Unary:
+    {
+        auto& ex = static_cast<const UnaryExpr&>(expr);
+        t = checkUnaryExpression(ex);
+        break;
+    }
+    case Binary:
+    {
+        auto& ex = static_cast<const BinaryExpr&>(expr);
+        t = checkBinaryExpression(ex);
+        break;
+    }
+    case Grouping:
+    {
+        auto& ex = static_cast<const GroupingExpr&>(expr);
+        t = checkGroupingExpression(ex);
+        break;
+    }
+    case InterpolatedString:
+    {
+        auto& ex = static_cast<const StringExpr&>(expr);
+        t = checkStringExpression(ex);
+        break;
+    }
+    default:
+        t = Error;
+        break;
+    }
+    typeTable.mapping.emplace(&expr, t);
+    return t;
+};
+Type TypeChecker::checkUnaryExpression(const UnaryExpr& expr)
+{
+    auto  op = expr.getOperator();
+    auto& operand = expr.getOperand();
+    Type  t = checkExpression(operand);
+
+    if (t == Error)
+    {
+        return t;
+    }
+
+    if (op == LogicalNot)
+    {
+        return t == Bool ? Bool : Error;
+    }
+    if (op == ArithmeticNegate)
+    {
+        return t == Int ? Int : Error;
+    }
+    return Error;
+};
+Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr)
+{
+    auto  op = expr.getOperator();
+    auto& left = expr.getLeft();
+    auto& right = expr.getRight();
+    Type  leftType = checkExpression(left);
+    Type  rightType = checkExpression(right);
+
+    if (leftType == Error || rightType == Error)
+    {
+        return Error;
+    }
+
+    switch (op)
+    {
+    case Add:
+    case Divide:
+    case Multiply:
+    case Subtract:
+    {
+        if (leftType != Int || rightType != Int)
+        {
+            return Error;
+        }
+        return Int;
+    }
+    case Less:
+    case Greater:
+    case LessEqual:
+    case GreaterEqual:
+    {
+        if (leftType != Int || rightType != Int)
+        {
+            return Error;
+        }
+        return Bool;
+    }
+    case NotEqual:
+    case EqualEqual:
+    {
+        if (leftType != rightType)
+        {
+            return Error;
+        }
+        return Bool;
+    }
+    default:
+        return Error;
+    }
+};
+
+Type TypeChecker::checkGroupingExpression(const GroupingExpr& expr)
+{
+    auto& e = expr.getExpression();
+    return checkExpression(e);
+};
+
+Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr)
+{
+    auto it = resolutionTable.mapping.find(&expr);
+    if (it == resolutionTable.mapping.end())
+    {
+        return Error;
+    }
+    const Symbol* symbol = it->second;
+
+    const SummonStmt* decl = symbol->declStmt;
+    if (!decl)
+    {
+        return Error;
+    }
+    return checkExpression(decl->getInitializer());
+};
+
+Type TypeChecker::checkStringExpression(const StringExpr& expr)
+{
+    for (auto& part : expr.getParts())
+    {
+        if (part.kind == StringPart::EXPR)
+        {
+            Type t = checkExpression(*part.expr);
+
+            if (t == Error || t == Void)
+            {
+                return Error;
+            }
+        }
+    }
+    return String;
+};
 
 Type TypeChecker::checkLiteralExpression(const Expr& expr)
 {
@@ -353,12 +507,5 @@ Type TypeChecker::checkLiteralExpression(const Expr& expr)
     {
         return Int;
     }
-    else if (expr.kind == BoolLiteral)
-    {
-        return Bool;
-    }
-    else
-    {
-        return Error;
-    }
+    return Bool;
 };
