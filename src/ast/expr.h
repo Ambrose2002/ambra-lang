@@ -312,6 +312,11 @@ class UnaryExpr : public Expr
         return *operand;
     }
 
+    const UnaryOpKind getOperator() const
+    {
+        return op;
+    }
+
   private:
     UnaryOpKind           op;      ///< The unary operator
     std::unique_ptr<Expr> operand; ///< The operand expression
@@ -414,6 +419,11 @@ class BinaryExpr : public Expr
     const Expr& getRight() const
     {
         return *right;
+    }
+
+    const BinaryOpKind getOperator() const
+    {
+        return op;
     }
 
   private:
