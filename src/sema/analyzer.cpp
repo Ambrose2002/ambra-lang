@@ -317,7 +317,8 @@ void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt)
         Type  t = checkExpression(condition);
         if (t != Bool && t != Error)
         {
-            diagnostics.emplace_back(Diagnostic{"If condition must be a boolean", condition.loc});
+            diagnostics.emplace_back(
+                Diagnostic{"If condition expression must be Bool", condition.loc});
         }
         auto& block = std::get<1>(branch);
         checkBlockStatement(*block);
@@ -336,7 +337,8 @@ void TypeChecker::checkWhileStatement(const WhileStmt& stmt)
 
     if (t != Bool && t != Error)
     {
-        diagnostics.emplace_back(Diagnostic{"While condition must be a boolean", condition.loc});
+        diagnostics.emplace_back(
+            Diagnostic{"While condition expression must be Bool", condition.loc});
     }
 
     auto& block = stmt.getBody();
@@ -404,11 +406,24 @@ Type TypeChecker::checkUnaryExpression(const UnaryExpr& expr)
 
     if (op == LogicalNot)
     {
-        return t == Bool ? Bool : Error;
+
+        if (t == Bool)
+        {
+            return Bool;
+        }
+        diagnostics.emplace_back(Diagnostic{"Unary 'not' expects a Bool operand", expr.loc});
+        return Error;
     }
+
     if (op == ArithmeticNegate)
     {
-        return t == Int ? Int : Error;
+
+        if (t == Int)
+        {
+            return Int;
+        }
+        diagnostics.emplace_back(Diagnostic{"Unary '-' expects an Int operand", expr.loc});
+        return Error;
     }
     return Error;
 };
@@ -434,6 +449,8 @@ Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr)
     {
         if (leftType != Int || rightType != Int)
         {
+            diagnostics.emplace_back(
+                Diagnostic{"Arithmetic operators require Int operands", expr.loc});
             return Error;
         }
         return Int;
@@ -445,6 +462,8 @@ Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr)
     {
         if (leftType != Int || rightType != Int)
         {
+            diagnostics.emplace_back(
+                Diagnostic{"Comparison operators require Int operands", expr.loc});
             return Error;
         }
         return Bool;
@@ -454,6 +473,8 @@ Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr)
     {
         if (leftType != rightType)
         {
+            diagnostics.emplace_back(
+                Diagnostic{"Equality operands must have the same type", expr.loc});
             return Error;
         }
         return Bool;
@@ -474,6 +495,8 @@ Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr)
     auto it = resolutionTable.mapping.find(&expr);
     if (it == resolutionTable.mapping.end())
     {
+        diagnostics.emplace_back(
+            Diagnostic{"Unresolved identifier '" + expr.getName() + "'", expr.loc});
         return Error;
     }
     const Symbol* symbol = it->second;
@@ -481,6 +504,8 @@ Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr)
     const SummonStmt* decl = symbol->declStmt;
     if (!decl)
     {
+        diagnostics.emplace_back(
+            Diagnostic{"Internal error: missing declaration for identifier", expr.loc});
         return Error;
     }
 
@@ -493,7 +518,7 @@ Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr)
 
     if (activeDeclarations.find(&initializer) != activeDeclarations.end())
     {
-        diagnostics.emplace_back(Diagnostic{"Circular type dependency"}, initializer.loc);
+        diagnostics.emplace_back(Diagnostic{"Circular type dependency detected", initializer.loc});
         return Error;
     }
     activeDeclarations.emplace(&initializer);
@@ -510,8 +535,13 @@ Type TypeChecker::checkStringExpression(const StringExpr& expr)
         {
             Type t = checkExpression(*part.expr);
 
-            if (t == Error || t == Void)
+            if (t == Error)
+                return Error;
+
+            if (t == Void)
             {
+                diagnostics.emplace_back(Diagnostic{
+                    "Void expression cannot appear in string interpolation", part.expr->loc});
                 return Error;
             }
         }
