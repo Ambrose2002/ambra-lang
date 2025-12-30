@@ -222,3 +222,96 @@ SemanticResult Resolver::resolve(const Program& program)
     result.resolutionTable = resolutionTable;
     return result;
 }
+
+TypeChecker::TypeChecker(const ResolutionTable& resolutionTable, const Scope* rootScope)
+    : resolutionTable(resolutionTable)
+{
+}
+
+void TypeChecker::typeCheck(const Program& program)
+{
+    diagnostics.clear();
+    typeTable.mapping.clear();
+
+    checkProgram(program);
+};
+
+void TypeChecker::checkProgram(const Program& program)
+{
+    for (auto& stmt : program.getStatements())
+    {
+        checkStatement(*stmt);
+    }
+};
+void TypeChecker::checkStatement(const Stmt& stmt)
+{
+    switch (stmt.kind)
+    {
+    case Summon:
+    {
+        auto& s = static_cast<const SummonStmt&>(stmt);
+        checkSummonSatement(s);
+        return;
+    }
+    case Say:
+    {
+        auto& s = static_cast<const SayStmt&>(stmt);
+        checkSayStatement(s);
+        return;
+    }
+    case Block:
+    {
+        auto& s = static_cast<const BlockStmt&>(stmt);
+        checkBlockStatement(s);
+        return;
+    }
+    case IfChain:
+    {
+        auto& s = static_cast<const IfChainStmt&>(stmt);
+        checkIfChainStatement(s);
+        return;
+    }
+    case While:
+    {
+        auto& s = static_cast<const WhileStmt&>(stmt);
+        checkWhileStatement(s);
+        return;
+    }
+    default:
+        return;
+    }
+};
+void TypeChecker::checkSummonSatement(const SummonStmt& stmt) {
+
+};
+void TypeChecker::checkSayStatement(const SayStmt& stmt) {
+
+};
+void TypeChecker::checkBlockStatement(const BlockStmt& stmt) {
+
+};
+void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt) {};
+void checkWhileStatement(const WhileStmt& stmt);
+
+Type TypeChecker::checkExpression(const Expr& expr) {};
+Type TypeChecker::checkUnaryExpression(const UnaryExpr& expr) {};
+Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr) {};
+Type TypeChecker::checkGroupingExpression(const GroupingExpr& expr) {};
+Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr) {};
+Type TypeChecker::checkStringExpression(const StringExpr& expr) {};
+
+Type TypeChecker::checkLiteralExpression(const Expr& expr)
+{
+    if (expr.kind == IntLiteral)
+    {
+        return Int;
+    }
+    else if (expr.kind == BoolLiteral)
+    {
+        return Bool;
+    }
+    else
+    {
+        return Error;
+    }
+};

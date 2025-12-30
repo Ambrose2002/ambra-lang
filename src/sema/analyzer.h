@@ -202,7 +202,25 @@ class TypeChecker
     TypeTable               typeTable;
     std::vector<Diagnostic> diagnostics;
 
+    void checkProgram(const Program& program);
+    void checkStatement(const Stmt& stmt);
+    void checkSummonSatement(const SummonStmt& stmt);
+    void checkSayStatement(const SayStmt& stmt);
+    void checkBlockStatement(const BlockStmt& stmt);
+    void checkIfChainStatement(const IfChainStmt& stmt);
+    void checkWhileStatement(const WhileStmt& stmt);
+
+    Type checkExpression(const Expr& expr);
+    Type checkUnaryExpression(const UnaryExpr& expr);
+    Type checkBinaryExpression(const BinaryExpr& expr);
+    Type checkGroupingExpression(const GroupingExpr& expr);
+    Type checkIdentifierExpression(const IdentifierExpr& expr);
+    Type checkStringExpression(const StringExpr& expr);
+    Type checkLiteralExpression(const Expr& expr);
+
   public:
     TypeChecker(const ResolutionTable& resolutionTable, const Scope* rootScope);
     TypeCheckerResults check(const Program& program);
+
+    void typeCheck(const Program& program);
 };
