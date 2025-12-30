@@ -281,16 +281,55 @@ void TypeChecker::checkStatement(const Stmt& stmt)
         return;
     }
 };
-void TypeChecker::checkSummonSatement(const SummonStmt& stmt) {
+void TypeChecker::checkSummonSatement(const SummonStmt& stmt)
+{
+    auto& initializer = stmt.getInitializer();
+    Type  type = checkExpression(initializer);
 
+    if (type == Void || type == Error)
+    {
+        diagnostics.emplace(diagnostics.end(), "Error type", initializer.loc);
+    }
 };
-void TypeChecker::checkSayStatement(const SayStmt& stmt) {
+void TypeChecker::checkSayStatement(const SayStmt& stmt)
+{
+    auto& expr = stmt.getExpression();
+    Type  type = checkExpression(expr);
 
+    if (type == Void || type == Error)
+    {
+        diagnostics.emplace(diagnostics.end(), "Error type", expr.loc);
+    }
 };
-void TypeChecker::checkBlockStatement(const BlockStmt& stmt) {
+void TypeChecker::checkBlockStatement(const BlockStmt& stmt)
+{
 
+    for (auto& s : stmt)
+    {
+        checkStatement(*s);
+    }
 };
-void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt) {};
+void TypeChecker::checkIfChainStatement(const IfChainStmt& stmt)
+{
+
+    for (auto& branch : stmt.getBranches())
+    {
+        auto& condition = std::get<0>(branch);
+        Type  t = checkExpression(*condition);
+        if (t != Bool)
+        {
+            diagnostics.emplace(diagnostics.end(), "Condition must be a boolean", condition->loc);
+        }
+        auto& block = std::get<1>(branch);
+        checkBlockStatement(*block);
+    }
+
+    auto& elseBlock = stmt.getElseBranch();
+    if (elseBlock)
+    {
+        checkBlockStatement(*elseBlock);
+    }
+};
 void checkWhileStatement(const WhileStmt& stmt);
 
 Type TypeChecker::checkExpression(const Expr& expr) {};
