@@ -229,12 +229,14 @@ TypeChecker::TypeChecker(const ResolutionTable& resolutionTable, const Scope* ro
 {
 }
 
-void TypeChecker::typeCheck(const Program& program)
+TypeCheckerResults TypeChecker::typeCheck(const Program& program)
 {
     diagnostics.clear();
     typeTable.mapping.clear();
 
     checkProgram(program);
+
+    return TypeCheckerResults{typeTable, diagnostics};
 };
 
 void TypeChecker::checkProgram(const Program& program)
@@ -481,7 +483,23 @@ Type TypeChecker::checkIdentifierExpression(const IdentifierExpr& expr)
     {
         return Error;
     }
-    return checkExpression(decl->getInitializer());
+
+    auto& initializer = decl->getInitializer();
+    auto  iterator = typeTable.mapping.find(&initializer);
+    if (iterator != typeTable.mapping.end())
+    {
+        return iterator->second;
+    }
+
+    if (activeDeclarations.find(&initializer) != activeDeclarations.end())
+    {
+        diagnostics.emplace_back(Diagnostic{"Circular type dependency"}, initializer.loc);
+        return Error;
+    }
+    activeDeclarations.emplace(&initializer);
+    Type t = checkExpression(initializer);
+    activeDeclarations.erase(&initializer);
+    return t;
 };
 
 Type TypeChecker::checkStringExpression(const StringExpr& expr)
