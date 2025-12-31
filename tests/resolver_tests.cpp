@@ -199,9 +199,9 @@ static const IdentifierExpr* findIdentAt(const std::vector<const IdentifierExpr*
     return nullptr;
 }
 
-// ----------------------
-// Happy path tests
-// ----------------------
+// ----------------------------
+// Happy path tests (Resolver)
+// ----------------------------
 
 /**
  * summon age = 10;
@@ -1431,4 +1431,94 @@ TEST(Resolver_MultipleErrors, MultipleUndeclaredInExpression)
 
     ASSERT_EQ(result.diagnostics.size(), 2u);
     ASSERT_TRUE(result.hadError());
+}
+
+// ----------------------------
+// Happy path tests (TypeChecker)
+// ----------------------------
+
+TEST(TypeChecker_Basics, GlobalDeclareThenUse)
+{
+    // summon x = 10;
+    // say x;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("say", SAY, {}, 2, 1),       Token("x", IDENTIFIER, {}, 2, 5),
+        Token(";", SEMI_COLON, {}, 2, 6),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Basics, ArithmeticExpression)
+{
+    // summon x = 1 + 2 * 3;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("1", INTEGER, 1, 1, 12),
+        Token("+", PLUS, {}, 1, 14),       Token("2", INTEGER, 2, 1, 16),
+        Token("*", STAR, {}, 1, 18),       Token("3", INTEGER, 3, 1, 20),
+        Token(";", SEMI_COLON, {}, 1, 21), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Basics, IfConditionBool)
+{
+    // summon x = 10;
+    // should (x > 5) { say x; }
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("should", SHOULD, {}, 2, 1), Token("(", LEFT_PAREN, {}, 2, 8),
+        Token("x", IDENTIFIER, {}, 2, 9),  Token(">", GREATER, {}, 2, 11),
+        Token("5", INTEGER, 5, 2, 13),     Token(")", RIGHT_PAREN, {}, 2, 14),
+        Token("{", LEFT_BRACE, {}, 2, 16),
+
+        Token("say", SAY, {}, 3, 3),       Token("x", IDENTIFIER, {}, 3, 7),
+        Token(";", SEMI_COLON, {}, 3, 8),
+
+        Token("}", RIGHT_BRACE, {}, 4, 1), Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
 }
