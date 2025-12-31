@@ -1437,6 +1437,10 @@ TEST(Resolver_MultipleErrors, MultipleUndeclaredInExpression)
 // Happy path tests (TypeChecker)
 // ----------------------------
 
+/**
+ * Tests basic type checking of global variable declaration and usage.
+ * Verifies that an integer variable can be declared and used without type errors.
+ */
 TEST(TypeChecker_Basics, GlobalDeclareThenUse)
 {
     // summon x = 10;
@@ -1466,6 +1470,10 @@ TEST(TypeChecker_Basics, GlobalDeclareThenUse)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests type checking of arithmetic expressions with correct operator precedence.
+ * Verifies that complex arithmetic expressions (addition and multiplication) type check correctly.
+ */
 TEST(TypeChecker_Basics, ArithmeticExpression)
 {
     // summon x = 1 + 2 * 3;
@@ -1490,6 +1498,10 @@ TEST(TypeChecker_Basics, ArithmeticExpression)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests that if conditions accept boolean expressions from comparisons.
+ * Verifies that comparison operators produce valid boolean types for conditionals.
+ */
 TEST(TypeChecker_Basics, IfConditionBool)
 {
     // summon x = 10;
@@ -1523,6 +1535,10 @@ TEST(TypeChecker_Basics, IfConditionBool)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests type checking of string literals.
+ * Verifies that string variables can be declared and used without type errors.
+ */
 TEST(TypeChecker_Basics, StringLiteral)
 {
     // summon name = "Alice";
@@ -1551,6 +1567,10 @@ TEST(TypeChecker_Basics, StringLiteral)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests type checking of boolean literals (affirmative and negative).
+ * Verifies that boolean variables can be declared with both true and false values.
+ */
 TEST(TypeChecker_Basics, BooleanLiteral)
 {
     // summon flag = affirmative;
@@ -1580,6 +1600,10 @@ TEST(TypeChecker_Basics, BooleanLiteral)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests addition of integer variables.
+ * Verifies that integer addition produces valid integer types.
+ */
 TEST(TypeChecker_Arithmetic, AdditionOfIntegers)
 {
     // summon a = 10;
@@ -1615,6 +1639,10 @@ TEST(TypeChecker_Arithmetic, AdditionOfIntegers)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests subtraction of integers.
+ * Verifies that integer subtraction type checks correctly.
+ */
 TEST(TypeChecker_Arithmetic, SubtractionOfIntegers)
 {
     // summon diff = 100 - 42;
@@ -1640,6 +1668,10 @@ TEST(TypeChecker_Arithmetic, SubtractionOfIntegers)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests multiplication of integers.
+ * Verifies that integer multiplication type checks correctly.
+ */
 TEST(TypeChecker_Arithmetic, MultiplicationOfIntegers)
 {
     // summon product = 7 * 6;
@@ -1665,6 +1697,10 @@ TEST(TypeChecker_Arithmetic, MultiplicationOfIntegers)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests division of integers.
+ * Verifies that integer division type checks correctly.
+ */
 TEST(TypeChecker_Arithmetic, DivisionOfIntegers)
 {
     // summon quotient = 50 / 5;
@@ -1690,6 +1726,10 @@ TEST(TypeChecker_Arithmetic, DivisionOfIntegers)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests complex arithmetic expressions with grouping and multiple operators.
+ * Verifies that nested expressions with parentheses type check correctly.
+ */
 TEST(TypeChecker_Arithmetic, ComplexExpression)
 {
     // summon result = (10 + 5) * 2 - 8 / 4;
@@ -1719,6 +1759,10 @@ TEST(TypeChecker_Arithmetic, ComplexExpression)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests unary negation operator on integers.
+ * Verifies that unary minus produces valid integer types.
+ */
 TEST(TypeChecker_Arithmetic, UnaryNegation)
 {
     // summon neg = -42;
@@ -1743,6 +1787,10 @@ TEST(TypeChecker_Arithmetic, UnaryNegation)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests greater-than comparison operator.
+ * Verifies that comparison of integers produces boolean type.
+ */
 TEST(TypeChecker_Comparison, GreaterThan)
 {
     // summon x = 10;
@@ -1778,6 +1826,10 @@ TEST(TypeChecker_Comparison, GreaterThan)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests greater-than-or-equal comparison operator.
+ * Verifies that >= produces boolean type.
+ */
 TEST(TypeChecker_Comparison, GreaterThanOrEqual)
 {
     // summon check = 10 >= 10;
@@ -1803,6 +1855,10 @@ TEST(TypeChecker_Comparison, GreaterThanOrEqual)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests less-than comparison operator.
+ * Verifies that < produces boolean type.
+ */
 TEST(TypeChecker_Comparison, LessThan)
 {
     // summon check = 3 < 7;
@@ -1828,6 +1884,10 @@ TEST(TypeChecker_Comparison, LessThan)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests less-than-or-equal comparison operator.
+ * Verifies that <= produces boolean type.
+ */
 TEST(TypeChecker_Comparison, LessThanOrEqual)
 {
     // summon check = 5 <= 5;
@@ -1853,6 +1913,10 @@ TEST(TypeChecker_Comparison, LessThanOrEqual)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests equality comparison of integers.
+ * Verifies that == operator works with integer types.
+ */
 TEST(TypeChecker_Equality, IntegerEquality)
 {
     // summon check = 42 == 42;
@@ -1878,6 +1942,10 @@ TEST(TypeChecker_Equality, IntegerEquality)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests inequality comparison of integers.
+ * Verifies that != operator works with integer types.
+ */
 TEST(TypeChecker_Equality, IntegerInequality)
 {
     // summon check = 10 != 20;
@@ -1903,6 +1971,10 @@ TEST(TypeChecker_Equality, IntegerInequality)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests equality comparison of strings.
+ * Verifies that string values can be compared for equality.
+ */
 TEST(TypeChecker_Equality, StringEquality)
 {
     // summon check = "hello" == "hello";
@@ -1930,6 +2002,10 @@ TEST(TypeChecker_Equality, StringEquality)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests equality comparison of booleans.
+ * Verifies that boolean literals can be compared.
+ */
 TEST(TypeChecker_Equality, BooleanEquality)
 {
     // summon check = affirmative == negative;
@@ -1955,6 +2031,10 @@ TEST(TypeChecker_Equality, BooleanEquality)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests logical NOT operator on boolean literal.
+ * Verifies that NOT operator accepts boolean and produces boolean.
+ */
 TEST(TypeChecker_Logical, NotOperator)
 {
     // summon result = not affirmative;
@@ -1981,6 +2061,10 @@ TEST(TypeChecker_Logical, NotOperator)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests NOT operator with comparison expression.
+ * Verifies that NOT can be applied to comparison results.
+ */
 TEST(TypeChecker_Logical, NotWithNegation)
 {
     // summon x = 10;
@@ -2012,6 +2096,10 @@ TEST(TypeChecker_Logical, NotWithNegation)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests double negation (not not) on boolean.
+ * Verifies that NOT can be nested.
+ */
 TEST(TypeChecker_Logical, DoubleNegation)
 {
     // summon result = not not affirmative;
@@ -2037,6 +2125,10 @@ TEST(TypeChecker_Logical, DoubleNegation)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests equality comparison of boolean variables.
+ * Verifies that booleans can be compared for equality.
+ */
 TEST(TypeChecker_Comparison, ComparingBooleanVariables)
 {
     // summon flag1 = affirmative;
@@ -2072,6 +2164,10 @@ TEST(TypeChecker_Comparison, ComparingBooleanVariables)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests while loop with integer comparison in condition.
+ * Verifies that comparison expressions produce valid boolean conditions for loops.
+ */
 TEST(TypeChecker_ControlFlow, WhileLoopWithIntCondition)
 {
     // summon counter = 10;
@@ -2111,6 +2207,10 @@ TEST(TypeChecker_ControlFlow, WhileLoopWithIntCondition)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests if-else statement type checking.
+ * Verifies that both branches type check independently.
+ */
 TEST(TypeChecker_ControlFlow, IfWithElseBranches)
 {
     // summon x = 10;
@@ -2158,6 +2258,10 @@ TEST(TypeChecker_ControlFlow, IfWithElseBranches)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests if-elsif-else chain with multiple branches.
+ * Verifies that all branches in an if chain type check correctly.
+ */
 TEST(TypeChecker_ControlFlow, MultipleIfChainBranches)
 {
     // summon score = 85;
@@ -2218,6 +2322,10 @@ TEST(TypeChecker_ControlFlow, MultipleIfChainBranches)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests simple string interpolation with identifier.
+ * Verifies that variable interpolation in strings type checks correctly.
+ */
 TEST(TypeChecker_Strings, SimpleInterpolation)
 {
     // summon name = "Alice";
@@ -2254,6 +2362,10 @@ TEST(TypeChecker_Strings, SimpleInterpolation)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests string interpolation with arithmetic expression.
+ * Verifies that complex expressions inside interpolations type check.
+ */
 TEST(TypeChecker_Strings, InterpolationWithIntegerExpression)
 {
     // summon x = 10;
@@ -2299,6 +2411,10 @@ TEST(TypeChecker_Strings, InterpolationWithIntegerExpression)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests multiple interpolations in a single string.
+ * Verifies that multiple variables can be interpolated in one string.
+ */
 TEST(TypeChecker_Strings, MultipleInterpolations)
 {
     // summon first = "John";
@@ -2337,6 +2453,10 @@ TEST(TypeChecker_Strings, MultipleInterpolations)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests type checking in nested block scopes.
+ * Verifies that inner scope can access and use outer scope variables.
+ */
 TEST(TypeChecker_Scopes, VariableInNestedBlock)
 {
     // summon x = 10;
@@ -2370,6 +2490,10 @@ TEST(TypeChecker_Scopes, VariableInNestedBlock)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests shadowing with same type.
+ * Verifies that inner variable can shadow outer variable with same type.
+ */
 TEST(TypeChecker_Scopes, ShadowingWithSameType)
 {
     // summon x = 10;
@@ -2402,6 +2526,10 @@ TEST(TypeChecker_Scopes, ShadowingWithSameType)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests shadowing with different type.
+ * Verifies that inner variable can shadow outer variable with different type.
+ */
 TEST(TypeChecker_Scopes, ShadowingWithDifferentType)
 {
     // summon x = 10;
@@ -2440,6 +2568,10 @@ TEST(TypeChecker_Scopes, ShadowingWithDifferentType)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests complex program with multiple types and control flow.
+ * Verifies that programs mixing integers, strings, and booleans type check correctly.
+ */
 TEST(TypeChecker_Mixed, ComplexProgramWithMultipleTypes)
 {
     // summon count = 5;
@@ -2483,6 +2615,10 @@ TEST(TypeChecker_Mixed, ComplexProgramWithMultipleTypes)
     ASSERT_FALSE(types.hadError());
 }
 
+/**
+ * Tests arithmetic expressions in both conditions and string interpolation.
+ * Verifies complex type checking across different contexts.
+ */
 TEST(TypeChecker_Mixed, ArithmeticInConditionAndInterpolation)
 {
     // summon a = 10;
@@ -2539,6 +2675,14 @@ TEST(TypeChecker_Mixed, ArithmeticInConditionAndInterpolation)
     ASSERT_FALSE(types.hadError());
 }
 
+// ----------------------------
+// Error path tests (TypeChecker)
+// ----------------------------
+
+/**
+ * Tests error when adding integer with boolean.
+ * Error: Arithmetic operators require matching numeric types.
+ */
 TEST(TypeChecker_Errors, ArithmeticTypeMismatch)
 {
     // summon x = 1 + affirmative;
@@ -2562,6 +2706,10 @@ TEST(TypeChecker_Errors, ArithmeticTypeMismatch)
     ASSERT_EQ(types.diagnostics.size(), 1);
 }
 
+/**
+ * Tests error when if condition is not boolean.
+ * Error: Conditional expressions must evaluate to boolean type.
+ */
 TEST(TypeChecker_Errors, IfConditionNotBool)
 {
     // should (10) { say 1; }
@@ -2586,6 +2734,10 @@ TEST(TypeChecker_Errors, IfConditionNotBool)
     ASSERT_EQ(types.diagnostics.size(), 1);
 }
 
+/**
+ * Tests multiple independent type errors in different statements.
+ * Error: Multiple type mismatches should be reported.
+ */
 TEST(TypeChecker_Errors, MultipleIndependentErrors)
 {
     // summon x = 1 + "hello";
@@ -2616,6 +2768,10 @@ TEST(TypeChecker_Errors, MultipleIndependentErrors)
     ASSERT_EQ(types.diagnostics.size(), 2);
 }
 
+/**
+ * Tests error when variable references itself in initializer.
+ * Error: Circular dependency in variable initialization.
+ */
 TEST(TypeChecker_Errors, CircularDependency)
 {
     // summon x = x;
@@ -2638,6 +2794,654 @@ TEST(TypeChecker_Errors, CircularDependency)
     ASSERT_EQ(types.diagnostics.size(), 1);
 }
 
+/**
+ * Tests error when adding string with integer.
+ * Error: Addition requires matching types.
+ */
+TEST(TypeChecker_Errors, StringPlusInteger)
+{
+    // summon x = "hello" + 5;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"hello\"", STRING, std::string("hello"), 1, 12),
+        Token("+", PLUS, {}, 1, 20),       Token("5", INTEGER, 5, 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 23), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when adding boolean with integer.
+ * Error: Addition requires matching types.
+ */
+TEST(TypeChecker_Errors, BooleanPlusInteger)
+{
+    // summon x = affirmative + 10;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("affirmative", BOOL, true, 1, 12),
+        Token("+", PLUS, {}, 1, 24),       Token("10", INTEGER, 10, 1, 26),
+        Token(";", SEMI_COLON, {}, 1, 28), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when subtracting strings.
+ * Error: Subtraction requires numeric types.
+ */
+TEST(TypeChecker_Errors, SubtractStrings)
+{
+    // summon x = "hello" - "world";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"hello\"", STRING, std::string("hello"), 1, 12),
+        Token("-", MINUS, {}, 1, 20),      Token("\"world\"", STRING, std::string("world"), 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 30), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when multiplying booleans.
+ * Error: Multiplication requires numeric types.
+ */
+TEST(TypeChecker_Errors, MultiplyBooleans)
+{
+    // summon x = affirmative * negative;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("affirmative", BOOL, true, 1, 12),
+        Token("*", STAR, {}, 1, 24),       Token("negative", BOOL, false, 1, 26),
+        Token(";", SEMI_COLON, {}, 1, 34), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when dividing string by integer.
+ * Error: Division requires numeric types.
+ */
+TEST(TypeChecker_Errors, DivideStringByInteger)
+{
+    // summon x = "test" / 2;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"test\"", STRING, std::string("test"), 1, 12),
+        Token("/", SLASH, {}, 1, 19),      Token("2", INTEGER, 2, 1, 21),
+        Token(";", SEMI_COLON, {}, 1, 22), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when applying unary minus to string.
+ * Error: Unary minus requires numeric type.
+ */
+TEST(TypeChecker_Errors, UnaryMinusOnString)
+{
+    // summon x = -"hello";
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("-", MINUS, {}, 1, 12),
+                                 Token("\"hello\"", STRING, std::string("hello"), 1, 13),
+                                 Token(";", SEMI_COLON, {}, 1, 21),
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when applying unary minus to boolean.
+ * Error: Unary minus requires numeric type.
+ */
+TEST(TypeChecker_Errors, UnaryMinusOnBoolean)
+{
+    // summon x = -affirmative;
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("-", MINUS, {}, 1, 12),
+                                 Token("affirmative", BOOL, true, 1, 13),
+                                 Token(";", SEMI_COLON, {}, 1, 24),
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+TEST(TypeChecker_Errors, NotOnInteger)
+{
+    // summon x = not 42;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("not", NOT, {}, 1, 12),
+        Token("42", INTEGER, 42, 1, 16),   Token(";", SEMI_COLON, {}, 1, 18),
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when applying NOT to string.
+ * Error: NOT operator requires boolean type.
+ */
+TEST(TypeChecker_Errors, NotOnString)
+{
+    // summon x = not "test";
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("not", NOT, {}, 1, 12),
+                                 Token("\"test\"", STRING, std::string("test"), 1, 16),
+                                 Token(";", SEMI_COLON, {}, 1, 23),
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing integer with string.
+ * Error: Comparison operators require matching types.
+ */
+TEST(TypeChecker_Errors, CompareIntegerWithString)
+{
+    // summon x = 10 > "hello";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(">", GREATER, {}, 1, 15),    Token("\"hello\"", STRING, std::string("hello"), 1, 17),
+        Token(";", SEMI_COLON, {}, 1, 25), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing boolean with integer.
+ * Error: Comparison operators require matching types.
+ */
+TEST(TypeChecker_Errors, CompareBooleanWithInteger)
+{
+    // summon x = affirmative < 5;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("affirmative", BOOL, true, 1, 12),
+        Token("<", LESS, {}, 1, 24),       Token("5", INTEGER, 5, 1, 26),
+        Token(";", SEMI_COLON, {}, 1, 27), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing string with boolean.
+ * Error: Comparison operators require matching types.
+ */
+TEST(TypeChecker_Errors, CompareStringWithBoolean)
+{
+    // summon x = "test" >= negative;
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("\"test\"", STRING, std::string("test"), 1, 12),
+                                 Token(">=", GREATER_EQUAL, {}, 1, 19),
+                                 Token("negative", BOOL, false, 1, 22),
+                                 Token(";", SEMI_COLON, {}, 1, 30),
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing integer with string for equality.
+ * Error: Equality operators require matching types.
+ */
+TEST(TypeChecker_Errors, EqualityMismatchIntegerString)
+{
+    // summon x = 10 == "10";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),   Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),        Token("10", INTEGER, 10, 1, 12),
+        Token("==", EQUAL_EQUAL, {}, 1, 15), Token("\"10\"", STRING, std::string("10"), 1, 18),
+        Token(";", SEMI_COLON, {}, 1, 23),   Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing boolean with integer for inequality.
+ * Error: Equality operators require matching types.
+ */
+TEST(TypeChecker_Errors, InequalityMismatchBooleanInteger)
+{
+    // summon x = affirmative != 1;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),  Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),       Token("affirmative", BOOL, true, 1, 12),
+        Token("!=", BANG_EQUAL, {}, 1, 24), Token("1", INTEGER, 1, 1, 27),
+        Token(";", SEMI_COLON, {}, 1, 28),  Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+TEST(TypeChecker_Errors, WhileConditionString)
+{
+    // aslongas ("hello") { say 1; }
+
+    std::vector<Token> tokens = {Token("aslongas", ASLONGAS, {}, 1, 1),
+                                 Token("(", LEFT_PAREN, {}, 1, 10),
+                                 Token("\"hello\"", STRING, std::string("hello"), 1, 11),
+                                 Token(")", RIGHT_PAREN, {}, 1, 19),
+                                 Token("{", LEFT_BRACE, {}, 1, 21),
+                                 Token("say", SAY, {}, 2, 3),
+                                 Token("1", INTEGER, 1, 2, 7),
+                                 Token(";", SEMI_COLON, {}, 2, 8),
+                                 Token("}", RIGHT_BRACE, {}, 3, 1),
+                                 Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when if condition evaluates to integer instead of boolean.
+ * Error: Conditional expressions must evaluate to boolean type.
+ */
+TEST(TypeChecker_Errors, IfConditionInteger)
+{
+    // should (42) { say "yes"; }
+
+    std::vector<Token> tokens = {Token("should", SHOULD, {}, 1, 1),
+                                 Token("(", LEFT_PAREN, {}, 1, 8),
+                                 Token("42", INTEGER, 42, 1, 9),
+                                 Token(")", RIGHT_PAREN, {}, 1, 11),
+                                 Token("{", LEFT_BRACE, {}, 1, 13),
+                                 Token("say", SAY, {}, 2, 3),
+                                 Token("\"yes\"", STRING, std::string("yes"), 2, 7),
+                                 Token(";", SEMI_COLON, {}, 2, 12),
+                                 Token("}", RIGHT_BRACE, {}, 3, 1),
+                                 Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when mixed types appear in complex expression.
+ * Error: Operators require matching operand types.
+ */
+TEST(TypeChecker_Errors, MixedTypeInComplexExpression)
+{
+    // summon x = (10 + 5) * "hello";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("(", LEFT_PAREN, {}, 1, 12),
+        Token("10", INTEGER, 10, 1, 13),   Token("+", PLUS, {}, 1, 16),
+        Token("5", INTEGER, 5, 1, 18),     Token(")", RIGHT_PAREN, {}, 1, 19),
+        Token("*", STAR, {}, 1, 21),       Token("\"hello\"", STRING, std::string("hello"), 1, 23),
+        Token(";", SEMI_COLON, {}, 1, 31), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when variable of different type is used in arithmetic.
+ * Error: Variable type must match the operation's type requirements.
+ */
+TEST(TypeChecker_Errors, TypeMismatchInVariableUsage)
+{
+    // summon x = "text";
+    // summon y = x + 10;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"text\"", STRING, std::string("text"), 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 19),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("y", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("x", IDENTIFIER, {}, 2, 12),
+        Token("+", PLUS, {}, 2, 14),       Token("10", INTEGER, 10, 2, 16),
+        Token(";", SEMI_COLON, {}, 2, 18),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when comparing variables of different types in condition.
+ * Error: Comparison operators require matching operand types.
+ */
+TEST(TypeChecker_Errors, InvalidComparisonInCondition)
+{
+    // summon name = "Alice";
+    // should (name > 10) { say "invalid"; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("name", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 13),
+                                 Token("\"Alice\"", STRING, std::string("Alice"), 1, 15),
+                                 Token(";", SEMI_COLON, {}, 1, 23),
+
+                                 Token("should", SHOULD, {}, 2, 1),
+                                 Token("(", LEFT_PAREN, {}, 2, 8),
+                                 Token("name", IDENTIFIER, {}, 2, 9),
+                                 Token(">", GREATER, {}, 2, 14),
+                                 Token("10", INTEGER, 10, 2, 16),
+                                 Token(")", RIGHT_PAREN, {}, 2, 18),
+                                 Token("{", LEFT_BRACE, {}, 2, 20),
+                                 Token("say", SAY, {}, 2, 22),
+                                 Token("\"invalid\"", STRING, std::string("invalid"), 2, 26),
+                                 Token(";", SEMI_COLON, {}, 2, 35),
+                                 Token("}", RIGHT_BRACE, {}, 2, 37),
+
+                                 Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when single statement contains multiple type mismatches.
+ * Error: Multiple type violations in chained operations.
+ */
+TEST(TypeChecker_Errors, MultipleErrorsInSingleStatement)
+{
+    // summon x = "hello" + affirmative - 10;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"hello\"", STRING, std::string("hello"), 1, 12),
+        Token("+", PLUS, {}, 1, 20),       Token("affirmative", BOOL, true, 1, 22),
+        Token("-", MINUS, {}, 1, 34),      Token("10", INTEGER, 10, 1, 36),
+        Token(";", SEMI_COLON, {}, 1, 38),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when negating a non-numeric variable.
+ * Error: Unary minus requires numeric type.
+ */
+TEST(TypeChecker_Errors, NegateNonNumeric)
+{
+    // summon a = "test";
+    // summon b = -a;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("a", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("\"test\"", STRING, std::string("test"), 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 19),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("b", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("-", MINUS, {}, 2, 12),
+        Token("a", IDENTIFIER, {}, 2, 13), Token(";", SEMI_COLON, {}, 2, 14),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests error when applying NOT to a numeric variable.
+ * Error: NOT operator requires boolean type.
+ */
+TEST(TypeChecker_Errors, NotOperatorOnVariable)
+{
+    // summon x = 100;
+    // summon y = not x;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("100", INTEGER, 100, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 15),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("y", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("not", NOT, {}, 2, 12),
+        Token("x", IDENTIFIER, {}, 2, 16), Token(";", SEMI_COLON, {}, 2, 17),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_GE(types.diagnostics.size(), 1u);
+}
+
+/**
+ * Tests valid string interpolation with variable reference.
+ * Validates: Interpolated variables are properly type-checked.
+ */
 TEST(TypeChecker_Basics, InterpolatedStringValid)
 {
     // summon x = 10;
