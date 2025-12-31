@@ -469,6 +469,119 @@ All statements have type `Void`:
 
 ---
 
+## 2.5.1 Intermediate Representation (IR)
+
+**Input:** Resolved and type-checked AST  
+**Output:** Stack-based typed IR (instruction sequence + constant pool)
+
+Ambra lowers the AST into a **stack-based, strongly typed IR** where each instruction encodes its operand/result type in the opcode (e.g., `AddI32`, `EqBool`). This eliminates runtime type dispatch and keeps the VM simple.
+
+### IR Design Goals
+- Simple stack-based execution model
+- No runtime name resolution (identifiers become local slot accesses)
+- Type-directed lowering (type checker chooses opcodes)
+- Structured control flow becomes labels + jumps
+
+### Core Concepts
+
+#### Operand Stack
+- Instructions operate on an implicit operand stack
+- Expressions push values; operators consume and push results
+- Stack is empty at statement boundaries
+
+#### Local Slots
+- Variables declared by `summon` map to numbered storage slots
+- `summon x = expr;` allocates a new local slot (integer index)
+- Variable references lower to `LoadLocal<T> <slot>`
+- Assignments lower to `StoreLocal<T> <slot>`
+- Shadowing naturally uses different slot numbers
+
+#### Control Flow
+- `Label <name>` marks a position
+- `Jump <name>` unconditional branch
+- `JumpIfFalse <name>` pops a Bool and branches if false
+
+### Type System in IR
+IR values are one of: `I32` (integer), `Bool`, `String`, or `Void` (compile-time only).  
+The IR is only generated when semantic analysis succeeds.
+
+### Instruction Categories
+
+**Constants:**
+- `ConstI32 <n>`, `ConstBool <b>`, `ConstString <s>` — push literals
+
+**Locals:**
+- `LoadLocal{I32,Bool,String} <slot>` — push local value
+- `StoreLocal{I32,Bool,String} <slot>` — pop and store
+
+**Operators:**
+- `NotBool`, `NegI32` — unary operations
+- `AddI32`, `SubI32`, `MulI32`, `DivI32` — arithmetic
+- `LessI32`, `LessEqI32`, `GreaterI32`, `GreaterEqI32` — comparisons
+- `EqI32`, `NeqI32`, `EqBool`, `NeqBool`, `EqString`, `NeqString` — equality
+- `ConcatString` — string concatenation
+
+**Conversions:**
+- `I32ToString`, `BoolToString` — explicit conversions for `say` and interpolation
+
+**I/O:**
+- `PrintString` — output a string (used for `say`)
+
+**Control Flow:**
+- `Label <L>`, `Jump <L>`, `JumpIfFalse <L>` — structured control flow
+
+### Key Lowering Patterns
+
+**Summon:**
+```
+summon x = expr;  →  1. Lower expr (pushes value)
+                     2. StoreLocal<T> <slot>
+```
+
+**Say:**
+```
+say expr;  →  1. Lower expr
+              2. Convert to String if needed
+              3. PrintString
+```
+
+**If-Chain:**
+```
+should (c1) { b1 }       →  1. Lower c1
+otherwise should (c2) {b2}   2. JumpIfFalse <next>
+otherwise { b3 }             3. Lower b1
+                             4. Jump <end>
+                             5. Label <next>
+                             ...
+                             6. Label <end>
+```
+
+**While:**
+```
+aslongas (cond) { body }  →  1. Label <loop>
+                             2. Lower cond
+                             3. JumpIfFalse <end>
+                             4. Lower body
+                             5. Jump <loop>
+                             6. Label <end>
+```
+
+**Interpolated Strings:**
+Expand to concatenation sequence:
+```
+"a{x}b{y}c"  →  1. ConstString "a"
+                2. LoadLocal <x>, convert if needed
+                3. ConcatString
+                4. ConstString "b"
+                5. ConcatString
+                6. LoadLocal <y>, convert if needed
+                7. ConcatString
+                8. ConstString "c"
+                9. ConcatString
+```
+
+---
+
 ## 2.6 Bytecode Generation
 
 **Input:** AST  
