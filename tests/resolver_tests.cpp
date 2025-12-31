@@ -1522,3 +1522,1019 @@ TEST(TypeChecker_Basics, IfConditionBool)
 
     ASSERT_FALSE(types.hadError());
 }
+
+TEST(TypeChecker_Basics, StringLiteral)
+{
+    // summon name = "Alice";
+    // say name;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("name", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 13),      Token("\"Alice\"", STRING, std::string("Alice"), 1, 15),
+        Token(";", SEMI_COLON, {}, 1, 22),
+
+        Token("say", SAY, {}, 2, 1),       Token("name", IDENTIFIER, {}, 2, 5),
+        Token(";", SEMI_COLON, {}, 2, 9),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Basics, BooleanLiteral)
+{
+    // summon flag = affirmative;
+    // summon other = negative;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("flag", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 13),      Token("affirmative", BOOL, true, 1, 15),
+        Token(";", SEMI_COLON, {}, 1, 26),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("other", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 14),      Token("negative", BOOL, false, 2, 16),
+        Token(";", SEMI_COLON, {}, 2, 24),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, AdditionOfIntegers)
+{
+    // summon a = 10;
+    // summon b = 20;
+    // summon c = a + b;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("a", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("b", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("20", INTEGER, 20, 2, 12),
+        Token(";", SEMI_COLON, {}, 2, 14),
+
+        Token("summon", SUMMON, {}, 3, 1), Token("c", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 10),      Token("a", IDENTIFIER, {}, 3, 12),
+        Token("+", PLUS, {}, 3, 14),       Token("b", IDENTIFIER, {}, 3, 16),
+        Token(";", SEMI_COLON, {}, 3, 17),
+
+        Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, SubtractionOfIntegers)
+{
+    // summon diff = 100 - 42;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("diff", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 13),      Token("100", INTEGER, 100, 1, 15),
+        Token("-", MINUS, {}, 1, 19),      Token("42", INTEGER, 42, 1, 21),
+        Token(";", SEMI_COLON, {}, 1, 23),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, MultiplicationOfIntegers)
+{
+    // summon product = 7 * 6;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("product", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 16),      Token("7", INTEGER, 7, 1, 18),
+        Token("*", STAR, {}, 1, 20),       Token("6", INTEGER, 6, 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 23),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, DivisionOfIntegers)
+{
+    // summon quotient = 50 / 5;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("quotient", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 17),      Token("50", INTEGER, 50, 1, 19),
+        Token("/", SLASH, {}, 1, 22),      Token("5", INTEGER, 5, 1, 24),
+        Token(";", SEMI_COLON, {}, 1, 25),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, ComplexExpression)
+{
+    // summon result = (10 + 5) * 2 - 8 / 4;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("result", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 15),      Token("(", LEFT_PAREN, {}, 1, 17),
+        Token("10", INTEGER, 10, 1, 18),   Token("+", PLUS, {}, 1, 21),
+        Token("5", INTEGER, 5, 1, 23),     Token(")", RIGHT_PAREN, {}, 1, 24),
+        Token("*", STAR, {}, 1, 26),       Token("2", INTEGER, 2, 1, 28),
+        Token("-", MINUS, {}, 1, 30),      Token("8", INTEGER, 8, 1, 32),
+        Token("/", SLASH, {}, 1, 34),      Token("4", INTEGER, 4, 1, 36),
+        Token(";", SEMI_COLON, {}, 1, 37),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Arithmetic, UnaryNegation)
+{
+    // summon neg = -42;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("neg", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 12),      Token("-", MINUS, {}, 1, 14),
+        Token("42", INTEGER, 42, 1, 15),   Token(";", SEMI_COLON, {}, 1, 17),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Comparison, GreaterThan)
+{
+    // summon x = 10;
+    // summon y = 5;
+    // summon result = x > y;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("y", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("5", INTEGER, 5, 2, 12),
+        Token(";", SEMI_COLON, {}, 2, 13),
+
+        Token("summon", SUMMON, {}, 3, 1), Token("result", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 15),      Token("x", IDENTIFIER, {}, 3, 17),
+        Token(">", GREATER, {}, 3, 19),    Token("y", IDENTIFIER, {}, 3, 21),
+        Token(";", SEMI_COLON, {}, 3, 22),
+
+        Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Comparison, GreaterThanOrEqual)
+{
+    // summon check = 10 >= 10;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),     Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),          Token("10", INTEGER, 10, 1, 16),
+        Token(">=", GREATER_EQUAL, {}, 1, 19), Token("10", INTEGER, 10, 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 24),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Comparison, LessThan)
+{
+    // summon check = 3 < 7;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),      Token("3", INTEGER, 3, 1, 16),
+        Token("<", LESS, {}, 1, 18),       Token("7", INTEGER, 7, 1, 20),
+        Token(";", SEMI_COLON, {}, 1, 21),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Comparison, LessThanOrEqual)
+{
+    // summon check = 5 <= 5;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),  Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),       Token("5", INTEGER, 5, 1, 16),
+        Token("<=", LESS_EQUAL, {}, 1, 18), Token("5", INTEGER, 5, 1, 21),
+        Token(";", SEMI_COLON, {}, 1, 22),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Equality, IntegerEquality)
+{
+    // summon check = 42 == 42;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),   Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),        Token("42", INTEGER, 42, 1, 16),
+        Token("==", EQUAL_EQUAL, {}, 1, 19), Token("42", INTEGER, 42, 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 24),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Equality, IntegerInequality)
+{
+    // summon check = 10 != 20;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),  Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),       Token("10", INTEGER, 10, 1, 16),
+        Token("!=", BANG_EQUAL, {}, 1, 19), Token("20", INTEGER, 20, 1, 22),
+        Token(";", SEMI_COLON, {}, 1, 24),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Equality, StringEquality)
+{
+    // summon check = "hello" == "hello";
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("check", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 14),
+                                 Token("\"hello\"", STRING, std::string("hello"), 1, 16),
+                                 Token("==", EQUAL_EQUAL, {}, 1, 24),
+                                 Token("\"hello\"", STRING, std::string("hello"), 1, 27),
+                                 Token(";", SEMI_COLON, {}, 1, 35),
+
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Equality, BooleanEquality)
+{
+    // summon check = affirmative == negative;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),   Token("check", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),        Token("affirmative", BOOL, true, 1, 16),
+        Token("==", EQUAL_EQUAL, {}, 1, 28), Token("negative", BOOL, false, 1, 31),
+        Token(";", SEMI_COLON, {}, 1, 39),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Logical, NotOperator)
+{
+    // summon result = not affirmative;
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("result", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 15),
+                                 Token("not", NOT, {}, 1, 17),
+                                 Token("affirmative", BOOL, true, 1, 21),
+                                 Token(";", SEMI_COLON, {}, 1, 32),
+
+                                 Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Logical, NotWithNegation)
+{
+    // summon x = 10;
+    // summon result = not (x > 5);
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),  Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),       Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("summon", SUMMON, {}, 2, 1),  Token("result", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 15),       Token("not", NOT, {}, 2, 17),
+        Token("(", LEFT_PAREN, {}, 2, 21),  Token("x", IDENTIFIER, {}, 2, 22),
+        Token(">", GREATER, {}, 2, 24),     Token("5", INTEGER, 5, 2, 26),
+        Token(")", RIGHT_PAREN, {}, 2, 27), Token(";", SEMI_COLON, {}, 2, 28),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Logical, DoubleNegation)
+{
+    // summon result = not not affirmative;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("result", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 15),      Token("not", NOT, {}, 1, 17),
+        Token("not", NOT, {}, 1, 21),      Token("affirmative", BOOL, true, 1, 25),
+        Token(";", SEMI_COLON, {}, 1, 36),
+
+        Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Comparison, ComparingBooleanVariables)
+{
+    // summon flag1 = affirmative;
+    // summon flag2 = negative;
+    // summon result = flag1 == flag2;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),   Token("flag1", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),        Token("affirmative", BOOL, true, 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 27),
+
+        Token("summon", SUMMON, {}, 2, 1),   Token("flag2", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 14),        Token("negative", BOOL, false, 2, 16),
+        Token(";", SEMI_COLON, {}, 2, 24),
+
+        Token("summon", SUMMON, {}, 3, 1),   Token("result", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 15),        Token("flag1", IDENTIFIER, {}, 3, 17),
+        Token("==", EQUAL_EQUAL, {}, 3, 23), Token("flag2", IDENTIFIER, {}, 3, 26),
+        Token(";", SEMI_COLON, {}, 3, 31),
+
+        Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_ControlFlow, WhileLoopWithIntCondition)
+{
+    // summon counter = 10;
+    // aslongas (counter > 0) { say counter; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("counter", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 16),
+                                 Token("10", INTEGER, 10, 1, 18),
+                                 Token(";", SEMI_COLON, {}, 1, 20),
+
+                                 Token("aslongas", ASLONGAS, {}, 2, 1),
+                                 Token("(", LEFT_PAREN, {}, 2, 10),
+                                 Token("counter", IDENTIFIER, {}, 2, 11),
+                                 Token(">", GREATER, {}, 2, 19),
+                                 Token("0", INTEGER, 0, 2, 21),
+                                 Token(")", RIGHT_PAREN, {}, 2, 22),
+                                 Token("{", LEFT_BRACE, {}, 2, 24),
+
+                                 Token("say", SAY, {}, 3, 3),
+                                 Token("counter", IDENTIFIER, {}, 3, 7),
+                                 Token(";", SEMI_COLON, {}, 3, 14),
+
+                                 Token("}", RIGHT_BRACE, {}, 4, 1),
+                                 Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_ControlFlow, IfWithElseBranches)
+{
+    // summon x = 10;
+    // should (x > 5) { say x; } otherwise { say 0; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("10", INTEGER, 10, 1, 12),
+                                 Token(";", SEMI_COLON, {}, 1, 14),
+
+                                 Token("should", SHOULD, {}, 2, 1),
+                                 Token("(", LEFT_PAREN, {}, 2, 8),
+                                 Token("x", IDENTIFIER, {}, 2, 9),
+                                 Token(">", GREATER, {}, 2, 11),
+                                 Token("5", INTEGER, 5, 2, 13),
+                                 Token(")", RIGHT_PAREN, {}, 2, 14),
+                                 Token("{", LEFT_BRACE, {}, 2, 16),
+
+                                 Token("say", SAY, {}, 3, 3),
+                                 Token("x", IDENTIFIER, {}, 3, 7),
+                                 Token(";", SEMI_COLON, {}, 3, 8),
+
+                                 Token("}", RIGHT_BRACE, {}, 4, 1),
+
+                                 Token("otherwise", OTHERWISE, {}, 4, 3),
+                                 Token("{", LEFT_BRACE, {}, 4, 13),
+                                 Token("say", SAY, {}, 5, 3),
+                                 Token("0", INTEGER, 0, 5, 7),
+                                 Token(";", SEMI_COLON, {}, 5, 8),
+                                 Token("}", RIGHT_BRACE, {}, 6, 1),
+
+                                 Token("", EOF_TOKEN, {}, 7, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_ControlFlow, MultipleIfChainBranches)
+{
+    // summon score = 85;
+    // should (score >= 90) { say "A"; }
+    // otherwise should (score >= 80) { say "B"; }
+    // otherwise { say "C"; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("score", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 14),
+                                 Token("85", INTEGER, 85, 1, 16),
+                                 Token(";", SEMI_COLON, {}, 1, 18),
+
+                                 Token("should", SHOULD, {}, 2, 1),
+                                 Token("(", LEFT_PAREN, {}, 2, 8),
+                                 Token("score", IDENTIFIER, {}, 2, 9),
+                                 Token(">=", GREATER_EQUAL, {}, 2, 15),
+                                 Token("90", INTEGER, 90, 2, 18),
+                                 Token(")", RIGHT_PAREN, {}, 2, 20),
+                                 Token("{", LEFT_BRACE, {}, 2, 22),
+                                 Token("say", SAY, {}, 2, 24),
+                                 Token("\"A\"", STRING, std::string("A"), 2, 28),
+                                 Token(";", SEMI_COLON, {}, 2, 31),
+                                 Token("}", RIGHT_BRACE, {}, 2, 33),
+
+                                 Token("otherwise", OTHERWISE, {}, 3, 1),
+                                 Token("should", SHOULD, {}, 3, 11),
+                                 Token("(", LEFT_PAREN, {}, 3, 18),
+                                 Token("score", IDENTIFIER, {}, 3, 19),
+                                 Token(">=", GREATER_EQUAL, {}, 3, 25),
+                                 Token("80", INTEGER, 80, 3, 28),
+                                 Token(")", RIGHT_PAREN, {}, 3, 30),
+                                 Token("{", LEFT_BRACE, {}, 3, 32),
+                                 Token("say", SAY, {}, 3, 34),
+                                 Token("\"B\"", STRING, std::string("B"), 3, 38),
+                                 Token(";", SEMI_COLON, {}, 3, 41),
+                                 Token("}", RIGHT_BRACE, {}, 3, 43),
+
+                                 Token("otherwise", OTHERWISE, {}, 4, 1),
+                                 Token("{", LEFT_BRACE, {}, 4, 11),
+                                 Token("say", SAY, {}, 4, 13),
+                                 Token("\"C\"", STRING, std::string("C"), 4, 17),
+                                 Token(";", SEMI_COLON, {}, 4, 20),
+                                 Token("}", RIGHT_BRACE, {}, 4, 22),
+
+                                 Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Strings, SimpleInterpolation)
+{
+    // summon name = "Alice";
+    // summon greeting = "Hello {name}";
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("name", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 13),
+                                 Token("\"Alice\"", STRING, std::string("Alice"), 1, 15),
+                                 Token(";", SEMI_COLON, {}, 1, 22),
+
+                                 Token("summon", SUMMON, {}, 2, 1),
+                                 Token("greeting", IDENTIFIER, {}, 2, 8),
+                                 Token("=", EQUAL, {}, 2, 17),
+                                 Token("\"Hello \"", STRING, std::string("Hello "), 2, 19),
+                                 Token("{", INTERP_START, {}, 2, 27),
+                                 Token("name", IDENTIFIER, {}, 2, 28),
+                                 Token("}", INTERP_END, {}, 2, 32),
+                                 Token("\"\"", STRING, std::string(""), 2, 33),
+                                 Token(";", SEMI_COLON, {}, 2, 35),
+
+                                 Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Strings, InterpolationWithIntegerExpression)
+{
+    // summon x = 10;
+    // summon y = 20;
+    // summon msg = "Sum is {x + y}";
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("10", INTEGER, 10, 1, 12),
+                                 Token(";", SEMI_COLON, {}, 1, 14),
+
+                                 Token("summon", SUMMON, {}, 2, 1),
+                                 Token("y", IDENTIFIER, {}, 2, 8),
+                                 Token("=", EQUAL, {}, 2, 10),
+                                 Token("20", INTEGER, 20, 2, 12),
+                                 Token(";", SEMI_COLON, {}, 2, 14),
+
+                                 Token("summon", SUMMON, {}, 3, 1),
+                                 Token("msg", IDENTIFIER, {}, 3, 8),
+                                 Token("=", EQUAL, {}, 3, 12),
+                                 Token("\"Sum is \"", STRING, std::string("Sum is "), 3, 14),
+                                 Token("{", INTERP_START, {}, 3, 23),
+                                 Token("x", IDENTIFIER, {}, 3, 24),
+                                 Token("+", PLUS, {}, 3, 26),
+                                 Token("y", IDENTIFIER, {}, 3, 28),
+                                 Token("}", INTERP_END, {}, 3, 29),
+                                 Token("\"\"", STRING, std::string(""), 3, 30),
+                                 Token(";", SEMI_COLON, {}, 3, 32),
+
+                                 Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Strings, MultipleInterpolations)
+{
+    // summon first = "John";
+    // summon last = "Doe";
+    // summon full = "{first} {last}";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),   Token("first", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),        Token("\"John\"", STRING, std::string("John"), 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 22),
+
+        Token("summon", SUMMON, {}, 2, 1),   Token("last", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 13),        Token("\"Doe\"", STRING, std::string("Doe"), 2, 15),
+        Token(";", SEMI_COLON, {}, 2, 20),
+
+        Token("summon", SUMMON, {}, 3, 1),   Token("full", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 13),        Token("\"\"", STRING, std::string(""), 3, 15),
+        Token("{", INTERP_START, {}, 3, 17), Token("first", IDENTIFIER, {}, 3, 18),
+        Token("}", INTERP_END, {}, 3, 23),   Token("\" \"", STRING, std::string(" "), 3, 24),
+        Token("{", INTERP_START, {}, 3, 27), Token("last", IDENTIFIER, {}, 3, 28),
+        Token("}", INTERP_END, {}, 3, 32),   Token("\"\"", STRING, std::string(""), 3, 33),
+        Token(";", SEMI_COLON, {}, 3, 35),
+
+        Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Scopes, VariableInNestedBlock)
+{
+    // summon x = 10;
+    // { summon y = x + 5; say y; }
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("{", LEFT_BRACE, {}, 2, 1),  Token("summon", SUMMON, {}, 2, 3),
+        Token("y", IDENTIFIER, {}, 2, 10), Token("=", EQUAL, {}, 2, 12),
+        Token("x", IDENTIFIER, {}, 2, 14), Token("+", PLUS, {}, 2, 16),
+        Token("5", INTEGER, 5, 2, 18),     Token(";", SEMI_COLON, {}, 2, 19),
+
+        Token("say", SAY, {}, 3, 3),       Token("y", IDENTIFIER, {}, 3, 7),
+        Token(";", SEMI_COLON, {}, 3, 8),  Token("}", RIGHT_BRACE, {}, 4, 1),
+
+        Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Scopes, ShadowingWithSameType)
+{
+    // summon x = 10;
+    // { summon x = 20; say x; }
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("{", LEFT_BRACE, {}, 2, 1),  Token("summon", SUMMON, {}, 2, 3),
+        Token("x", IDENTIFIER, {}, 2, 10), Token("=", EQUAL, {}, 2, 12),
+        Token("20", INTEGER, 20, 2, 14),   Token(";", SEMI_COLON, {}, 2, 16),
+
+        Token("say", SAY, {}, 3, 3),       Token("x", IDENTIFIER, {}, 3, 7),
+        Token(";", SEMI_COLON, {}, 3, 8),  Token("}", RIGHT_BRACE, {}, 4, 1),
+
+        Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Scopes, ShadowingWithDifferentType)
+{
+    // summon x = 10;
+    // { summon x = "hello"; say x; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("x", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("10", INTEGER, 10, 1, 12),
+                                 Token(";", SEMI_COLON, {}, 1, 14),
+
+                                 Token("{", LEFT_BRACE, {}, 2, 1),
+                                 Token("summon", SUMMON, {}, 2, 3),
+                                 Token("x", IDENTIFIER, {}, 2, 10),
+                                 Token("=", EQUAL, {}, 2, 12),
+                                 Token("\"hello\"", STRING, std::string("hello"), 2, 14),
+                                 Token(";", SEMI_COLON, {}, 2, 21),
+
+                                 Token("say", SAY, {}, 3, 3),
+                                 Token("x", IDENTIFIER, {}, 3, 7),
+                                 Token(";", SEMI_COLON, {}, 3, 8),
+                                 Token("}", RIGHT_BRACE, {}, 4, 1),
+
+                                 Token("", EOF_TOKEN, {}, 5, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Mixed, ComplexProgramWithMultipleTypes)
+{
+    // summon count = 5;
+    // summon name = "test";
+    // summon active = affirmative;
+    // should (count > 0) { say name; }
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),    Token("count", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 14),         Token("5", INTEGER, 5, 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 17),
+
+        Token("summon", SUMMON, {}, 2, 1),    Token("name", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 13),         Token("\"test\"", STRING, std::string("test"), 2, 15),
+        Token(";", SEMI_COLON, {}, 2, 21),
+
+        Token("summon", SUMMON, {}, 3, 1),    Token("active", IDENTIFIER, {}, 3, 8),
+        Token("=", EQUAL, {}, 3, 15),         Token("affirmative", BOOL, true, 3, 17),
+        Token(";", SEMI_COLON, {}, 3, 28),
+
+        Token("should", SHOULD, {}, 4, 1),    Token("(", LEFT_PAREN, {}, 4, 8),
+        Token("count", IDENTIFIER, {}, 4, 9), Token(">", GREATER, {}, 4, 15),
+        Token("0", INTEGER, 0, 4, 17),        Token(")", RIGHT_PAREN, {}, 4, 18),
+        Token("{", LEFT_BRACE, {}, 4, 20),
+
+        Token("say", SAY, {}, 5, 3),          Token("name", IDENTIFIER, {}, 5, 7),
+        Token(";", SEMI_COLON, {}, 5, 11),
+
+        Token("}", RIGHT_BRACE, {}, 6, 1),    Token("", EOF_TOKEN, {}, 7, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
+
+TEST(TypeChecker_Mixed, ArithmeticInConditionAndInterpolation)
+{
+    // summon a = 10;
+    // summon b = 20;
+    // should ((a + b) > 25) { say "Result: {a * b}"; }
+
+    std::vector<Token> tokens = {Token("summon", SUMMON, {}, 1, 1),
+                                 Token("a", IDENTIFIER, {}, 1, 8),
+                                 Token("=", EQUAL, {}, 1, 10),
+                                 Token("10", INTEGER, 10, 1, 12),
+                                 Token(";", SEMI_COLON, {}, 1, 14),
+
+                                 Token("summon", SUMMON, {}, 2, 1),
+                                 Token("b", IDENTIFIER, {}, 2, 8),
+                                 Token("=", EQUAL, {}, 2, 10),
+                                 Token("20", INTEGER, 20, 2, 12),
+                                 Token(";", SEMI_COLON, {}, 2, 14),
+
+                                 Token("should", SHOULD, {}, 3, 1),
+                                 Token("(", LEFT_PAREN, {}, 3, 8),
+                                 Token("(", LEFT_PAREN, {}, 3, 9),
+                                 Token("a", IDENTIFIER, {}, 3, 10),
+                                 Token("+", PLUS, {}, 3, 12),
+                                 Token("b", IDENTIFIER, {}, 3, 14),
+                                 Token(")", RIGHT_PAREN, {}, 3, 15),
+                                 Token(">", GREATER, {}, 3, 17),
+                                 Token("25", INTEGER, 25, 3, 19),
+                                 Token(")", RIGHT_PAREN, {}, 3, 21),
+                                 Token("{", LEFT_BRACE, {}, 3, 23),
+
+                                 Token("say", SAY, {}, 4, 3),
+                                 Token("\"Result: \"", STRING, std::string("Result: "), 4, 7),
+                                 Token("{", INTERP_START, {}, 4, 17),
+                                 Token("a", IDENTIFIER, {}, 4, 18),
+                                 Token("*", STAR, {}, 4, 20),
+                                 Token("b", IDENTIFIER, {}, 4, 22),
+                                 Token("}", INTERP_END, {}, 4, 23),
+                                 Token("\"\"", STRING, std::string(""), 4, 24),
+                                 Token(";", SEMI_COLON, {}, 4, 26),
+
+                                 Token("}", RIGHT_BRACE, {}, 5, 1),
+                                 Token("", EOF_TOKEN, {}, 6, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    ASSERT_FALSE(sema.hadError());
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
