@@ -2538,3 +2538,130 @@ TEST(TypeChecker_Mixed, ArithmeticInConditionAndInterpolation)
 
     ASSERT_FALSE(types.hadError());
 }
+
+TEST(TypeChecker_Errors, ArithmeticTypeMismatch)
+{
+    // summon x = 1 + affirmative;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("1", INTEGER, 1, 1, 12),
+        Token("+", PLUS, {}, 1, 14),       Token("affirmative", BOOL, true, 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 28), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_EQ(types.diagnostics.size(), 1);
+}
+
+TEST(TypeChecker_Errors, IfConditionNotBool)
+{
+    // should (10) { say 1; }
+
+    std::vector<Token> tokens = {
+        Token("should", SHOULD, {}, 1, 1), Token("(", LEFT_PAREN, {}, 1, 8),
+        Token("10", INTEGER, 10, 1, 9),    Token(")", RIGHT_PAREN, {}, 1, 11),
+        Token("{", LEFT_BRACE, {}, 1, 13), Token("say", SAY, {}, 2, 3),
+        Token("1", INTEGER, 1, 2, 7),      Token(";", SEMI_COLON, {}, 2, 8),
+        Token("}", RIGHT_BRACE, {}, 3, 1), Token("", EOF_TOKEN, {}, 4, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_EQ(types.diagnostics.size(), 1);
+}
+
+TEST(TypeChecker_Errors, MultipleIndependentErrors)
+{
+    // summon x = 1 + "hello";
+    // summon y = not 10;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("1", INTEGER, 1, 1, 12),
+        Token("+", PLUS, {}, 1, 14),       Token("\"hello\"", STRING, "hello", 1, 16),
+        Token(";", SEMI_COLON, {}, 1, 24),
+
+        Token("summon", SUMMON, {}, 2, 1), Token("y", IDENTIFIER, {}, 2, 8),
+        Token("=", EQUAL, {}, 2, 10),      Token("not", NOT, {}, 2, 12),
+        Token("10", INTEGER, 10, 2, 16),   Token(";", SEMI_COLON, {}, 2, 18),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_EQ(types.diagnostics.size(), 2);
+}
+
+TEST(TypeChecker_Errors, CircularDependency)
+{
+    // summon x = x;
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),      Token("x", IDENTIFIER, {}, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 13), Token("", EOF_TOKEN, {}, 2, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_TRUE(types.hadError());
+    ASSERT_EQ(types.diagnostics.size(), 1);
+}
+
+TEST(TypeChecker_Basics, InterpolatedStringValid)
+{
+    // summon x = 10;
+    // say "value = {x}";
+
+    std::vector<Token> tokens = {
+        Token("summon", SUMMON, {}, 1, 1),    Token("x", IDENTIFIER, {}, 1, 8),
+        Token("=", EQUAL, {}, 1, 10),         Token("10", INTEGER, 10, 1, 12),
+        Token(";", SEMI_COLON, {}, 1, 14),
+
+        Token("say", SAY, {}, 2, 1),          Token("\"value = \"", STRING, "value = ", 2, 5),
+        Token("${", INTERP_START, {}, 2, 16), Token("x", IDENTIFIER, {}, 2, 18),
+        Token("}", INTERP_END, {}, 2, 19),    Token(";", SEMI_COLON, {}, 2, 20),
+
+        Token("", EOF_TOKEN, {}, 3, 1)};
+
+    Parser  parser(tokens);
+    Program program = parser.parseProgram();
+
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+
+    ASSERT_FALSE(types.hadError());
+}
