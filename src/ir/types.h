@@ -26,7 +26,7 @@ struct LocalInfo
 
 struct Constant
 {
-    IrType type;
-    ConstId constId;
+    IrType                               type;
+    ConstId                              constId;
     std::variant<std::string, int, bool> value;
 };
