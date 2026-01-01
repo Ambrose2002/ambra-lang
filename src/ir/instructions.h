@@ -3,6 +3,12 @@
 
 #include <variant>
 
+struct Label
+{
+    LabelId     id;
+    std::string debugName;
+};
+
 enum Opcode
 {
     // Stack
