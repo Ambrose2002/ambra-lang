@@ -7,9 +7,9 @@
 enum IrType
 {
     I32,
-    Bool,
-    String,
-    Void
+    Bool32,
+    String32,
+    Void32
 };
 
 using LocalId = uint32_t;
