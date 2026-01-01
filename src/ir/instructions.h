@@ -1,4 +1,10 @@
-enum Opcode {
+#include "ast/expr.h"
+#include "types.h"
+
+#include <variant>
+
+enum Opcode
+{
     // Stack
     PushConst,
     Pop,
@@ -24,6 +30,16 @@ enum Opcode {
     // Side effects
     PrintString,
 
-    //Structural
+    // Structural
     Nop
+};
+
+using Operand = std::variant<std::monostate, LocalId, LabelId, ConstId>;
+
+struct Instruction
+{
+    Opcode  opcode;
+    Operand operand;
+
+    SourceLoc loc;
 };
