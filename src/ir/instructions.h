@@ -25,6 +25,10 @@ enum Opcode
     MulI32,
     DivI32,
 
+    // Unary
+    NotBool,
+    NegI32,
+
     // Comparison
     CmpEqlI32,
     CmpLtI32,
