@@ -4,7 +4,6 @@
 #include "ast/stmt.h"
 #include "sema/analyzer.h"
 
-#include <queue>
 #include <unordered_map>
 void LoweringContext::lowerExpression(const Expr* expr, Type expectedType)
 {
@@ -424,4 +423,49 @@ void LoweringContext::lowerBlockStatement(const BlockStmt* stmt)
         lowerStatement(stmt.get());
     }
     localScopes.pop_back();
+}
+
+void LoweringContext::lowerIfChainStatement(const IfChainStmt* stmt)
+{
+    std::vector<LabelId> nextLabels;
+
+    // Allocate labels for fallthrough between branches
+    for (size_t i = 0; i < stmt->getBranches().size(); ++i)
+    {
+        nextLabels.push_back(currentFunction->nextLabelId);
+        currentFunction->nextLabelId.value++;
+    }
+
+    // Final exit label
+    LabelId endLabel = currentFunction->nextLabelId;
+    currentFunction->nextLabelId.value++;
+
+    const auto& branches = stmt->getBranches();
+
+    for (size_t i = 0; i < branches.size(); ++i)
+    {
+        const auto& [cond, block] = branches[i];
+
+        lowerExpression(cond.get(), Bool);
+
+        currentFunction->instructions.emplace_back(
+            Instruction{JumpIfFalse, Operand{nextLabels[i]}});
+
+        lowerBlockStatement(block.get());
+
+        // Jump to end after executing this branch
+        currentFunction->instructions.emplace_back(Instruction{Jump, Operand{endLabel}});
+
+        // Emit label for next branch
+        currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{nextLabels[i]}});
+    }
+
+    // Else branch (if present)
+    if (stmt->getElseBranch())
+    {
+        lowerBlockStatement(stmt->getElseBranch().get());
+    }
+
+    // Final merge point
+    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
 }
