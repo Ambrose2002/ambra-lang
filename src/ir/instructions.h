@@ -29,13 +29,21 @@ enum Opcode
     NotBool,
     NegI32,
 
-    // Comparison
+    // Comparison for ints
     CmpEqI32,
     CmpNEqI32,
     CmpLtI32,
     CmpLtEqI32,
     CmpGtI32,
     CmpGtEqI32,
+
+    // Comparison for bool
+    CmpEqBool32,
+    CmpNEqBool32,
+
+    // Comparison for string
+    CmpEqString32,
+    CmpNEqString32,
 
     // Control flow
     Jump,
