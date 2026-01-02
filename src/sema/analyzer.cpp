@@ -43,6 +43,8 @@ void Resolver::resolveSummonStmt(const SummonStmt& stmt)
     symbol->declLoc = identifier.loc;
     symbol->declStmt = &stmt;
 
+    stmt.setSymbol(symbol.get());
+
     bool isDeclared = currentScope->declare(identifier.getName(), std::move(symbol));
 
     if (!isDeclared)

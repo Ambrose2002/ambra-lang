@@ -15,4 +15,5 @@ struct LoweringContext
     bool hadError = false;
 
     void lowerExpression(const Expr* expr);
+    void lowerStatement(const Stmt* stmt);
 };

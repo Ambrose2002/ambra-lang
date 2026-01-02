@@ -1,6 +1,8 @@
 #include "lowering.h"
 
 #include "ast/expr.h"
+#include "ast/stmt.h"
+#include "sema/analyzer.h"
 void LoweringContext::lowerExpression(const Expr* expr)
 {
     switch (expr->kind)
@@ -136,60 +138,127 @@ void LoweringContext::lowerExpression(const Expr* expr)
         lowerExpression(&left);
         lowerExpression(&right);
 
-        switch (op) {
-            case EqualEqual:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
-                return;
-            }
-            case NotEqual:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
-                return;
-            }
-            case Greater:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpGtI32, Operand{}});
-                return;
-            }
-            case GreaterEqual:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpGtEqI32, Operand{}});
-                return;
-            }
-            case Less:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpLtI32, Operand{}});
-                return;
-            }
-            case LessEqual:
-            {
-                currentFunction->instructions.emplace_back(Instruction{CmpLtEqI32, Operand{}});
-                return;
-            }
-            case Add:
-            {
-                currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
-                return;
-            }
-            case Subtract:
-            {
-                currentFunction->instructions.emplace_back(Instruction{SubI32, Operand{}});
-                return;
-            }
-            case Multiply:
-            {
-                currentFunction->instructions.emplace_back(Instruction{MulI32, Operand{}});
-                return;
-            }
-            case Divide:
-            {
-                currentFunction->instructions.emplace_back(Instruction{DivI32, Operand{}});
-                return;
-            }
+        switch (op)
+        {
+        case EqualEqual:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
+            return;
+        }
+        case NotEqual:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
+            return;
+        }
+        case Greater:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpGtI32, Operand{}});
+            return;
+        }
+        case GreaterEqual:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpGtEqI32, Operand{}});
+            return;
+        }
+        case Less:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpLtI32, Operand{}});
+            return;
+        }
+        case LessEqual:
+        {
+            currentFunction->instructions.emplace_back(Instruction{CmpLtEqI32, Operand{}});
+            return;
+        }
+        case Add:
+        {
+            currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
+            return;
+        }
+        case Subtract:
+        {
+            currentFunction->instructions.emplace_back(Instruction{SubI32, Operand{}});
+            return;
+        }
+        case Multiply:
+        {
+            currentFunction->instructions.emplace_back(Instruction{MulI32, Operand{}});
+            return;
+        }
+        case Divide:
+        {
+            currentFunction->instructions.emplace_back(Instruction{DivI32, Operand{}});
+            return;
+        }
+        default:
+            hadError = true;
+            return;
         }
     }
     default:
         break;
+    }
+}
+
+void LoweringContext::lowerStatement(const Stmt* stmt)
+{
+    switch (stmt->kind)
+    {
+    case Summon:
+    {
+        const auto* s = static_cast<const SummonStmt*>(stmt);
+        LocalId     lId = currentFunction->nextLocalId;
+        currentFunction->nextLocalId.value++;
+
+        LocalInfo localInfo;
+        localInfo.id = lId;
+        localInfo.debugName = s->getIdentifier().getName();
+        localInfo.declLoc = s->loc;
+
+        IrType t;
+        auto   typeIt = typeTable.mapping.find(&s->getInitializer());
+        if (typeIt == typeTable.mapping.end())
+        {
+            hadError = true;
+            return;
+        }
+        switch (typeIt->second)
+        {
+        case Int:
+        {
+            localInfo.type = I32;
+            break;
+        }
+        case Bool:
+        {
+            localInfo.type = Bool32;
+            break;
+        }
+        case String:
+        {
+            localInfo.type = String32;
+            break;
+        }
+        case Void:
+        {
+            localInfo.type = Void32;
+            break;
+        }
+        default:
+            hadError = true;
+            return;
+        }
+        currentFunction->localTable.locals.emplace_back(localInfo);
+
+        auto symbol = s->getSymbol();
+        localScopes.back()[symbol] = lId;
+
+        lowerExpression(&s->getInitializer());
+        currentFunction->instructions.emplace_back(Instruction{StoreLocal, Operand{lId}});
+        return;
+    }
+    default:
+        hadError = true;
+        return;
     }
 }

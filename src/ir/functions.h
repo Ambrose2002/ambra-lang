@@ -15,8 +15,8 @@ struct LabelTable
 struct IrFunction
 {
     std::vector<Instruction> instructions;
-    LocalTable               locals;
-    LabelTable               labels;
+    LocalTable               localTable;
+    LabelTable               labelTable;
 
     LocalId nextLocalId{0};
     LabelId nextLabelId{0};
