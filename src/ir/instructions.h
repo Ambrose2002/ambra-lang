@@ -48,6 +48,7 @@ enum Opcode
     // Control flow
     Jump,
     JumpIfFalse,
+    JLabel,
 
     // Side effects
     PrintString,
