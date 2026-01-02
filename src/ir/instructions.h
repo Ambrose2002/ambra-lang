@@ -30,8 +30,12 @@ enum Opcode
     NegI32,
 
     // Comparison
-    CmpEqlI32,
+    CmpEqI32,
+    CmpNEqI32,
     CmpLtI32,
+    CmpLtEqI32,
+    CmpGtI32,
+    CmpGtEqI32,
 
     // Control flow
     Jump,
