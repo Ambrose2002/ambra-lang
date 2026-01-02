@@ -16,6 +16,9 @@
 #include <utility>
 #include <vector>
 
+// Forward declaration to avoid circular dependency
+struct Symbol;
+
 /**
  * @brief Enumeration of all statement node types.
  */
@@ -133,9 +136,20 @@ class SummonStmt : public Stmt
         return *identifier;
     }
 
+    const Symbol* getSymbol() const
+    {
+        return symbol;
+    }
+
+    void setSymbol(Symbol* s) const
+    {
+        symbol = s;
+    }
+
   private:
     std::unique_ptr<IdentifierExpr> identifier;  ///< The identifier
     std::unique_ptr<Expr>           initializer; ///< The initialization expression
+    mutable Symbol* symbol; ///< The symbol this summon statement creates during resolution.
 };
 
 /**
