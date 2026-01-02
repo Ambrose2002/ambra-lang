@@ -460,12 +460,35 @@ void LoweringContext::lowerIfChainStatement(const IfChainStmt* stmt)
         currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{nextLabels[i]}});
     }
 
-    // Else branch (if present)
     if (stmt->getElseBranch())
     {
         lowerBlockStatement(stmt->getElseBranch().get());
     }
 
-    // Final merge point
     currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
+}
+
+void LoweringContext::lowerWhileStatement(const WhileStmt* stmt) {
+
+    LabelId loopLabel = currentFunction->nextLabelId;
+    currentFunction->nextLabelId.value++;
+
+    LabelId endLabel = currentFunction->nextLabelId;
+    currentFunction->nextLabelId.value++;
+
+    // push loop start label
+    currentFunction->instructions.emplace_back(Instruction{JLabel}, Operand{loopLabel});
+
+    lowerExpression(&stmt->getCondition(), Bool);
+    // jump to end if false
+    currentFunction->instructions.emplace_back(Instruction{JumpIfFalse, Operand{endLabel}});
+
+    lowerBlockStatement(&stmt->getBody());
+
+    // jump back to loop start
+    currentFunction->instructions.emplace_back(Instruction{Jump}, Operand{loopLabel});
+
+    //push loop end label
+    currentFunction->instructions.emplace_back(Instruction{JLabel}, Operand{endLabel});
+
 }
