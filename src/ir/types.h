@@ -12,9 +12,20 @@ enum IrType
     Void32
 };
 
-using LocalId = uint32_t;
-using LabelId = uint32_t;
-using ConstId = uint32_t;
+struct LocalId
+{
+    uint32_t value;
+};
+
+struct LabelId
+{
+    uint32_t value;
+};
+
+struct ConstId
+{
+    uint32_t value;
+};
 
 struct LocalInfo
 {
