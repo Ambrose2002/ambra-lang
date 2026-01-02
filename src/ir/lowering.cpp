@@ -3,61 +3,62 @@
 #include "ast/expr.h"
 #include "ast/stmt.h"
 #include "sema/analyzer.h"
-void LoweringContext::lowerExpression(const Expr* expr)
+void LoweringContext::lowerExpression(const Expr* expr, Type expectedType)
 {
     switch (expr->kind)
     {
     case IntLiteral:
     {
         const auto* e = static_cast<const IntLiteralExpr*>(expr);
-        lowerIntExpr(e);
-        return;
+        lowerIntExpr(e, expectedType);
+        break;
     }
     case BoolLiteral:
     {
         const auto* e = static_cast<const BoolLiteralExpr*>(expr);
-        lowerBoolExpr(e);
-        return;
+        lowerBoolExpr(e, expectedType);
+        break;
     }
     case InterpolatedString:
     {
         const auto* e = static_cast<const StringExpr*>(expr);
 
-        lowerStringExpr(e);
+        lowerStringExpr(e, expectedType);
 
-        return;
+        break;
     }
     case Identifier:
     {
         const auto* e = static_cast<const IdentifierExpr*>(expr);
 
-        lowerIdentifierExpr(e);
+        lowerIdentifierExpr(e, expectedType);
         return;
     }
     case Grouping:
     {
         const auto* e = static_cast<const GroupingExpr*>(expr);
-        lowerGroupingExpr(e);
-        return;
+        lowerGroupingExpr(e, expectedType);
+        break;
     }
     case Unary:
     {
         const auto* e = static_cast<const UnaryExpr*>(expr);
-        lowerUnaryExpr(e);
-        return;
+        lowerUnaryExpr(e, expectedType);
+        break;
     }
     case Binary:
     {
         const auto* e = static_cast<const BinaryExpr*>(expr);
-        lowerBinaryExpr(e);
-        return;
+        lowerBinaryExpr(e, expectedType);
+        break;
     }
     default:
+        hadError = true;
         break;
     }
 }
 
-void LoweringContext::lowerIntExpr(const IntLiteralExpr* e)
+void LoweringContext::lowerIntExpr(const IntLiteralExpr* e, Type expectedType)
 {
     // 1. Allocate constant ID
     ConstId cid = program->nextConstId;
@@ -65,9 +66,13 @@ void LoweringContext::lowerIntExpr(const IntLiteralExpr* e)
 
     program->constants.emplace_back(Constant{I32, cid, e->getValue()});
     currentFunction->instructions.emplace_back(Instruction{PushConst, Operand{cid}});
+    if (expectedType == String)
+    {
+        currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
+    }
     return;
 }
-void LoweringContext::lowerStringExpr(const StringExpr* e)
+void LoweringContext::lowerStringExpr(const StringExpr* e, Type expectedType)
 {
     const StringPart& first = e->getParts()[0];
     if (first.kind == StringPart::TEXT)
@@ -80,7 +85,7 @@ void LoweringContext::lowerStringExpr(const StringExpr* e)
     }
     else
     {
-        lowerExpression(first.expr.get());
+        lowerExpression(first.expr.get(), Void);
         currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
     }
 
@@ -98,7 +103,7 @@ void LoweringContext::lowerStringExpr(const StringExpr* e)
         }
         else
         {
-            lowerExpression(part.expr.get());
+            lowerExpression(part.expr.get(), Void);
             currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
         }
 
@@ -106,7 +111,8 @@ void LoweringContext::lowerStringExpr(const StringExpr* e)
     }
     return;
 }
-void LoweringContext::lowerBoolExpr(const BoolLiteralExpr* e)
+
+void LoweringContext::lowerBoolExpr(const BoolLiteralExpr* e, Type expectedType)
 {
     // 1. Allocate constant ID
     ConstId cid = program->nextConstId;
@@ -114,9 +120,15 @@ void LoweringContext::lowerBoolExpr(const BoolLiteralExpr* e)
 
     program->constants.emplace_back(Constant{Bool32, cid, e->getValue()});
     currentFunction->instructions.emplace_back(Instruction{PushConst, Operand{cid}});
+
+    if (expectedType == String)
+    {
+        currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
+    }
     return;
 }
-void LoweringContext::lowerIdentifierExpr(const IdentifierExpr* e)
+
+void LoweringContext::lowerIdentifierExpr(const IdentifierExpr* e, Type expectedType)
 {
     auto it = resolutionTable.mapping.find(e);
 
@@ -149,39 +161,106 @@ void LoweringContext::lowerIdentifierExpr(const IdentifierExpr* e)
         return;
     }
     currentFunction->instructions.emplace_back(Instruction{LoadLocal, Operand{lId}});
+    auto typeIt = typeTable.mapping.find(e);
+    if (typeIt == typeTable.mapping.end())
+    {
+        hadError = true;
+        return;
+    }
+    if (typeIt->second != expectedType)
+    {
+        if (expectedType == String)
+        {
+            currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
+        }
+    }
     return;
 }
-void LoweringContext::lowerUnaryExpr(const UnaryExpr* e)
+
+void LoweringContext::lowerUnaryExpr(const UnaryExpr* e, Type expectedType)
 {
     const auto& operand = e->getOperand();
 
-    lowerExpression(&operand);
+    Type operandType = (e->getOperator() == LogicalNot) ? Bool : Int;
+    lowerExpression(&operand, operandType);
+
     auto opCode = e->getOperator() == LogicalNot ? NotBool : NegI32;
     currentFunction->instructions.emplace_back(Instruction{opCode, Operand{}});
+
+    if (expectedType == String)
+        currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
     return;
 }
-void LoweringContext::lowerBinaryExpr(const BinaryExpr* e)
+
+void LoweringContext::lowerBinaryExpr(const BinaryExpr* e, Type expectedType)
 {
     const auto& left = e->getLeft();
     const auto& right = e->getRight();
 
     const auto op = e->getOperator();
 
-    lowerExpression(&left);
-    lowerExpression(&right);
+    Type operandType;
+    switch (op)
+    {
+    case Add:
+    case Subtract:
+    case Multiply:
+    case Divide:
+    case Greater:
+    case GreaterEqual:
+    case Less:
+    case LessEqual:
+        operandType = Int;
+        break;
+
+    case EqualEqual:
+    case NotEqual:
+        operandType = typeTable.mapping.at(&left);
+        break;
+
+    default:
+        hadError = true;
+        return;
+    }
+
+    lowerExpression(&left, operandType);
+    lowerExpression(&right, operandType);
 
     switch (op)
     {
     case EqualEqual:
-    {
-        currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
-        return;
-    }
+        switch (operandType)
+        {
+        case Int:
+            currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
+            return;
+        case Bool:
+            currentFunction->instructions.emplace_back(Instruction{CmpEqBool32, Operand{}});
+            return;
+        case String:
+            currentFunction->instructions.emplace_back(Instruction{CmpEqString32, Operand{}});
+            return;
+        default:
+            hadError = true;
+            return;
+        }
+
     case NotEqual:
-    {
-        currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
-        return;
-    }
+        switch (operandType)
+        {
+        case Int:
+            currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
+            return;
+        case Bool:
+            currentFunction->instructions.emplace_back(Instruction{CmpNEqBool32, Operand{}});
+            return;
+        case String:
+            currentFunction->instructions.emplace_back(Instruction{CmpNEqString32, Operand{}});
+            return;
+        default:
+            hadError = true;
+            return;
+        }
     case Greater:
     {
         currentFunction->instructions.emplace_back(Instruction{CmpGtI32, Operand{}});
@@ -227,9 +306,10 @@ void LoweringContext::lowerBinaryExpr(const BinaryExpr* e)
         return;
     }
 }
-void LoweringContext::lowerGroupingExpr(const GroupingExpr* e)
+
+void LoweringContext::lowerGroupingExpr(const GroupingExpr* e, Type expectedType)
 {
-    lowerExpression(e);
+    lowerExpression(&e->getExpression(), expectedType);
     return;
 }
 
@@ -240,58 +320,77 @@ void LoweringContext::lowerStatement(const Stmt* stmt)
     case Summon:
     {
         const auto* s = static_cast<const SummonStmt*>(stmt);
-        LocalId     lId = currentFunction->nextLocalId;
-        currentFunction->nextLocalId.value++;
-
-        LocalInfo localInfo;
-        localInfo.id = lId;
-        localInfo.debugName = s->getIdentifier().getName();
-        localInfo.declLoc = s->loc;
-
-        IrType t;
-        auto   typeIt = typeTable.mapping.find(&s->getInitializer());
-        if (typeIt == typeTable.mapping.end())
-        {
-            hadError = true;
-            return;
-        }
-        switch (typeIt->second)
-        {
-        case Int:
-        {
-            localInfo.type = I32;
-            break;
-        }
-        case Bool:
-        {
-            localInfo.type = Bool32;
-            break;
-        }
-        case String:
-        {
-            localInfo.type = String32;
-            break;
-        }
-        case Void:
-        {
-            localInfo.type = Void32;
-            break;
-        }
-        default:
-            hadError = true;
-            return;
-        }
-        currentFunction->localTable.locals.emplace_back(localInfo);
-
-        auto symbol = s->getSymbol();
-        localScopes.back()[symbol] = lId;
-
-        lowerExpression(&s->getInitializer());
-        currentFunction->instructions.emplace_back(Instruction{StoreLocal, Operand{lId}});
+        lowerSummonStatement(s);
+        return;
+    }
+    case Say:
+    {
+        const auto* s = static_cast<const SayStmt*>(stmt);
+        lowerSayStatement(s);
         return;
     }
     default:
         hadError = true;
         return;
     }
+}
+
+void LoweringContext::lowerSummonStatement(const SummonStmt* s)
+{
+    LocalId lId = currentFunction->nextLocalId;
+    currentFunction->nextLocalId.value++;
+
+    LocalInfo localInfo;
+    localInfo.id = lId;
+    localInfo.debugName = s->getIdentifier().getName();
+    localInfo.declLoc = s->loc;
+
+    IrType t;
+    auto   typeIt = typeTable.mapping.find(&s->getInitializer());
+    if (typeIt == typeTable.mapping.end())
+    {
+        hadError = true;
+        return;
+    }
+    switch (typeIt->second)
+    {
+    case Int:
+    {
+        localInfo.type = I32;
+        break;
+    }
+    case Bool:
+    {
+        localInfo.type = Bool32;
+        break;
+    }
+    case String:
+    {
+        localInfo.type = String32;
+        break;
+    }
+    case Void:
+    {
+        localInfo.type = Void32;
+        break;
+    }
+    default:
+        hadError = true;
+        return;
+    }
+    currentFunction->localTable.locals.emplace_back(localInfo);
+
+    auto symbol = s->getSymbol();
+    localScopes.back()[symbol] = lId;
+
+    lowerExpression(&s->getInitializer(), typeIt->second);
+    currentFunction->instructions.emplace_back(Instruction{StoreLocal, Operand{lId}});
+    return;
+}
+
+void LoweringContext::lowerSayStatement(const SayStmt* stmt)
+{
+    lowerExpression(&stmt->getExpression(), String);
+    currentFunction->instructions.emplace_back(Instruction{PrintString, Operand{}});
+    return;
 }

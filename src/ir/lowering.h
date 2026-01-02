@@ -1,4 +1,5 @@
 #include "ast/expr.h"
+#include "ast/stmt.h"
 #include "program.h"
 #include "sema/analyzer.h"
 
@@ -15,13 +16,16 @@ struct LoweringContext
 
     bool hadError = false;
 
-    void lowerExpression(const Expr* expr);
+    void lowerExpression(const Expr* expr, Type expectedType);
+    void lowerIntExpr(const IntLiteralExpr* expr, Type expectedType);
+    void lowerStringExpr(const StringExpr* expr, Type expectedType);
+    void lowerBoolExpr(const BoolLiteralExpr* expr, Type expectedType);
+    void lowerIdentifierExpr(const IdentifierExpr* expr, Type expectedType);
+    void lowerUnaryExpr(const UnaryExpr* expr, Type expectedType);
+    void lowerBinaryExpr(const BinaryExpr* expr, Type expectedType);
+    void lowerGroupingExpr(const GroupingExpr* expr, Type expectedType);
+
     void lowerStatement(const Stmt* stmt);
-    void lowerIntExpr(const IntLiteralExpr* expr);
-    void lowerStringExpr(const StringExpr* expr);
-    void lowerBoolExpr(const BoolLiteralExpr* expr);
-    void lowerIdentifierExpr(const IdentifierExpr* expr);
-    void lowerUnaryExpr(const UnaryExpr* expr);
-    void lowerBinaryExpr(const BinaryExpr* expr);
-    void lowerGroupingExpr(const GroupingExpr* expr);
+    void lowerSummonStatement(const SummonStmt* stmt);
+    void lowerSayStatement(const SayStmt* stmt);
 };
