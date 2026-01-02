@@ -18,7 +18,6 @@ struct IrFunction
     LocalTable               locals;
     LabelTable               labels;
 
-    LocalId nextLocalId = 0;
-    LabelId nextLabelId = 0;
-    ConstId nextConstId = 0;
+    LocalId nextLocalId{0};
+    LabelId nextLabelId{0};
 };

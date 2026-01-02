@@ -14,4 +14,6 @@ struct LoweringContext
     const ResolutionTable& resolutionTable;
 
     bool hadError = false;
+
+    void lowerExpression(const Expr* expr);
 };
