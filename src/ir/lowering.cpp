@@ -106,7 +106,15 @@ void LoweringContext::lowerExpression(const Expr* expr)
             return;
         }
         currentFunction->instructions.emplace_back(Instruction{LoadLocal, Operand{lId}});
+        return;
     }
+    case Grouping:
+    {
+        const auto* e = static_cast<const GroupingExpr*>(expr);
+        lowerExpression(e);
+        return;
+    }
+    
     default:
         break;
     }
