@@ -36,6 +36,9 @@ enum Opcode
     // Side effects
     PrintString,
 
+    ToString,
+    ConcatString,
+
     // Structural
     Nop
 };
