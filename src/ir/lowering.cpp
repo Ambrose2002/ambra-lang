@@ -124,6 +124,71 @@ void LoweringContext::lowerExpression(const Expr* expr)
         currentFunction->instructions.emplace_back(Instruction{opCode, Operand{}});
         return;
     }
+    case Binary:
+    {
+        const auto* e = static_cast<const BinaryExpr*>(expr);
+
+        const auto& left = e->getLeft();
+        const auto& right = e->getRight();
+
+        const auto op = e->getOperator();
+
+        lowerExpression(&left);
+        lowerExpression(&right);
+
+        switch (op) {
+            case EqualEqual:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
+                return;
+            }
+            case NotEqual:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
+                return;
+            }
+            case Greater:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpGtI32, Operand{}});
+                return;
+            }
+            case GreaterEqual:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpGtEqI32, Operand{}});
+                return;
+            }
+            case Less:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpLtI32, Operand{}});
+                return;
+            }
+            case LessEqual:
+            {
+                currentFunction->instructions.emplace_back(Instruction{CmpLtEqI32, Operand{}});
+                return;
+            }
+            case Add:
+            {
+                currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
+                return;
+            }
+            case Subtract:
+            {
+                currentFunction->instructions.emplace_back(Instruction{SubI32, Operand{}});
+                return;
+            }
+            case Multiply:
+            {
+                currentFunction->instructions.emplace_back(Instruction{MulI32, Operand{}});
+                return;
+            }
+            case Divide:
+            {
+                currentFunction->instructions.emplace_back(Instruction{DivI32, Operand{}});
+                return;
+            }
+        }
+    }
     default:
         break;
     }
