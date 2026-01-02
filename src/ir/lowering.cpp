@@ -114,7 +114,16 @@ void LoweringContext::lowerExpression(const Expr* expr)
         lowerExpression(e);
         return;
     }
-    
+    case Unary:
+    {
+        const auto* e = static_cast<const UnaryExpr*>(expr);
+        const auto& operand = e->getOperand();
+
+        lowerExpression(&operand);
+        auto opCode = e->getOperator() == LogicalNot ? NotBool : NegI32;
+        currentFunction->instructions.emplace_back(Instruction{opCode, Operand{}});
+        return;
+    }
     default:
         break;
     }
