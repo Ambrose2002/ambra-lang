@@ -216,6 +216,11 @@ class BoolLiteralExpr : public Expr
         return std::string("Bool(") + (value ? "true" : "false") + ")";
     }
 
+    const bool getValue() const
+    {
+        return value;
+    }
+
   private:
     bool value; ///< The boolean value
 };
