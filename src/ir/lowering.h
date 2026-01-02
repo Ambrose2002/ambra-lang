@@ -28,4 +28,7 @@ struct LoweringContext
     void lowerStatement(const Stmt* stmt);
     void lowerSummonStatement(const SummonStmt* stmt);
     void lowerSayStatement(const SayStmt* stmt);
+    void lowerBlockStatement(const BlockStmt* stmt);
+    void lowerIfChainStatement(const IfChainStmt* stmt);
+    void lowerWhileStatement(const WhileStmt* stmt);
 };

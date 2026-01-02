@@ -3,6 +3,9 @@
 #include "ast/expr.h"
 #include "ast/stmt.h"
 #include "sema/analyzer.h"
+
+#include <queue>
+#include <unordered_map>
 void LoweringContext::lowerExpression(const Expr* expr, Type expectedType)
 {
     switch (expr->kind)
@@ -329,6 +332,24 @@ void LoweringContext::lowerStatement(const Stmt* stmt)
         lowerSayStatement(s);
         return;
     }
+    case Block:
+    {
+        const auto* s = static_cast<const BlockStmt*>(stmt);
+        lowerBlockStatement(s);
+        return;
+    }
+    case IfChain:
+    {
+        const auto* s = static_cast<const IfChainStmt*>(stmt);
+        lowerIfChainStatement(s);
+        return;
+    }
+    case While:
+    {
+        const auto* s = static_cast<const WhileStmt*>(stmt);
+        lowerWhileStatement(s);
+        return;
+    }
     default:
         hadError = true;
         return;
@@ -393,4 +414,14 @@ void LoweringContext::lowerSayStatement(const SayStmt* stmt)
     lowerExpression(&stmt->getExpression(), String);
     currentFunction->instructions.emplace_back(Instruction{PrintString, Operand{}});
     return;
+}
+
+void LoweringContext::lowerBlockStatement(const BlockStmt* stmt)
+{
+    localScopes.emplace_back();
+    for (auto& stmt : *stmt)
+    {
+        lowerStatement(stmt.get());
+    }
+    localScopes.pop_back();
 }
