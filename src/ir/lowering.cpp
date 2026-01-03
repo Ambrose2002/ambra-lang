@@ -478,7 +478,7 @@ void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
     currentFunction->nextLabelId.value++;
 
     // push loop start label
-    currentFunction->instructions.emplace_back(Instruction{JLabel}, Operand{loopLabel});
+    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{loopLabel}});
 
     lowerExpression(&stmt->getCondition(), Bool);
     // jump to end if false
@@ -487,10 +487,10 @@ void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
     lowerBlockStatement(&stmt->getBody());
 
     // jump back to loop start
-    currentFunction->instructions.emplace_back(Instruction{Jump}, Operand{loopLabel});
+    currentFunction->instructions.emplace_back(Instruction{Jump, Operand{loopLabel}});
 
     // push loop end label
-    currentFunction->instructions.emplace_back(Instruction{JLabel}, Operand{endLabel});
+    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
 }
 
 IrProgram LoweringContext::lowerProgram(const Program* prog)
