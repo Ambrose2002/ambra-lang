@@ -468,7 +468,8 @@ void LoweringContext::lowerIfChainStatement(const IfChainStmt* stmt)
     currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
 }
 
-void LoweringContext::lowerWhileStatement(const WhileStmt* stmt) {
+void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
+{
 
     LabelId loopLabel = currentFunction->nextLabelId;
     currentFunction->nextLabelId.value++;
@@ -488,7 +489,29 @@ void LoweringContext::lowerWhileStatement(const WhileStmt* stmt) {
     // jump back to loop start
     currentFunction->instructions.emplace_back(Instruction{Jump}, Operand{loopLabel});
 
-    //push loop end label
+    // push loop end label
     currentFunction->instructions.emplace_back(Instruction{JLabel}, Operand{endLabel});
+}
 
+IrProgram LoweringContext::lowerProgram(const Program* prog)
+{
+    IrProgram result;
+
+    program = &result;
+    currentFunction = &result.main;
+
+    localScopes.clear();
+    localScopes.emplace_back();
+
+    for (auto& stmt : *prog)
+    {
+        lowerStatement(stmt.get());
+    }
+
+    localScopes.pop_back();
+
+    program = nullptr;
+    currentFunction = nullptr;
+
+    return result;
 }

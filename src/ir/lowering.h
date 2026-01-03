@@ -31,4 +31,6 @@ struct LoweringContext
     void lowerBlockStatement(const BlockStmt* stmt);
     void lowerIfChainStatement(const IfChainStmt* stmt);
     void lowerWhileStatement(const WhileStmt* stmt);
+
+    IrProgram lowerProgram(const Program* program);
 };
