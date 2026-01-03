@@ -141,3 +141,56 @@ static IrProgram lowerFromSource(const std::string& source)
     return lowerer.lowerProgram(&program);
 }
 
+TEST(Lowering_Basics, SayIntLiteral)
+{
+    IrProgram ir = lowerFromSource("say 5;");
+
+    ASSERT_EQ(ir.constants.size(), 1u);
+    EXPECT_EQ(ir.constants[0].type, I32);
+    EXPECT_EQ(std::get<int>(ir.constants[0].value), 5);
+
+    const auto& instrs = ir.main.instructions;
+    ASSERT_EQ(instrs.size(), 3u);
+
+    EXPECT_EQ(instrs[0].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[0].operand), ConstId{0});
+
+    EXPECT_EQ(instrs[1].opcode, ToString);
+    EXPECT_EQ(instrs[2].opcode, PrintString);
+}
+
+TEST(Lowering_Basics, SayBoolLiteral)
+{
+    IrProgram ir = lowerFromSource("say affirmative;");
+
+    ASSERT_EQ(ir.constants.size(), 1u);
+    EXPECT_EQ(ir.constants[0].type, Bool32);
+    EXPECT_EQ(std::get<bool>(ir.constants[0].value), true);
+
+    const auto& instrs = ir.main.instructions;
+    ASSERT_EQ(instrs.size(), 3u);
+
+    EXPECT_EQ(instrs[0].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[0].operand), ConstId{0});
+
+    EXPECT_EQ(instrs[1].opcode, ToString);
+    EXPECT_EQ(instrs[2].opcode, PrintString);
+}
+
+TEST(Lowering_Basics, SayStringLiteral)
+{
+    IrProgram ir = lowerFromSource(R"(say "hello";)");
+
+    ASSERT_EQ(ir.constants.size(), 1u);
+    EXPECT_EQ(ir.constants[0].type, String32);
+    EXPECT_EQ(std::get<std::string>(ir.constants[0].value), "hello");
+
+    const auto& instrs = ir.main.instructions;
+    // String already on stack, so no ToString needed.
+    ASSERT_EQ(instrs.size(), 2u);
+
+    EXPECT_EQ(instrs[0].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[0].operand), ConstId{0});
+
+    EXPECT_EQ(instrs[1].opcode, PrintString);
+}
