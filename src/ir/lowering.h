@@ -6,19 +6,6 @@
  * Abstract Syntax Tree (AST) into a low-level Intermediate Representation (IR).
  * The IR uses a stack-based instruction set suitable for interpretation or
  * further compilation.
- *
- * The lowering phase:
- * - Converts high-level expressions into stack operations
- * - Allocates local variable slots and tracks scoping
- * - Generates control flow instructions (jumps, labels)
- * - Creates constant pool entries for literals
- * - Inserts type conversions (e.g., ToString for printing)
- *
- * The IR generated is structured as:
- * - Constants: Pool of literal values referenced by instructions
- * - Instructions: Sequence of stack-based operations
- * - Local table: Variable metadata (name, type, slot)
- * - Control flow: Labels and jumps for conditionals/loops
  */
 
 #include "ast/expr.h"
@@ -65,6 +52,24 @@ struct LoweringContext
 
     /** @brief Error flag set if lowering encounters an unrecoverable issue */
     bool hadError = false;
+
+    /**
+     * @brief Register a label in the label table
+     * @param id The label identifier to define
+     *
+     * Allocates a new label entry without emitting a JLabel instruction yet.
+     * Used to reserve label IDs before their actual position is known.
+     */
+    void defineLabel(LabelId id);
+
+    /**
+     * @brief Emit a label instruction at the current position
+     * @param id The label identifier to emit
+     *
+     * Generates a JLabel instruction marking a control flow target.
+     * Records the instruction position for jump resolution.
+     */
+    void emitLabel(LabelId id);
 
     // ==================================================================================
     // EXPRESSION LOWERING
@@ -157,12 +162,6 @@ struct LoweringContext
      */
     void lowerGroupingExpr(const GroupingExpr* expr, Type expectedType);
 
-    // ==================================================================================
-    // STATEMENT LOWERING
-    // ==================================================================================
-    // Statement lowering generates instructions that perform side effects but don't
-    // leave values on the stack (or clean up after themselves).
-
     /**
      * @brief Lower a statement to IR instructions
      * @param stmt The statement AST node to lower
@@ -236,23 +235,11 @@ struct LoweringContext
      */
     void lowerWhileStatement(const WhileStmt* stmt);
 
-    // ==================================================================================
-    // PROGRAM LOWERING
-    // ==================================================================================
-
     /**
      * @brief Lower entire program from AST to IR
      * @param program The root AST node representing the complete program
      * @return Complete IR program ready for execution or further compilation
      *
-     * Main entry point for the lowering phase. Initializes the IR program,
-     * processes all top-level statements, and returns the complete IR structure.
-     *
-     * The returned IrProgram contains:
-     * - Constant pool with all literals
-     * - Main function with instruction sequence
-     * - Local variable table
-     * - Label information for control flow
      */
     IrProgram lowerProgram(const Program* program);
 };

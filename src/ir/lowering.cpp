@@ -5,6 +5,28 @@
 #include "sema/analyzer.h"
 
 #include <unordered_map>
+
+void LoweringContext::defineLabel(LabelId id)
+{
+    // record label -> current instruction index (the position of the JLabel instruction)
+    size_t ip = currentFunction->instructions.size();
+
+    // prevent duplicate label definitions (programming error)
+    if (currentFunction->labelTable.position.find(id) != currentFunction->labelTable.position.end())
+    {
+        hadError = true;
+        return;
+    }
+
+    currentFunction->labelTable.position.emplace(id, ip);
+}
+
+void LoweringContext::emitLabel(LabelId id)
+{
+    defineLabel(id);
+    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{id}});
+}
+
 void LoweringContext::lowerExpression(const Expr* expr, Type expectedType)
 {
     switch (expr->kind)
@@ -462,7 +484,7 @@ void LoweringContext::lowerIfChainStatement(const IfChainStmt* stmt)
         currentFunction->instructions.emplace_back(Instruction{Jump, Operand{endLabel}});
 
         // Emit label for next branch
-        currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{nextLabels[i]}});
+        emitLabel(nextLabels[i]);
     }
 
     if (stmt->getElseBranch())
@@ -470,7 +492,7 @@ void LoweringContext::lowerIfChainStatement(const IfChainStmt* stmt)
         lowerBlockStatement(stmt->getElseBranch().get());
     }
 
-    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
+    emitLabel(endLabel);
 }
 
 void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
@@ -483,7 +505,7 @@ void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
     currentFunction->nextLabelId.value++;
 
     // push loop start label
-    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{loopLabel}});
+    emitLabel(loopLabel);
 
     lowerExpression(&stmt->getCondition(), Bool);
     // jump to end if false
@@ -495,7 +517,7 @@ void LoweringContext::lowerWhileStatement(const WhileStmt* stmt)
     currentFunction->instructions.emplace_back(Instruction{Jump, Operand{loopLabel}});
 
     // push loop end label
-    currentFunction->instructions.emplace_back(Instruction{JLabel, Operand{endLabel}});
+    emitLabel(endLabel);
 }
 
 IrProgram LoweringContext::lowerProgram(const Program* prog)

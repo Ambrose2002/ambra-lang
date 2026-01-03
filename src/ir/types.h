@@ -127,9 +127,22 @@ struct Constant
     }
 };
 
-// Hash function specializations for using IDs in unordered containers
+/**
+ * @brief Hash function specializations for IR identifier types
+ * Example usage:
+ * @code
+ * std::unordered_map<LabelId, size_t> labelPositions;
+ * labelPositions[LabelId{0}] = 42;
+ * @endcode
+ */
 namespace std
 {
+/**
+ * @brief Hash function for LabelId
+ *
+ * Enables LabelId to be used as a key in unordered containers.
+ * Hashes the underlying uint32_t value field.
+ */
 template <> struct hash<LabelId>
 {
     size_t operator()(const LabelId& id) const noexcept
@@ -138,6 +151,12 @@ template <> struct hash<LabelId>
     }
 };
 
+/**
+ * @brief Hash function for LocalId
+ *
+ * Enables LocalId to be used as a key in unordered containers.
+ * Hashes the underlying uint32_t value field.
+ */
 template <> struct hash<LocalId>
 {
     size_t operator()(const LocalId& id) const noexcept
@@ -146,6 +165,12 @@ template <> struct hash<LocalId>
     }
 };
 
+/**
+ * @brief Hash function for ConstId
+ *
+ * Enables ConstId to be used as a key in unordered containers.
+ * Hashes the underlying uint32_t value field.
+ */
 template <> struct hash<ConstId>
 {
     size_t operator()(const ConstId& id) const noexcept

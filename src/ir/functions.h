@@ -23,6 +23,7 @@
 
 #include "instructions.h"
 
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -66,6 +67,8 @@ struct LabelTable
      * Labels are resolved to instruction positions during execution.
      */
     std::vector<Label> labels;
+
+    std::unordered_map<LabelId, size_t> position{};
 };
 
 /**
