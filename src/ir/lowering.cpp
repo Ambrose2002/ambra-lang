@@ -235,78 +235,83 @@ void LoweringContext::lowerBinaryExpr(const BinaryExpr* e, Type expectedType)
         {
         case Int:
             currentFunction->instructions.emplace_back(Instruction{CmpEqI32, Operand{}});
-            return;
+            break;
         case Bool:
             currentFunction->instructions.emplace_back(Instruction{CmpEqBool32, Operand{}});
-            return;
+            break;
         case String:
             currentFunction->instructions.emplace_back(Instruction{CmpEqString32, Operand{}});
-            return;
+            break;
         default:
             hadError = true;
-            return;
+            break;
         }
-
+        break;
     case NotEqual:
         switch (operandType)
         {
         case Int:
             currentFunction->instructions.emplace_back(Instruction{CmpNEqI32, Operand{}});
-            return;
+            break;
         case Bool:
             currentFunction->instructions.emplace_back(Instruction{CmpNEqBool32, Operand{}});
-            return;
+            break;
         case String:
             currentFunction->instructions.emplace_back(Instruction{CmpNEqString32, Operand{}});
-            return;
+            break;
         default:
             hadError = true;
-            return;
+            break;
         }
+        break;
     case Greater:
     {
         currentFunction->instructions.emplace_back(Instruction{CmpGtI32, Operand{}});
-        return;
+        break;
     }
     case GreaterEqual:
     {
         currentFunction->instructions.emplace_back(Instruction{CmpGtEqI32, Operand{}});
-        return;
+        break;
     }
     case Less:
     {
         currentFunction->instructions.emplace_back(Instruction{CmpLtI32, Operand{}});
-        return;
+        break;
     }
     case LessEqual:
     {
         currentFunction->instructions.emplace_back(Instruction{CmpLtEqI32, Operand{}});
-        return;
+        break;
     }
     case Add:
     {
         currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
-        return;
+        break;
     }
     case Subtract:
     {
         currentFunction->instructions.emplace_back(Instruction{SubI32, Operand{}});
-        return;
+        break;
     }
     case Multiply:
     {
         currentFunction->instructions.emplace_back(Instruction{MulI32, Operand{}});
-        return;
+        break;
     }
     case Divide:
     {
         currentFunction->instructions.emplace_back(Instruction{DivI32, Operand{}});
-        return;
+        break;
     }
     default:
         hadError = true;
-        return;
+        break;
     }
+
+    if (expectedType == String)
+        currentFunction->instructions.emplace_back(Instruction{ToString, Operand{}});
+    return;
 }
 
 void LoweringContext::lowerGroupingExpr(const GroupingExpr* e, Type expectedType)
