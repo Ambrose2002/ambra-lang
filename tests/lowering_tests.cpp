@@ -194,3 +194,120 @@ TEST(Lowering_Basics, SayStringLiteral)
 
     EXPECT_EQ(instrs[1].opcode, PrintString);
 }
+
+TEST(Lowering_Variables, SummonThenUse)
+{
+    IrProgram ir = lowerFromSource(R"(
+        summon x = 5;
+        say x;
+    )");
+
+    ASSERT_EQ(ir.main.localTable.locals.size(), 1u);
+    EXPECT_EQ(ir.main.localTable.locals[0].debugName, "x");
+    EXPECT_EQ(ir.main.localTable.locals[0].type, I32);
+
+    const auto& instrs = ir.main.instructions;
+    ASSERT_EQ(instrs.size(), 5u);
+
+    // summon x = 5;
+    EXPECT_EQ(instrs[0].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[0].operand), ConstId{0});
+
+    EXPECT_EQ(instrs[1].opcode, StoreLocal);
+    EXPECT_EQ(std::get<LocalId>(instrs[1].operand), LocalId{0});
+
+    // say x;
+    EXPECT_EQ(instrs[2].opcode, LoadLocal);
+    EXPECT_EQ(std::get<LocalId>(instrs[2].operand), LocalId{0});
+
+    EXPECT_EQ(instrs[3].opcode, ToString);
+    EXPECT_EQ(instrs[4].opcode, PrintString);
+}
+
+TEST(Lowering_Scopes, BlockShadowing)
+{
+    IrProgram ir = lowerFromSource(R"(
+        summon x = 1;
+        {
+            summon x = 2;
+            say x;
+        }
+        say x;
+    )");
+
+    ASSERT_EQ(ir.main.localTable.locals.size(), 2u);
+    EXPECT_EQ(ir.main.localTable.locals[0].debugName, "x");
+    EXPECT_EQ(ir.main.localTable.locals[1].debugName, "x");
+
+    const auto& instrs = ir.main.instructions;
+
+    // Ensure we load two *different* locals (inner and outer).
+    std::vector<LocalId> loaded;
+    for (const auto& inst : instrs)
+    {
+        if (inst.opcode == LoadLocal)
+        {
+            loaded.push_back(std::get<LocalId>(inst.operand));
+        }
+    }
+
+    ASSERT_EQ(loaded.size(), 2u);
+    EXPECT_FALSE(loaded[0] == loaded[1]);
+}
+
+TEST(Lowering_Expressions, BinaryAdd)
+{
+    IrProgram ir = lowerFromSource("say 1 + 2;");
+
+    ASSERT_EQ(ir.constants.size(), 2u);
+
+    const auto& instrs = ir.main.instructions;
+    ASSERT_EQ(instrs.size(), 5u);
+
+    EXPECT_EQ(instrs[0].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[0].operand), ConstId{0});
+
+    EXPECT_EQ(instrs[1].opcode, PushConst);
+    EXPECT_EQ(std::get<ConstId>(instrs[1].operand), ConstId{1});
+
+    EXPECT_EQ(instrs[2].opcode, AddI32);
+
+    EXPECT_EQ(instrs[3].opcode, ToString);
+    EXPECT_EQ(instrs[4].opcode, PrintString);
+}
+
+// ----------------------
+// 4) Control flow shape tests
+// ----------------------
+
+TEST(Lowering_ControlFlow, WhileLoop_HasJumpsAndLabels)
+{
+    IrProgram ir = lowerFromSource(R"(
+        summon x = 0;
+        aslongas (x < 3) {
+            say x;
+        }
+    )");
+
+    printIrProgram(ir);
+
+    const auto& instrs = ir.main.instructions;
+
+    bool sawLabel = false;
+    bool sawJumpIfFalse = false;
+    bool sawJumpBack = false;
+
+    for (const auto& inst : instrs)
+    {
+        if (inst.opcode == JLabel)
+            sawLabel = true;
+        if (inst.opcode == JumpIfFalse)
+            sawJumpIfFalse = true;
+        if (inst.opcode == Jump)
+            sawJumpBack = true;
+    }
+
+    EXPECT_TRUE(sawLabel);
+    EXPECT_TRUE(sawJumpIfFalse);
+    EXPECT_TRUE(sawJumpBack);
+}
