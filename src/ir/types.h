@@ -126,3 +126,31 @@ struct Constant
         return type == other.type && constId == other.constId && value == other.value;
     }
 };
+
+// Hash function specializations for using IDs in unordered containers
+namespace std
+{
+template <> struct hash<LabelId>
+{
+    size_t operator()(const LabelId& id) const noexcept
+    {
+        return hash<uint32_t>()(id.value);
+    }
+};
+
+template <> struct hash<LocalId>
+{
+    size_t operator()(const LocalId& id) const noexcept
+    {
+        return hash<uint32_t>()(id.value);
+    }
+};
+
+template <> struct hash<ConstId>
+{
+    size_t operator()(const ConstId& id) const noexcept
+    {
+        return hash<uint32_t>()(id.value);
+    }
+};
+} // namespace std
