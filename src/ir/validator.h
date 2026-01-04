@@ -491,12 +491,19 @@ struct IrValidator
 
         for (const auto& entry : labelPos)
         {
+            if (entry.second >= function.instructions.size())
+            {
+                diagnostics.push_back({"Label table position out of range", entry.second});
+                continue;
+            }
+
             auto inst = function.instructions[entry.second];
 
             if (!std::holds_alternative<LabelId>(inst.operand) || inst.opcode != JLabel)
             {
                 diagnostics.push_back(
                     {"Label table entry does not point to JLabel instruction", entry.second});
+                continue;
             }
 
             if (!(std::get<LabelId>(inst.operand) == entry.first))
@@ -514,6 +521,7 @@ struct IrValidator
                 if (!std::holds_alternative<LabelId>(instr.operand))
                 {
                     diagnostics.push_back({"Jump targets undefined label", ip});
+                    continue;
                 }
 
                 auto lId = std::get<LabelId>(instr.operand);
