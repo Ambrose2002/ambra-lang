@@ -1,5 +1,6 @@
 #include "lowering.h"
 
+#include <deque>
 #include <unordered_map>
 #include <vector>
 
@@ -117,49 +118,145 @@ struct IrValidator
   private:
     void validateFunction()
     {
-        std::vector<IrType> stack;
+        const auto& instrs = function.instructions;
+        if (instrs.empty())
+            return;
 
-        std::unordered_map<LabelId, std::vector<IrType>> labelStacks;
+        const std::unordered_map<LabelId, size_t> labelToIp = function.labelTable.position;
+        
+        // For each instruction index, we store the "incoming" abstract stack.
+        // If an instruction is reachable via multiple paths, their incoming stacks must match.
+        std::vector<std::optional<std::vector<IrType>>> inStack(instrs.size());
 
-        const auto& instructions = function.instructions;
-
-        for (size_t ip = 0; ip < instructions.size(); ++ip)
+        auto enqueueIfCompatible =
+            [&](size_t targetIp, const std::vector<IrType>& incoming, size_t fromIp)
         {
-            const Instruction& inst = instructions[ip];
-
-            // Validate instruction + update stack
-            validateInstruction(ip, stack);
-
-            // Handle control-flow edges
-            if (inst.opcode == Jump || inst.opcode == JumpIfFalse)
+            if (targetIp >= instrs.size())
             {
-                LabelId target = std::get<LabelId>(inst.operand);
-
-                auto it = labelStacks.find(target);
-                if (it == labelStacks.end())
-                {
-                    labelStacks[target] = stack;
-                }
-                else if (it->second != stack)
-                {
-                    diagnostics.push_back({"Stack mismatch at jump target", ip});
-                }
+                diagnostics.push_back({"Jump target out of range", fromIp});
+                return;
             }
 
-            // Handle label definition
-            if (inst.opcode == JLabel)
+            auto& slot = inStack[targetIp];
+            if (!slot.has_value())
             {
-                LabelId id = std::get<LabelId>(inst.operand);
+                slot = incoming;
+                return;
+            }
 
-                auto it = labelStacks.find(id);
-                if (it == labelStacks.end())
+            if (slot.value() != incoming)
+            {
+                diagnostics.push_back({"Stack mismatch at control-flow merge", fromIp});
+                // Keep the first one; do not update.
+            }
+        };
+
+        // Worklist of instruction pointers to process.
+        std::deque<size_t> work;
+        inStack[0] = std::vector<IrType>{}; // entry stack is empty
+        work.push_back(0);
+
+        // To avoid infinite loop, we only re-enqueue when we first discover a node.
+        // Since we require exact equality at merges, the first discovery is enough.
+        std::vector<bool> enqueued(instrs.size(), false);
+        enqueued[0] = true;
+
+        while (!work.empty())
+        {
+            size_t ip = work.front();
+            work.pop_front();
+            enqueued[ip] = false;
+
+            // If this instruction became unreachable, skip.
+            if (!inStack[ip].has_value())
+                continue;
+
+            std::vector<IrType> stack = inStack[ip].value(); // local copy for this path
+
+            // Validate and update stack for this instruction
+            validateInstruction(ip, stack);
+
+            // Compute successors and propagate stack states
+            const Instruction& inst = instrs[ip];
+
+            auto pushWork = [&](size_t target)
+            {
+                if (target >= instrs.size())
+                    return;
+                if (!inStack[target].has_value())
+                    return;
+                if (!enqueued[target])
                 {
-                    labelStacks[id] = stack;
+                    enqueued[target] = true;
+                    work.push_back(target);
                 }
-                else if (it->second != stack)
+            };
+
+            // Helper: resolve label operand -> target ip
+            auto resolveLabelTarget = [&](size_t fromIp) -> std::optional<size_t>
+            {
+                if (!std::holds_alternative<LabelId>(inst.operand))
                 {
-                    diagnostics.push_back({"Stack mismatch at label", ip});
+                    diagnostics.push_back({"Jump missing LabelId operand", fromIp});
+                    return std::nullopt;
                 }
+                LabelId target = std::get<LabelId>(inst.operand);
+                auto    it = labelToIp.find(target);
+                if (it == labelToIp.end())
+                {
+                    diagnostics.push_back({"Jump to undefined label", fromIp});
+                    return std::nullopt;
+                }
+                return it->second;
+            };
+
+            if (inst.opcode == Jump)
+            {
+                auto targetIpOpt = resolveLabelTarget(ip);
+                if (targetIpOpt.has_value())
+                {
+                    size_t targetIp = *targetIpOpt;
+                    bool   wasUnset = !inStack[targetIp].has_value();
+                    enqueueIfCompatible(targetIp, stack, ip);
+                    if (wasUnset && inStack[targetIp].has_value())
+                        pushWork(targetIp);
+                }
+                continue; // unconditional jump: no fallthrough
+            }
+
+            if (inst.opcode == JumpIfFalse)
+            {
+                // Branch taken: jump target
+                auto targetIpOpt = resolveLabelTarget(ip);
+                if (targetIpOpt.has_value())
+                {
+                    size_t targetIp = *targetIpOpt;
+                    bool   wasUnset = !inStack[targetIp].has_value();
+                    enqueueIfCompatible(targetIp, stack, ip);
+                    if (wasUnset && inStack[targetIp].has_value())
+                        pushWork(targetIp);
+                }
+
+                // Branch not taken: fallthrough
+                if (ip + 1 < instrs.size())
+                {
+                    size_t fallthrough = ip + 1;
+                    bool   wasUnset = !inStack[fallthrough].has_value();
+                    enqueueIfCompatible(fallthrough, stack, ip);
+                    if (wasUnset && inStack[fallthrough].has_value())
+                        pushWork(fallthrough);
+                }
+                continue;
+            }
+
+            // Normal fallthrough
+            if (ip + 1 < instrs.size())
+            {
+                size_t nextIp = ip + 1;
+                bool   wasUnset = !inStack[nextIp].has_value();
+                enqueueIfCompatible(nextIp, stack, ip);
+                if (wasUnset && inStack[nextIp].has_value())
+                    pushWork(nextIp);
             }
         }
     }
@@ -356,6 +453,6 @@ struct IrValidator
             diagnostics.push_back({"Unexpected opcode", ip});
         }
     }
-    void validateStack();
+
     void validateControlFlow();
 };
