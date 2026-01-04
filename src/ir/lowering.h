@@ -65,18 +65,8 @@ struct LoweringContext
     /**
      * @brief Emit a label instruction at the current position
      * @param id The label identifier to emit
-     *
-     * Generates a JLabel instruction marking a control flow target.
-     * Records the instruction position for jump resolution.
      */
     void emitLabel(LabelId id);
-
-    // ==================================================================================
-    // EXPRESSION LOWERING
-    // ==================================================================================
-    // Expression lowering generates instructions that evaluate expressions and leave
-    // their result on the stack. The expectedType parameter enables type conversions
-    // when the expression result needs to match a specific type context.
 
     /**
      * @brief Lower an expression to IR instructions
@@ -122,9 +112,6 @@ struct LoweringContext
      * @brief Lower identifier (variable reference) expression
      * @param expr Identifier AST node
      * @param expectedType Expected type in current context
-     *
-     * Generates: LoadLocal (variable's local ID)
-     * Optionally followed by ToString if type conversion needed
      */
     void lowerIdentifierExpr(const IdentifierExpr* expr, Type expectedType);
 
@@ -132,11 +119,6 @@ struct LoweringContext
      * @brief Lower unary expression (negation, logical NOT)
      * @param expr Unary expression AST node
      * @param expectedType Expected result type
-     *
-     * Generates:
-     * 1. Lower operand expression
-     * 2. Unary operation instruction (NegI32, NotBool)
-     * 3. Optional ToString for printing
      */
     void lowerUnaryExpr(const UnaryExpr* expr, Type expectedType);
 
@@ -144,12 +126,6 @@ struct LoweringContext
      * @brief Lower binary expression (arithmetic, comparison)
      * @param expr Binary expression AST node
      * @param expectedType Expected result type
-     *
-     * Generates:
-     * 1. Lower left operand
-     * 2. Lower right operand
-     * 3. Binary operation instruction (AddI32, CmpEqI32, etc.)
-     * 4. Optional ToString for result
      */
     void lowerBinaryExpr(const BinaryExpr* expr, Type expectedType);
 
@@ -157,51 +133,30 @@ struct LoweringContext
      * @brief Lower grouping (parenthesized) expression
      * @param expr Grouping expression AST node
      * @param expectedType Expected result type
-     *
-     * Simply lowers the inner expression; parentheses don't generate instructions
      */
     void lowerGroupingExpr(const GroupingExpr* expr, Type expectedType);
 
     /**
      * @brief Lower a statement to IR instructions
      * @param stmt The statement AST node to lower
-     *
-     * Dispatches to specific lowering methods based on statement kind.
-     * Statements don't leave values on the stack.
      */
     void lowerStatement(const Stmt* stmt);
 
     /**
      * @brief Lower variable declaration statement (summon)
      * @param stmt Variable declaration AST node
-     *
-     * Generates:
-     * 1. Lower initializer expression
-     * 2. StoreLocal (allocate local variable and store value)
-     * 3. Add entry to local table and current scope
      */
     void lowerSummonStatement(const SummonStmt* stmt);
 
     /**
      * @brief Lower print statement (say)
      * @param stmt Print statement AST node
-     *
-     * Generates:
-     * 1. Lower expression to print
-     * 2. ToString if expression is not already a string
-     * 3. PrintString instruction
      */
     void lowerSayStatement(const SayStmt* stmt);
 
     /**
      * @brief Lower block statement (scope with multiple statements)
      * @param stmt Block statement AST node
-     *
-     * Generates:
-     * 1. Push new variable scope
-     * 2. Lower each statement in block
-     * 3. Pop variable scope
-     *
      * Variables declared in the block are out of scope after block exit
      */
     void lowerBlockStatement(const BlockStmt* stmt);
@@ -209,29 +164,12 @@ struct LoweringContext
     /**
      * @brief Lower if/else statement chain (should/otherwise)
      * @param stmt If chain statement AST node
-     *
-     * Generates:
-     * 1. Lower condition expression
-     * 2. JumpIfFalse to else branch or end
-     * 3. Lower if body
-     * 4. Jump to end (if else exists)
-     * 5. JLabel for else branch
-     * 6. Lower else body (if exists)
-     * 7. JLabel for end
      */
     void lowerIfChainStatement(const IfChainStmt* stmt);
 
     /**
      * @brief Lower while loop statement (aslongas)
      * @param stmt While statement AST node
-     *
-     * Generates:
-     * 1. JLabel for loop start
-     * 2. Lower condition expression
-     * 3. JumpIfFalse to loop end
-     * 4. Lower loop body
-     * 5. Jump back to loop start
-     * 6. JLabel for loop end
      */
     void lowerWhileStatement(const WhileStmt* stmt);
 
@@ -239,7 +177,6 @@ struct LoweringContext
      * @brief Lower entire program from AST to IR
      * @param program The root AST node representing the complete program
      * @return Complete IR program ready for execution or further compilation
-     *
      */
     IrProgram lowerProgram(const Program* program);
 };
