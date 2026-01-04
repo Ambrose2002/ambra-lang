@@ -158,6 +158,76 @@ TEST(IRValidator_Valid, SimpleValidProgram)
     EXPECT_FALSE(res.hadError());
 }
 
+/** Branches merge with balanced stacks and valid labels. */
+TEST(IRValidator_Valid, BranchMergeBalancedStack)
+{
+    IrFunction fn;
+    IrProgram  pg;
+
+    LabelId elseLabel{1};
+    LabelId endLabel{2};
+
+    fn.instructions.push_back({PushConst, ConstId{0}}); // bool
+    fn.instructions.push_back({JumpIfFalse, elseLabel});
+
+    fn.instructions.push_back({PushConst, ConstId{1}}); // int
+    fn.instructions.push_back({Jump, endLabel});
+
+    fn.instructions.push_back({JLabel, elseLabel});
+    fn.instructions.push_back({PushConst, ConstId{2}}); // int
+
+    fn.instructions.push_back({JLabel, endLabel});
+    fn.instructions.push_back({ToString, {}});
+    fn.instructions.push_back({PrintString, {}});
+
+    pg.constants.push_back({Bool32, 0, true});
+    pg.constants.push_back({I32, 1, 7});
+    pg.constants.push_back({I32, 2, 9});
+
+    fn.labelTable.position[elseLabel] = 4;
+    fn.labelTable.position[endLabel] = 6;
+
+    auto res = validate(fn, pg);
+    EXPECT_FALSE(res.hadError());
+}
+
+/** Local store/load round-trip with printing. */
+TEST(IRValidator_Valid, LocalStoreLoadRoundTrip)
+{
+    IrFunction fn;
+    IrProgram  pg;
+
+    fn.instructions.push_back({PushConst, ConstId{0}});
+    fn.instructions.push_back({StoreLocal, LocalId{0}});
+    fn.instructions.push_back({LoadLocal, LocalId{0}});
+    fn.instructions.push_back({ToString, {}});
+    fn.instructions.push_back({PrintString, {}});
+
+    pg.constants.push_back({I32, 0, 123});
+    fn.localTable.locals.push_back(LocalInfo{LocalId{0}, I32, "x", {}});
+
+    auto res = validate(fn, pg);
+    EXPECT_FALSE(res.hadError());
+}
+
+/** String concat path that stays type-correct. */
+TEST(IRValidator_Valid, ConcatAndPrint)
+{
+    IrFunction fn;
+    IrProgram  pg;
+
+    fn.instructions.push_back({PushConst, ConstId{0}});
+    fn.instructions.push_back({PushConst, ConstId{1}});
+    fn.instructions.push_back({ConcatString, {}});
+    fn.instructions.push_back({PrintString, {}});
+
+    pg.constants.push_back({String32, 0, std::string("hello ")});
+    pg.constants.push_back({String32, 1, std::string("world")});
+
+    auto res = validate(fn, pg);
+    EXPECT_FALSE(res.hadError());
+}
+
 /** Detects invalid const ids. */
 TEST(IRValidator_Types, InvalidConstId)
 {
