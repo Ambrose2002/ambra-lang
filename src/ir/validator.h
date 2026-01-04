@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 static const char* getOpcodeName(Opcode op)
@@ -123,7 +124,7 @@ struct IrValidator
             return;
 
         const std::unordered_map<LabelId, size_t> labelToIp = function.labelTable.position;
-        
+
         // For each instruction index, we store the "incoming" abstract stack.
         // If an instruction is reachable via multiple paths, their incoming stacks must match.
         std::vector<std::optional<std::vector<IrType>>> inStack(instrs.size());
@@ -454,5 +455,44 @@ struct IrValidator
         }
     }
 
-    void validateControlFlow();
+    void validateControlFlow()
+    {
+        const auto labelPos = function.labelTable.position;
+
+        for (const auto& entry : labelPos)
+        {
+            auto inst = function.instructions[entry.second];
+
+            if (!std::holds_alternative<LabelId>(inst.operand) || inst.opcode != JLabel)
+            {
+                diagnostics.push_back(
+                    {"Label table entry does not point to JLabel instruction", entry.second});
+            }
+
+            if (!(std::get<LabelId>(inst.operand) == entry.first))
+            {
+                diagnostics.push_back({"Label table ID mismatch", entry.second});
+            }
+        }
+
+        for (size_t ip = 0; ip < function.instructions.size(); ip++)
+        {
+            const auto& instr = function.instructions[ip];
+
+            if (instr.opcode == Jump || instr.opcode == JumpIfFalse)
+            {
+                if (!std::holds_alternative<LabelId>(instr.operand))
+                {
+                    diagnostics.push_back({"Jump targets undefined label", ip});
+                }
+
+                auto lId = std::get<LabelId>(instr.operand);
+
+                if (labelPos.find(lId) == labelPos.end())
+                {
+                    diagnostics.push_back({"Jump targets undefined label", ip});
+                }
+            }
+        }
+    };
 };

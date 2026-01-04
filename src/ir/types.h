@@ -59,7 +59,7 @@ struct LocalId
  */
 struct LabelId
 {
-    uint32_t value; ///< Unique label identifier within function
+    size_t value; ///< Unique label identifier within function
 
     bool operator==(LabelId other) const
     {
