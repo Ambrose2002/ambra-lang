@@ -5,6 +5,10 @@
 #include <variant>
 #include <vector>
 
+/**
+ * @param op Opcode to stringify.
+ * @return Null-terminated name used in diagnostics.
+ */
 static const char* getOpcodeName(Opcode op)
 {
     switch (op)
@@ -68,6 +72,10 @@ static const char* getOpcodeName(Opcode op)
     }
 }
 
+/**
+ * @param t IR type to stringify.
+ * @return Short type name for error text.
+ */
 static const char* getTypeName(IrType t)
 {
     switch (t)
@@ -84,6 +92,7 @@ static const char* getTypeName(IrType t)
         return "Unknown";
     }
 }
+/** Single validation issue with message and instruction pointer. */
 struct IrDiagnostic
 {
     std::string message;
@@ -91,6 +100,7 @@ struct IrDiagnostic
     // SourceLoc   loc;
 };
 
+/** Aggregated results from a validation pass. */
 struct IrValidatorResults
 {
     std::vector<IrDiagnostic> diagnostics;
@@ -101,6 +111,7 @@ struct IrValidatorResults
     }
 };
 
+/** Validates IR type/stack discipline and control flow for one function. */
 struct IrValidator
 {
     const IrProgram&  program;
@@ -108,15 +119,20 @@ struct IrValidator
 
     std::vector<IrDiagnostic> diagnostics;
 
+    /**
+     * @return Diagnostics collected from function and control-flow validation.
+     */
     IrValidatorResults validate()
     {
         diagnostics.clear();
         validateFunction();
+        validateControlFlow();
 
         return IrValidatorResults{diagnostics};
     };
 
   private:
+    /** Walk instructions and track the abstract stack across control flow. */
     void validateFunction()
     {
         const auto& instrs = function.instructions;
@@ -262,6 +278,15 @@ struct IrValidator
         }
     }
 
+    /**
+     * @param popCount Number of items to pop.
+     * @param pushCount Number of items to push.
+     * @param popType Expected type to pop.
+     * @param pushType Type to push.
+     * @param stack Abstract operand stack being simulated.
+     * @param ip Instruction pointer for diagnostics.
+     * @return True if the stack stayed consistent.
+     */
     bool maintainStack(size_t popCount, size_t pushCount, IrType popType, IrType pushType,
                        std::vector<IrType>& stack, size_t ip)
     {
@@ -292,6 +317,10 @@ struct IrValidator
         return true;
     }
 
+    /**
+     * @param ip Instruction index to validate.
+     * @param stack Abstract operand stack being simulated.
+     */
     void validateInstruction(size_t ip, std::vector<IrType>& stack)
     {
         switch (function.instructions[ip].opcode)
@@ -455,6 +484,7 @@ struct IrValidator
         }
     }
 
+    /** Ensures label table and jump targets are well-formed. */
     void validateControlFlow()
     {
         const auto labelPos = function.labelTable.position;
