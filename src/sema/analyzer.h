@@ -204,6 +204,9 @@ class Resolver
     /** Registers variable declarations in the current scope. */
     void resolveSummonStmt(const SummonStmt& stmt);
 
+    /** Resolves assignment statements and checks variable exists. */
+    void resolveAssignStmt(const AssignStmt& stmt);
+
     /** Resolves print statements and their expressions. */
     void resolveSayStmt(const SayStmt& stmt);
 
@@ -312,6 +315,9 @@ class TypeChecker
 
     /** Type checks variable declaration statements. */
     void checkSummonStatement(const SummonStmt& stmt);
+
+    /** Type checks assignment statements and validates type compatibility. */
+    void checkAssignStatement(const AssignStmt& stmt);
 
     /** Type checks print statements and validates interpolated expressions. */
     void checkSayStatement(const SayStmt& stmt);

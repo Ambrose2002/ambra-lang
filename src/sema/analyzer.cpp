@@ -54,6 +54,25 @@ void Resolver::resolveSummonStmt(const SummonStmt& stmt)
     }
 }
 
+void Resolver::resolveAssignStmt(const AssignStmt& stmt)
+{
+    auto& target = stmt.getTarget();
+
+    // Resolve target - must already exist
+    const Symbol* sym = currentScope->lookup(target.getName());
+    if (!sym)
+    {
+        reportError("Cannot assign to undeclared variable '" + target.getName() + "'", stmt.loc);
+        return;
+    }
+
+    resolutionTable.mapping[&target] = sym;
+
+    // Resolve the value expression
+    auto& value = stmt.getValue();
+    resolveExpression(value);
+}
+
 void Resolver::resolveSayStmt(const SayStmt& stmt)
 {
     auto& expression = stmt.getExpression();
@@ -172,6 +191,12 @@ void Resolver::resolveStatement(const Stmt& stmt)
         resolveSummonStmt(statement);
         return;
     }
+    case Assignment:
+    {
+        auto& statement = static_cast<const AssignStmt&>(stmt);
+        resolveAssignStmt(statement);
+        return;
+    }
     case Say:
     {
         auto& statement = static_cast<const SayStmt&>(stmt);
@@ -258,6 +283,12 @@ void TypeChecker::checkStatement(const Stmt& stmt)
         checkSummonStatement(s);
         return;
     }
+    case Assignment:
+    {
+        auto& s = static_cast<const AssignStmt&>(stmt);
+        checkAssignStatement(s);
+        return;
+    }
     case Say:
     {
         auto& s = static_cast<const SayStmt&>(stmt);
@@ -297,6 +328,59 @@ void TypeChecker::checkSummonStatement(const SummonStmt& stmt)
             Diagnostic{"Variable initializer cannot be void", initializer.loc});
     }
 };
+
+void TypeChecker::checkAssignStatement(const AssignStmt& stmt)
+{
+    auto& target = stmt.getTarget();
+    auto& value = stmt.getValue();
+
+    // Get target variable's type from its declaration
+    auto it = resolutionTable.mapping.find(&target);
+    if (it == resolutionTable.mapping.end())
+    {
+        diagnostics.emplace_back(
+            Diagnostic{"Unresolved identifier '" + target.getName() + "'", stmt.loc});
+        return;
+    }
+    const Symbol* sym = it->second;
+
+    // Get the type from the declaration's initializer
+    const SummonStmt* decl = sym->declStmt;
+    if (!decl)
+    {
+        diagnostics.emplace_back(
+            Diagnostic{"Internal error: missing declaration for identifier", stmt.loc});
+        return;
+    }
+
+    auto& initializer = decl->getInitializer();
+    auto  typeIt = typeTable.mapping.find(&initializer);
+    if (typeIt == typeTable.mapping.end())
+    {
+        diagnostics.emplace_back(Diagnostic{"Internal error: missing type for variable", stmt.loc});
+        return;
+    }
+    Type targetType = typeIt->second;
+
+    // Check value expression type
+    Type valueType = checkExpression(value);
+
+    if (targetType != valueType && valueType != Error)
+    {
+        std::string targetTypeName = (targetType == Int)      ? "Int"
+                                     : (targetType == Bool)   ? "Bool"
+                                     : (targetType == String) ? "String"
+                                                              : "Unknown";
+        std::string valueTypeName = (valueType == Int)      ? "Int"
+                                    : (valueType == Bool)   ? "Bool"
+                                    : (valueType == String) ? "String"
+                                                            : "Unknown";
+        diagnostics.emplace_back(Diagnostic{"Type mismatch in assignment: expected " +
+                                                targetTypeName + ", got " + valueTypeName,
+                                            stmt.loc});
+    }
+}
+
 void TypeChecker::checkSayStatement(const SayStmt& stmt)
 {
     auto& expr = stmt.getExpression();
