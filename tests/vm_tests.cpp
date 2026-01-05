@@ -88,3 +88,25 @@ TEST(VM_Arithmetic, Negation)
     std::string out = runProgram("say -5;");
     EXPECT_EQ(out, "-5");
 }
+
+TEST(VM_Variables, SummonAndUse)
+{
+    std::string out = runProgram(R"(
+        summon x = 10;
+        say x;
+    )");
+    EXPECT_EQ(out, "10");
+}
+
+TEST(VM_Variables, Shadowing)
+{
+    std::string out = runProgram(R"(
+        summon x = 1;
+        {
+            summon x = 2;
+            say x;
+        }
+        say x;
+    )");
+    EXPECT_EQ(out, "21");
+}
