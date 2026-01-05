@@ -39,6 +39,62 @@ std::unordered_map<std::string, TokenType> Lexer::keywordMap = {
     {"summon", SUMMON}, {"should", SHOULD}, {"otherwise", OTHERWISE}, {"aslongas", ASLONGAS},
     {"say", SAY},       {"not", NOT},       {"affirmative", BOOL},    {"negative", BOOL}};
 
+/**
+ * @brief Processes escape sequences in a string literal.
+ *
+ * Converts escape sequences like \n, \t, \r, \\, \" to their actual
+ * character values.
+ *
+ * @param raw The raw string literal from the source
+ * @return The processed string with escape sequences replaced
+ */
+std::string Lexer::processEscapeSequences(const std::string& raw)
+{
+    std::string result;
+    result.reserve(raw.size());
+
+    for (size_t i = 0; i < raw.size(); ++i)
+    {
+        if (raw[i] == '\\' && i + 1 < raw.size())
+        {
+            char next = raw[i + 1];
+            switch (next)
+            {
+            case 'n':
+                result += '\n';
+                break;
+            case 't':
+                result += '\t';
+                break;
+            case 'r':
+                result += '\r';
+                break;
+            case '\\':
+                result += '\\';
+                break;
+            case '"':
+                result += '"';
+                break;
+            case '0':
+                result += '\0';
+                break;
+            default:
+                // Unknown escape sequence - keep the backslash and character as-is
+                result += '\\';
+                result += next;
+                break;
+            }
+            ++i; // Skip the next character since we processed it
+        }
+        else
+        {
+            result += raw[i];
+        }
+    }
+
+    return result;
+}
+
 char Lexer::advance()
 {
     char current_char = source.at(current);
@@ -200,6 +256,7 @@ Token Lexer::scanString(int startLine, int startColumn)
             if (length < 0)
                 length = 0;
             std::string literal = source.substr(start + offset, length);
+            literal = processEscapeSequences(literal);
 
             return makeToken(STRING, startLine, startColumn, literal);
         }
@@ -228,6 +285,7 @@ Token Lexer::scanString(int startLine, int startColumn)
             if (length < 0)
                 length = 0;
             std::string literal = source.substr(start + offset, length);
+            literal = processEscapeSequences(literal);
 
             mode = INTERP_EXPR_MODE;
             return makeToken(STRING, startLine, startColumn, literal);
@@ -281,6 +339,7 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
             interpStart = current;
             // Do NOT consume '{'
             std::string lexeme = source.substr(start, current - start);
+            lexeme = processEscapeSequences(lexeme);
             mode = INTERP_EXPR_MODE;
             return makeToken(MULTILINE_STRING, startLine, startColumn, lexeme);
         }
@@ -290,6 +349,7 @@ Token Lexer::scanMultiLineString(int startLine, int startColumn)
         {
             // Produce the final multiline string chunk *before* consuming """.
             std::string lexeme = source.substr(start, current - start);
+            lexeme = processEscapeSequences(lexeme);
 
             // Create the token now (uses current/start as the bounds),
             // then consume the closing quotes so scanning continues after them.

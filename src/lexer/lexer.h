@@ -277,6 +277,17 @@ class Lexer
      */
     bool isMultilineString();
 
+    /**
+     * @brief Processes escape sequences in a string literal.
+     *
+     * Converts escape sequences like \n, \t, \r, \\, \" to their actual
+     * character values.
+     *
+     * @param raw The raw string literal from the source
+     * @return The processed string with escape sequences replaced
+     */
+    std::string processEscapeSequences(const std::string& raw);
+
   public:
     /**
      * @brief Constructs a Lexer for the given source text.

@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 {
     if (argc != 2)
     {
-        std::cerr << "Usage: ambra_lang <file.ara>\n";
+        std::cerr << "Usage: ambra <file.ara>\n";
         return 1;
     }
 
