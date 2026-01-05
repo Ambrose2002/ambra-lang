@@ -15,7 +15,7 @@ A whimsical, educational programming language with a magical syntax.
 1. **Clone the repository:**
 ```bash
 git clone https://github.com/Ambrose2002/ambra-lang.git
-cd ambra_lang
+cd ambra-lang
 ```
 
 2. **Build the project:**
