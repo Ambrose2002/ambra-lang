@@ -53,7 +53,6 @@ static std::string runProgram(const std::string& source)
     return buffer.str();
 }
 
-
 TEST(VM_Basics, PrintInt)
 {
     std::string out = runProgram("say 5;");
@@ -70,4 +69,22 @@ TEST(VM_Basics, PrintString)
 {
     std::string out = runProgram(R"(say "hello";)");
     EXPECT_EQ(out, "hello");
+}
+
+TEST(VM_Arithmetic, Addition)
+{
+    std::string out = runProgram("say 1 + 2;");
+    EXPECT_EQ(out, "3");
+}
+
+TEST(VM_Arithmetic, MixedExpression)
+{
+    std::string out = runProgram("say (2 + 3) * 4;");
+    EXPECT_EQ(out, "20");
+}
+
+TEST(VM_Arithmetic, Negation)
+{
+    std::string out = runProgram("say -5;");
+    EXPECT_EQ(out, "-5");
 }
