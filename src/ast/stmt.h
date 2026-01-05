@@ -24,11 +24,12 @@ struct Symbol;
  */
 enum StmtKind
 {
-    Summon,  ///< Variable declaration statement
-    Say,     ///< Print statement
-    Block,   ///< Code block statement
-    IfChain, ///< Conditional chain statement
-    While    ///< Loop statement
+    Summon,     ///< Variable declaration statement
+    Assignment, ///< Variable assignment statement
+    Say,        ///< Print statement
+    Block,      ///< Code block statement
+    IfChain,    ///< Conditional chain statement
+    While       ///< Loop statement
 };
 
 /**
@@ -150,6 +151,90 @@ class SummonStmt : public Stmt
     std::unique_ptr<IdentifierExpr> identifier;  ///< The identifier
     std::unique_ptr<Expr>           initializer; ///< The initialization expression
     mutable Symbol* symbol; ///< The symbol this summon statement creates during resolution.
+};
+
+/**
+ * @brief Represents an assignment statement.
+ *
+ * Reassigns an existing variable to a new value.
+ * Example: `x = 5;`
+ */
+class AssignStmt : public Stmt
+{
+  public:
+    /**
+     * @brief Constructs an assignment statement.
+     * @param target The identifier being assigned to
+     * @param value The new value expression
+     * @param line Source line number
+     * @param col Source column number
+     */
+    AssignStmt(std::unique_ptr<IdentifierExpr> target, std::unique_ptr<Expr> value, int line,
+               int col)
+        : target(std::move(target)), value(std::move(value))
+    {
+        kind = Assignment;
+        loc = {line, col};
+    };
+
+    /**
+     * @brief Compares two AssignStmt nodes for equality.
+     * @param other The other statement to compare with
+     * @return True if both have the same target and value
+     */
+    bool operator==(const Stmt& other) const override
+    {
+        if (other.kind != kind)
+            return false;
+        auto& o = static_cast<const AssignStmt&>(other);
+        if (!(o.loc == loc))
+            return false;
+
+        if (!target && !o.target)
+            return true;
+        if (!target || !o.target)
+            return false;
+        if (!(*target == *o.target))
+            return false;
+
+        if (!value && !o.value)
+            return true;
+        if (!value || !o.value)
+            return false;
+        return *value == *o.value;
+    }
+
+    /**
+     * @brief Retrieves the target identifier.
+     * @return A const reference to the target identifier.
+     */
+    const IdentifierExpr& getTarget() const
+    {
+        return *target;
+    }
+
+    /**
+     * @brief Retrieves the value expression.
+     * @return A const reference to the value expression.
+     */
+    const Expr& getValue() const
+    {
+        return *value;
+    }
+
+    /**
+     * @brief Return a human-readable representation of this statement.
+     * @return String representation of this statement
+     */
+    std::string toString() const override
+    {
+        return std::string("Assign(") + (target ? target->toString() : std::string("null")) + ", " +
+               (value ? value->toString() : std::string("null")) + ")";
+    }
+
+  private:
+    std::unique_ptr<IdentifierExpr> target; ///< The variable being assigned to
+    std::unique_ptr<Expr>           value;  ///< The new value expression
 };
 
 /**
