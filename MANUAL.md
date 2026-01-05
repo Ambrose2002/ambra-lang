@@ -1,4 +1,4 @@
-# 🧙‍♀️ Ambra Language Manual (v0.1)
+# Ambra Language Manual (v0.1)
 
 Ambra is a small, whimsical programming language designed for learning compilers, exploring language design, and having fun writing expressive programs. It is playful, predictable, and intentionally limited in scope for the MVP so the compiler backend remains achievable and educational.
 
