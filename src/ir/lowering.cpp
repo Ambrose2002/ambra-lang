@@ -352,6 +352,12 @@ void LoweringContext::lowerStatement(const Stmt* stmt)
         lowerSummonStatement(s);
         return;
     }
+    case Assignment:
+    {
+        const auto* s = static_cast<const AssignStmt*>(stmt);
+        lowerAssignStatement(s);
+        return;
+    }
     case Say:
     {
         const auto* s = static_cast<const SayStmt*>(stmt);
@@ -431,6 +437,65 @@ void LoweringContext::lowerSummonStatement(const SummonStmt* s)
     localScopes.back()[symbol] = lId;
 
     lowerExpression(&s->getInitializer(), typeIt->second);
+    currentFunction->instructions.emplace_back(Instruction{StoreLocal, Operand{lId}});
+    return;
+}
+
+void LoweringContext::lowerAssignStatement(const AssignStmt* stmt)
+{
+    auto& target = stmt->getTarget();
+    auto& value = stmt->getValue();
+
+    // Get the symbol from resolution table
+    auto it = resolutionTable.mapping.find(&target);
+    if (it == resolutionTable.mapping.end())
+    {
+        hadError = true;
+        return;
+    }
+    const Symbol* sym = it->second;
+
+    // Find the LocalId from the symbol
+    LocalId lId{0};
+    bool    found = false;
+    for (auto it = localScopes.rbegin(); it != localScopes.rend(); ++it)
+    {
+        auto entry = it->find(sym);
+        if (entry != it->end())
+        {
+            lId = entry->second;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        hadError = true;
+        return;
+    }
+
+    // Get the target variable's type from the declaration
+    const SummonStmt* decl = sym->declStmt;
+    if (!decl)
+    {
+        hadError = true;
+        return;
+    }
+
+    auto& initializer = decl->getInitializer();
+    auto  typeIt = typeTable.mapping.find(&initializer);
+    if (typeIt == typeTable.mapping.end())
+    {
+        hadError = true;
+        return;
+    }
+    Type targetType = typeIt->second;
+
+    // Lower the value expression with the target variable's type
+    lowerExpression(&value, targetType);
+
+    // Emit StoreLocal to update the variable
     currentFunction->instructions.emplace_back(Instruction{StoreLocal, Operand{lId}});
     return;
 }

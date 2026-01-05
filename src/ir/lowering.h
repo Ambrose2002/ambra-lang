@@ -149,6 +149,12 @@ struct LoweringContext
     void lowerSummonStatement(const SummonStmt* stmt);
 
     /**
+     * @brief Lower assignment statement
+     * @param stmt Assignment statement AST node
+     */
+    void lowerAssignStatement(const AssignStmt* stmt);
+
+    /**
      * @brief Lower print statement (say)
      * @param stmt Print statement AST node
      */
