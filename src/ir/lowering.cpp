@@ -227,6 +227,20 @@ void LoweringContext::lowerBinaryExpr(const BinaryExpr* e, Type expectedType)
     switch (op)
     {
     case Add:
+    {
+        // For Add, check if either operand is a String
+        Type leftType = typeTable.mapping.at(&left);
+        Type rightType = typeTable.mapping.at(&right);
+        if (leftType == String || rightType == String)
+        {
+            operandType = String; // Convert to string concatenation
+        }
+        else
+        {
+            operandType = Int; // Numeric addition
+        }
+        break;
+    }
     case Subtract:
     case Multiply:
     case Divide:
@@ -308,7 +322,14 @@ void LoweringContext::lowerBinaryExpr(const BinaryExpr* e, Type expectedType)
     }
     case Add:
     {
-        currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
+        if (operandType == String)
+        {
+            currentFunction->instructions.emplace_back(Instruction{ConcatString, Operand{}});
+        }
+        else
+        {
+            currentFunction->instructions.emplace_back(Instruction{AddI32, Operand{}});
+        }
         break;
     }
     case Subtract:

@@ -529,6 +529,22 @@ Type TypeChecker::checkBinaryExpression(const BinaryExpr& expr)
     switch (op)
     {
     case Add:
+    {
+        // Support Int + Int for arithmetic
+        if (leftType == Int && rightType == Int)
+        {
+            return Int;
+        }
+        // Support string concatenation - if either operand is String, result is String
+        if (leftType == String || rightType == String)
+        {
+            return String;
+        }
+        diagnostics.emplace_back(Diagnostic{
+            "+ operator requires at least one String for concatenation or both Int for addition",
+            expr.loc});
+        return Error;
+    }
     case Divide:
     case Multiply:
     case Subtract:
