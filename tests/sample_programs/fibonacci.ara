@@ -1,0 +1,16 @@
+</ Generate first n Fibonacci numbers
+
+summon n = 10;
+summon a = 0;
+summon b = 1;
+summon counter = 0;
+
+say("First " + n + " Fibonacci numbers: ");
+
+aslongas (counter < n) {
+    say("{a} \n");
+    summon temp = a + b;
+    a = b;
+    b = temp;
+    counter = counter + 1;
+}

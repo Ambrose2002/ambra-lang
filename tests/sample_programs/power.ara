@@ -1,0 +1,15 @@
+</ Calculate base raised to an exponent
+
+summon base = 2;
+summon exponent = 10;
+summon result = 1;
+summon counter = 0;
+
+say("Calculating {base} raised to the power of {exponent}\n");
+
+aslongas (counter < exponent) {
+    result = result * base;
+    counter = counter + 1;
+}
+
+say("Result: {result}");

@@ -1,0 +1,28 @@
+</ Calculate letter grade from percentage
+
+summon score = 85;
+summon grade = "F";
+
+say("Score: {score}\n");
+
+should (score >= 90) {
+    grade = "A";
+}
+otherwise should (score >= 80) {
+    grade = "B";
+}
+otherwise should (score >= 70) {
+    grade = "C";
+}
+otherwise should (score >= 60) {
+    grade = "D";
+}
+
+say("Letter Grade: {grade}\n");
+
+should (score >= 70) {
+    say("Status: PASS");
+}
+otherwise {
+    say("Status: FAIL");
+}

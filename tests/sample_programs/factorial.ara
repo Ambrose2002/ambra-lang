@@ -1,0 +1,14 @@
+</ Calculate factorial of a number
+
+summon n = 5;
+summon result = 1;
+summon counter = 1;
+
+say("Calculating factorial of " + n + "\n");
+
+aslongas (counter <= n) {
+    result = result * counter;
+    counter = counter + 1;
+}
+
+say("Result: " + result);

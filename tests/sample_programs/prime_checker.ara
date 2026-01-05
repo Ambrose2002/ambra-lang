@@ -1,0 +1,24 @@
+</ Check if a number is prime
+
+summon num = 100;
+summon is_prime = affirmative;
+summon divisor = 2;
+
+should (num < 2) {
+    is_prime = negative;
+}
+
+aslongas (divisor * divisor <= num) {
+    summon remainder = num - ((num / divisor) * divisor);
+    should (remainder == 0) {
+        is_prime = negative;
+    }
+    divisor = divisor + 1;
+}
+
+should (is_prime) {
+    say("{num} is a prime number");
+}
+otherwise {
+    say("{num} is not a prime number");
+}

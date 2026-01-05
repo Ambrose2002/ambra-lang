@@ -1,0 +1,23 @@
+</ Convert Celsius to Fahrenheit
+
+summon celsius = 25;
+summon fahrenheit = 0;
+
+say("Temperature Converter");
+say("Celsius: ", celsius);
+
+</ Formula: F = (C * 9/5) + 32
+</ Using integer arithmetic: F = (C * 9) / 5 + 32
+fahrenheit = ((celsius * 9) / 5) + 32;
+
+say("Fahrenheit: ", fahrenheit);
+
+should (celsius < 0) {
+    say("Below freezing!");
+}
+otherwise should (celsius > 30) {
+    say("Hot day!");
+}
+otherwise {
+    say("Pleasant temperature");
+}

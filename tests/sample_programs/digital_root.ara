@@ -1,0 +1,24 @@
+</
+Calculate the digital root of a number
+(repeatedly sum digits until single digit remains)
+/>
+
+summon num = 12345;
+summon original = num;
+
+say("Calculating digital root of " + num + "\n");
+
+aslongas (num >= 10) {
+    summon sum = 0;
+    
+    aslongas (num > 0) {
+        summon digit = num - ((num / 10) * 10);
+        sum = sum + digit;
+        num = num / 10;
+    }
+    
+    num = sum;
+    say(" Sum of digits: " + num);
+}
+
+say("\nDigital root of " + original + " is " + num);
