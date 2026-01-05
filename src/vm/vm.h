@@ -30,5 +30,5 @@ struct VM
         locals.resize(function.localTable.locals.size());
     }
 
-    
+    void execute();
 };

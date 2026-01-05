@@ -15,11 +15,8 @@ set(CORE_SOURCES
     src/lexer/lexer.cpp
     src/lexer/token/token.cpp
     src/parser/parser.cpp
-    src/ast/ast.cpp
     src/sema/analyzer.cpp
     src/ir/lowering.cpp
-    src/bytecode/emitter.cpp
-    src/bytecode/disassembler.cpp
     src/vm/vm.cpp
     src/runtime/builtins.cpp
     src/utils/error.cpp
