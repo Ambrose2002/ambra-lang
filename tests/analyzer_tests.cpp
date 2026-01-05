@@ -2740,8 +2740,8 @@ TEST(TypeChecker_Errors, IfConditionNotBool)
  */
 TEST(TypeChecker_Errors, MultipleIndependentErrors)
 {
-    // summon x = 1 + "hello";
-    // summon y = not 10;
+    // summon x = 1 + "hello";  <-- Now valid (concatenation)
+    // summon y = not 10;        <-- Still invalid
 
     std::vector<Token> tokens = {
         Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
@@ -2765,7 +2765,7 @@ TEST(TypeChecker_Errors, MultipleIndependentErrors)
     TypeCheckerResults types = checker.typeCheck(program);
 
     ASSERT_TRUE(types.hadError());
-    ASSERT_EQ(types.diagnostics.size(), 2);
+    ASSERT_EQ(types.diagnostics.size(), 1); // Only 'not 10' errors now
 }
 
 /**
@@ -2801,6 +2801,7 @@ TEST(TypeChecker_Errors, CircularDependency)
 TEST(TypeChecker_Errors, StringPlusInteger)
 {
     // summon x = "hello" + 5;
+    // This is now VALID - it performs string concatenation
 
     std::vector<Token> tokens = {
         Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
@@ -2817,8 +2818,8 @@ TEST(TypeChecker_Errors, StringPlusInteger)
     TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
     TypeCheckerResults types = checker.typeCheck(program);
 
-    ASSERT_TRUE(types.hadError());
-    ASSERT_GE(types.diagnostics.size(), 1u);
+    ASSERT_FALSE(types.hadError()); // Should succeed now
+    ASSERT_EQ(types.diagnostics.size(), 0u);
 }
 
 /**
@@ -3274,6 +3275,7 @@ TEST(TypeChecker_Errors, TypeMismatchInVariableUsage)
 {
     // summon x = "text";
     // summon y = x + 10;
+    // This is now VALID - string concatenation
 
     std::vector<Token> tokens = {
         Token("summon", SUMMON, {}, 1, 1), Token("x", IDENTIFIER, {}, 1, 8),
@@ -3296,8 +3298,8 @@ TEST(TypeChecker_Errors, TypeMismatchInVariableUsage)
     TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
     TypeCheckerResults types = checker.typeCheck(program);
 
-    ASSERT_TRUE(types.hadError());
-    ASSERT_GE(types.diagnostics.size(), 1u);
+    ASSERT_FALSE(types.hadError()); // Should succeed now
+    ASSERT_EQ(types.diagnostics.size(), 0u);
 }
 
 /**
