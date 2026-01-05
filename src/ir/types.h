@@ -115,11 +115,11 @@ struct Constant
      * @brief The actual literal value
      *
      * Holds one of:
-     * - std::string for String32 constants
-     * - int for I32 constants
      * - bool for Bool32 constants
+     * - int for I32 constants
+     * - std::string for String32 constants
      */
-    std::variant<std::string, int, bool> value;
+    std::variant<bool, int, std::string> value;
 
     bool operator==(Constant other) const
     {

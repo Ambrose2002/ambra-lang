@@ -65,6 +65,10 @@ void VM::execute()
         case CmpLtEqI32:
         case CmpGtI32:
         case CmpGtEqI32:
+        case CmpEqBool32:
+        case CmpNEqBool32:
+        case CmpEqString32:
+        case CmpNEqString32:
         case ConcatString:
         {
             Value rhs = stack.back();

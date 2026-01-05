@@ -6,7 +6,7 @@
 struct Value
 {
     IrType                               tag;
-    std::variant<std::string, int, bool> payload;
+    std::variant<bool, int, std::string> payload;
 };
 
 struct VM

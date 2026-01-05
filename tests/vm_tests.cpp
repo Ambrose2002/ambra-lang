@@ -110,3 +110,44 @@ TEST(VM_Variables, Shadowing)
     )");
     EXPECT_EQ(out, "21");
 }
+
+TEST(VM_Comparison, IntegerEquality)
+{
+    std::string out = runProgram("say 3 == 3;");
+    EXPECT_EQ(out, "affirmative");
+}
+
+TEST(VM_Comparison, StringEquality)
+{
+    std::string out = runProgram(R"(say "hi" != "bye";)");
+    EXPECT_EQ(out, "affirmative");
+}
+
+TEST(VM_ControlFlow, IfChain)
+{
+    std::string out = runProgram(R"(
+        summon x = 3;
+        should (x < 2) {
+            say "low";
+        } otherwise should (x < 4) {
+            say "mid";
+        } otherwise {
+            say "high";
+        }
+    )");
+
+    EXPECT_EQ(out, "mid");
+}
+
+TEST(VM_ControlFlow, WhileLoop)
+{
+    std::string out = runProgram(R"(
+        summon x = 0;
+        aslongas (x < 3) {
+            say x;
+            summon x = x + 1;
+        }
+    )");
+
+    EXPECT_EQ(out, "012");
+}
