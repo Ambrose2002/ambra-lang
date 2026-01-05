@@ -648,9 +648,51 @@ std::unique_ptr<Stmt> Parser::parseWhileStatement()
                                        loc.column);
 }
 
+std::unique_ptr<Stmt> Parser::parseAssignmentStatement()
+{
+    size_t start = current;
+    advance(); // consume identifier
+
+    if (check(EQUAL))
+    {
+        // It's an assignment, backtrack and parse properly
+        current = start;
+        Token name = advance();
+        Token eq = advance(); // consume '='
+
+        std::unique_ptr<Expr> value = parseExpression();
+        if (!value)
+        {
+            reportError(peek(), "Expected expression after '='");
+            return nullptr;
+        }
+
+        auto target = std::make_unique<IdentifierExpr>(name.getLexeme(), name.getLocation().line,
+                                                       name.getLocation().column);
+        auto stmt =
+            std::make_unique<AssignStmt>(std::move(target), std::move(value),
+                                         name.getLocation().line, name.getLocation().column);
+
+        if (!match(SEMI_COLON))
+        {
+            reportError(peek(), "Expected ';' after assignment");
+        }
+
+        return stmt;
+    }
+    reportError(peek(), "= expected here in identifier assignment");
+    return nullptr;
+}
+
 std::unique_ptr<Stmt> Parser::parseStatement()
 {
     Token token = peek();
+
+    // Check for assignment: identifier = expr;
+    if (check(IDENTIFIER))
+    {
+        return parseAssignmentStatement();
+    }
 
     switch (token.getType())
     {

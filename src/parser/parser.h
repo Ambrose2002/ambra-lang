@@ -277,4 +277,11 @@ class Parser
      * @return Tuple of parsed condition `Expr` and block `BlockStmt`, both nullptr on error.
      */
     std::tuple<std::unique_ptr<Expr>, std::unique_ptr<BlockStmt>> parseConditionAndBlock();
+
+    /**
+     * @brief Parse an assignment statement.
+     *
+     * @return parse statement
+     */
+    std::unique_ptr<Stmt> parseAssignmentStatement();
 };
