@@ -1,7 +1,6 @@
 #include "vm.h"
 
 #include <iostream>
-#include <string>
 
 void VM::execute()
 {

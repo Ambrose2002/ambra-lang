@@ -3,8 +3,6 @@
 #include "vm/vm.h"
 
 #include <gtest/gtest.h>
-#include <sstream>
-#include <string>
 
 /*
  * Helper: full pipeline + VM execution with captured stdout
@@ -145,7 +143,7 @@ TEST(VM_ControlFlow, WhileLoop)
         summon x = 0;
         aslongas (x < 3) {
             say x;
-            summon x = x + 1;
+            x = x + 1;
         }
     )");
 
