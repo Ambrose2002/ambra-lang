@@ -54,11 +54,15 @@ if(CLANG_FORMAT_EXECUTABLE)
     add_dependencies(ambra_lang format_code)
 endif()
 
-# Compiler executable
+# Compiler executable (for bytecode generation)
 add_executable(ambra_compiler src/cli/compiler_main.cpp)
 target_link_libraries(ambra_compiler ambra_lang)
 
-# VM executable
+# Main Ambra CLI executable (runs complete pipeline)
+add_executable(ambra src/cli/vm_main.cpp)
+target_link_libraries(ambra ambra_lang)
+
+# Keep ambra_vm as an alias for backwards compatibility
 add_executable(ambra_vm src/cli/vm_main.cpp)
 target_link_libraries(ambra_vm ambra_lang)
 
@@ -79,6 +83,12 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Tests
 enable_testing()
 add_subdirectory(tests)
+
+# Install target - makes it easy to install the binary
+install(TARGETS ambra
+    RUNTIME DESTINATION bin
+    COMPONENT runtime
+)
 
 # Optional: Print build configuration
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
