@@ -10,8 +10,6 @@ Ambra embraces a magical, spell‑like personality. Programs read like small inc
 
 Ambra compiles to a custom bytecode format and runs on the Ambra Virtual Machine (AVM).
 
-This manual describes **Ambra v0.1**, the minimum viable version of the language.
-
 ---
 
 ## 2. Program Structure
@@ -30,7 +28,7 @@ Example:
 ```
 summon x = 10;
 aslongas (x > 0) {
-    say("Counting:", x);
+    say("Counting:" + x);
     x = x - 1;
 }
 ```
@@ -50,18 +48,19 @@ summon x = 10;
 ```
 
 ### Multi‑line comment  
-Begins with `</` and ends with `/>`:
+Begins with `</` followed immediately by a newline, and ends with `/>` on its own line:
 
 ```
 </
-   Multi‑line comments can span
-   any number of lines.
-   Ambra ignores everything here.
-/
->
+Multi‑line comments can span
+any number of lines.
+Ambra ignores everything here.
+/>
 ```
 
-Comments cannot nest in v0.1.
+**Important:** The opening `</` must be followed by a newline, and the closing `/>` must be on its own line.
+
+Comments cannot nest.
 
 ---
 
@@ -69,10 +68,20 @@ Comments cannot nest in v0.1.
 
 Variables are introduced using the `summon` keyword.
 
-### Syntax
+### Declaration Syntax
 
 ```
 summon identifier = expression;
+```
+
+### Reassignment
+
+Once a variable is declared, it can be reassigned without `summon`:
+
+```
+summon x = 10;
+x = 20;          </ reassignment
+x = x + 5;       </ allowed
 ```
 
 ### Examples
@@ -100,6 +109,12 @@ Ambra v0.1 includes:
 ### Integers  
 Whole numbers (e.g., `42`, `0`, `-3`).
 
+Division (`/`) performs **integer division** (truncates toward zero).
+
+```
+summon x = 7 / 2;  </ x = 3
+```
+
 ### Booleans  
 Ambra uses expressive boolean literals:
 
@@ -113,6 +128,8 @@ Double‑quoted:
 "Hello world"
 ```
 
+Strings support escape sequences like `\n` (newline), `\t` (tab), `\\` (backslash), and `\"` (quote).
+
 #### Multi‑line strings
 
 ```
@@ -122,14 +139,7 @@ string inside Ambra.
 """
 ```
 
-#### Interpolation
-
-```
-summon who = "Ambrose";
-say("Hello, {who}");
-```
-
-Only simple identifier interpolation is allowed in v0.1.
+Multi-line strings preserve newlines and indentation.
 
 ---
 
@@ -141,6 +151,25 @@ Ambra supports:
 ```
 +   -   *   /
 ```
+
+Arithmetic operators work on integers only (`-`, `*`, `/` require both operands to be integers).
+
+### String Concatenation
+
+The `+` operator also performs string concatenation:
+
+```
+summon greeting = "Hello " + "World";
+summon msg = "Score: " + 42;  </ Automatically converts 42 to string
+```
+
+**Type coercion:** If either operand of `+` is a string, both are converted to strings and concatenated. If both operands are integers, `+` performs arithmetic addition.
+
+Examples:
+- `"Hello" + "World"` → `"HelloWorld"`
+- `"Score: " + 95` → `"Score: 95"`
+- `42 + " points"` → `"42 points"`
+- `10 + 5` → `15` (arithmetic)
 
 ### Comparisons  
 ```
@@ -234,7 +263,7 @@ Example:
 summon i = 0;
 
 aslongas (i < 5) {
-    say("Count:", i);
+    say("Count: " + i + "\n");
     i = i + 1;
 }
 ```
@@ -252,14 +281,21 @@ say(expr1, expr2, ...);
 ```
 
 - Accepts one or more expressions  
-- Automatically prints a newline  
+- Prints each expression (no automatic spacing or newlines)
 - Converts all values to strings  
+
+To print a newline, use `"\n"`:
+
+```
+summon user = "Ambrose";
+say("Welcome, ", user, "!\n");
+```
 
 Example:
 
 ```
-summon user = "Ambrose";
-say("Welcome,", user, "!");
+say("Line 1\n");
+say("Line 2\n");
 ```
 
 ---
@@ -278,35 +314,36 @@ say(x);
 ## 11. Full Example Program
 
 ```
-</ Ambra v0.1 Example Program />
+</
+Ambra Example Program 
+/>
 
 summon user = "Ambrose";
 summon excited = affirmative;
 
-say("Hello,", user);
+say("Hello, " + user + ".\n");
 
 should (excited) {
-    say("You seem excited today!");
+    say("You seem excited today!\n");
 }
-otherwise should (user == "Flora") {
-    say("Ah, Flora. A familiar presence.");
+otherwise should (user == "Dom") {
+    say("Ah " + user + ". A familiar presence.\n");
 }
 otherwise {
-    say("Calm and collected.");
+    say("Calm and collected.\n");
 }
 
 summon i = 0;
 
 aslongas (i < 3) {
-    say("Counting:", i);
+    say("Counting: " + i + "\n");
     i = i + 1;
 }
 
 summon poem = """
 Ambra is small,
 Ambra is new,
-Ambra is quirky,
-And teaches you too.
+Ambra is quirky.
 """;
 
 say(poem);
@@ -333,20 +370,4 @@ say
 
 Planned upgrades for Ambra:
 
-- Functions  
-- Arrays  
-- Floats  
-- Dictionaries  
-- Modules  
-- Pattern matching  
-- Expression‑level interpolation  
-- Improved runtime library  
-
-These will be introduced incrementally.
-
----
-
-## 14. Versioning
-
-This document describes **Ambra v0.1 — MVP Syntax**.  
-Future versions will build on this foundation.
+- Functions

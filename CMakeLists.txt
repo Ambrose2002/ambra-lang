@@ -18,8 +18,6 @@ set(CORE_SOURCES
     src/sema/analyzer.cpp
     src/ir/lowering.cpp
     src/vm/vm.cpp
-    src/runtime/builtins.cpp
-    src/utils/error.cpp
 )
 
 # Find clang-format
@@ -53,10 +51,6 @@ target_include_directories(ambra_lang PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 if(CLANG_FORMAT_EXECUTABLE)
     add_dependencies(ambra_lang format_code)
 endif()
-
-# Compiler executable (for bytecode generation)
-add_executable(ambra_compiler src/cli/compiler_main.cpp)
-target_link_libraries(ambra_compiler ambra_lang)
 
 # Main Ambra CLI executable (runs complete pipeline)
 add_executable(ambra src/cli/vm_main.cpp)

@@ -1,6 +1,6 @@
 
 
-# Ambra Compiler & VM Architecture (v0.1)
+# Ambra Compiler & VM Architecture
 
 This document describes the **high‑level architecture** for the Ambra compiler and the Ambra Virtual Machine (AVM).  
 It guides implementation decisions while remaining language‑agnostic.  
@@ -12,31 +12,29 @@ No C++ code is included—only conceptual and structural explanations.
 
 The Ambra toolchain has two major components:
 
-1. **The Compiler** (`ambra-cc`)  
-   - Converts Ambra source code into Ambra bytecode.
+1. **The Compiler** (`ambra-lang`)  
+   - Converts Ambra source code into IR instructions.
 
 2. **The Ambra Virtual Machine (AVM)** (`ambra-vm`)  
-   - Executes Ambra bytecode instructions.
+   - Executes IR instructions.
 
 The compilation pipeline is:
 
 ```
-Source → Lexer → Parser → AST → Semantic Analysis → Bytecode Generation → Bytecode File
+Source → Lexer → Parser → AST → Semantic Analysis → IR Lowering
 ```
 
 And the VM pipeline is:
 
 ```
-Bytecode File → VM Loader → Execution Engine → Output
+IR Instructions → Execution Engine → Output
 ```
-
-The system is intentionally simple for Ambra v0.1, but leaves room for growth.
 
 ---
 
 # 2. Compiler Architecture
 
-The Ambra compiler is organized in six distinct stages.  
+The Ambra compiler is organized in five distinct stages.  
 Each stage is described below with responsibilities and considerations.
 
 ---
@@ -54,7 +52,6 @@ Each stage is described below with responsibilities and considerations.
   - keywords
   - numbers
   - string literals (normal and triple-quoted)
-  - interpolation markers (`{identifier}`)
   - comment delimiters (`</ ... />`)
   - punctuation and operators
 - Track line/column positions for error reporting.
@@ -62,11 +59,8 @@ Each stage is described below with responsibilities and considerations.
 ### Notes for implementation
 
 - Treat triple‑quoted strings as multi‑character tokens.
-- For interpolation, the lexer may:
-  - produce a single *interpolated string token*, or
-  - break it into literal + marker tokens  
-  Either approach is valid for v0.1.
 - Multi‑line comments must ignore everything until the closing `/>`.
+- String literals support escape sequences (`\n`, `\t`, `\\`, `\"`)
 
 ---
 
@@ -409,7 +403,7 @@ If not found: record an error, mark as unresolved, continue analysis to surface 
 **Input:** AST + resolved symbols  
 **Output:** Type annotations + diagnostics
 
-This pass performs **static type checking** after name resolution. It ensures all expressions and statements conform to Ambra's type rules and annotates the AST with type information for bytecode generation.
+This pass performs **static type checking** after name resolution. It ensures all expressions and statements conform to Ambra's type rules and annotates the AST with type information for IR lowering.
 
 ### Goals
 - Assign types to all expressions
@@ -497,7 +491,7 @@ Ambra lowers the AST into a **stack-based, strongly typed IR** where each instru
 - Shadowing naturally uses different slot numbers
 
 #### Control Flow
-- `Label <name>` marks a position
+- `JLabel <name>` marks a position
 - `Jump <name>` unconditional branch
 - `JumpIfFalse <name>` pops a Bool and branches if false
 
@@ -507,41 +501,58 @@ The IR is only generated when semantic analysis succeeds.
 
 ### Instruction Categories
 
-**Constants:**
-- `ConstI32 <n>`, `ConstBool <b>`, `ConstString <s>` — push literals
+**Stack Operations:**
+- `PushConst <constId>` — push constant from constant pool
+- `Pop` — remove top of stack
 
 **Locals:**
-- `LoadLocal{I32,Bool,String} <slot>` — push local value
-- `StoreLocal{I32,Bool,String} <slot>` — pop and store
+- `LoadLocal <slot>` — push local value
+- `StoreLocal <slot>` — pop and store
 
-**Operators:**
-- `NotBool`, `NegI32` — unary operations
-- `AddI32`, `SubI32`, `MulI32`, `DivI32` — arithmetic
-- `LessI32`, `LessEqI32`, `GreaterI32`, `GreaterEqI32` — comparisons
-- `EqI32`, `NeqI32`, `EqBool`, `NeqBool`, `EqString`, `NeqString` — equality
+**Arithmetic:**
+- `AddI32`, `SubI32`, `MulI32`, `DivI32` — integer arithmetic
+
+**Unary Operations:**
+- `NotBool` — boolean negation
+- `NegI32` — integer negation
+
+**Comparisons (Integers):**
+- `CmpEqI32`, `CmpNEqI32` — equality/inequality
+- `CmpLtI32`, `CmpLtEqI32`, `CmpGtI32`, `CmpGtEqI32` — relational
+
+**Comparisons (Booleans):**
+- `CmpEqBool32`, `CmpNEqBool32` — equality/inequality
+
+**Comparisons (Strings):**
+- `CmpEqString32`, `CmpNEqString32` — equality/inequality
+
+**String Operations:**
 - `ConcatString` — string concatenation
-
-**Conversions:**
-- `I32ToString`, `BoolToString` — explicit conversions for `say` and interpolation
+- `ToString` — convert value to string
 
 **I/O:**
 - `PrintString` — output a string (used for `say`)
 
 **Control Flow:**
-- `Label <L>`, `Jump <L>`, `JumpIfFalse <L>` — structured control flow
+- `JLabel <labelId>` — mark a position
+- `Jump <labelId>` — unconditional branch
+- `JumpIfFalse <labelId>` — conditional branch (pops bool)
+
+**Structural:**
+- `Nop` — no operation
 
 ### Key Lowering Patterns
 
 **Summon:**
 ```
 summon x = expr;  →  1. Lower expr (pushes value)
-                     2. StoreLocal<T> <slot>
+                     2. StoreLocal <slot>
 ```
 
 **Say:**
 ```
 say expr;  →  1. Lower expr
-              2. Convert to String if needed
+              2. Convert to String if needed (ToString)
               3. PrintString
 ```
 
@@ -551,93 +562,40 @@ should (c1) { b1 }       →  1. Lower c1
 otherwise should (c2) {b2}   2. JumpIfFalse <next>
 otherwise { b3 }             3. Lower b1
                              4. Jump <end>
-                             5. Label <next>
+                             5. JLabel <next>
                              ...
-                             6. Label <end>
+                             6. JLabel <end>
 ```
 
 **While:**
 ```
-aslongas (cond) { body }  →  1. Label <loop>
+aslongas (cond) { body }  →  1. JLabel <loop>
                              2. Lower cond
                              3. JumpIfFalse <end>
                              4. Lower body
                              5. Jump <loop>
-                             6. Label <end>
+                             6. JLabel <end>
 ```
 
-**Interpolated Strings:**
-Expand to concatenation sequence:
+**String Concatenation:**
+Expand `+` operator when strings are involved:
 ```
-"a{x}b{y}c"  →  1. ConstString "a"
-                2. LoadLocal <x>, convert if needed
-                3. ConcatString
-                4. ConstString "b"
-                5. ConcatString
-                6. LoadLocal <y>, convert if needed
-                7. ConcatString
-                8. ConstString "c"
-                9. ConcatString
+"a" + x + "b" + y + "c"  →  1. PushConst "a"
+                              2. LoadLocal <x>, convert if needed (ToString)
+                              3. ConcatString
+                              4. PushConst "b"
+                              5. ConcatString
+                              6. LoadLocal <y>, convert if needed (ToString)
+                              7. ConcatString
+                              8. PushConst "c"
+                              9. ConcatString
 ```
-
----
-
-## 2.6 Bytecode Generation
-
-**Input:** AST  
-**Output:** Bytecode module (instruction array + constants)
-
-### Responsibilities
-
-- Convert high‑level constructs into a linear sequence of bytecode instructions.
-- Emit:
-  - arithmetic ops
-  - load/store variable ops
-  - comparison ops
-  - jumps for `should`, `otherwise`, `aslongas`
-  - literal/string loading
-- Handle string interpolation:
-  - expand to concatenation ops, or
-  - emit a special “build string” sequence
-
-### Control flow strategy
-
-- Translate `should (cond) { ... } otherwise { ... }` into:
-  1. Evaluate condition
-  2. Jump if false → next block
-  3. Emit block
-  4. Jump to end
-- Similar for `otherwise should`.
-
-### Notes
-
-- v0.1 does not require a register machine; a simple **stack‑based VM** is recommended.
-- Maintain a constant pool of:
-  - strings
-  - identifiers (optional)
-  - integers
-
----
-
-## 2.7 Bytecode File Format
-
-The bytecode file contains:
-
-```
-Header (magic number + version)
-Constant pool
-Instruction stream
-```
-
-No relocations, symbols, or debugging info in v0.1.
-
-A simple binary or JSON‑like format is fine.
 
 ---
 
 # 3. Ambra Virtual Machine (AVM)
 
-The AVM executes bytecode produced by the compiler.
+The AVM executes IR instructions produced by the compiler. In Ambra, there is no separate bytecode encoding step—the IR instructions from the lowering phase are directly executed by the VM.
 
 ---
 
@@ -665,26 +623,50 @@ The VM repeatedly:
 3. Executes the corresponding operation.
 4. Advances or updates the IP.
 
-Stops when it reaches a `HALT` opcode.
+Stops when it reaches the end of the instruction sequence.
 
 This is the standard design used in Lua, Python, Wren, and many educational VMs.
 
 ---
 
-## 3.3 Instruction Set (v0.1)
+## 3.3 Instruction Set
 
-Typical opcodes include:
+Core opcodes include:
 
-- **LOAD_CONST**  
-- **LOAD_VAR / STORE_VAR**  
-- **ADD / SUB / MUL / DIV**  
-- **NEG / NOT**  
-- **CMP_EQ / CMP_NE / CMP_LT / CMP_LE / CMP_GT / CMP_GE**  
-- **JUMP / JUMP_IF_FALSE**  
-- **SAY**  
-- **HALT**
+**Stack & Constants:**
+- `PushConst` — push value from constant pool
+- `Pop` — remove top of stack
 
-Exact numeric assignments are implementation‑defined.
+**Local Variables:**
+- `LoadLocal` — load local variable by slot
+- `StoreLocal` — store to local variable slot
+
+**Arithmetic:**
+- `AddI32`, `SubI32`, `MulI32`, `DivI32` — integer arithmetic
+- `NegI32` — integer negation
+
+**Logic:**
+- `NotBool` — boolean negation
+
+**Comparisons:**
+- `CmpEqI32`, `CmpNEqI32`, `CmpLtI32`, `CmpLtEqI32`, `CmpGtI32`, `CmpGtEqI32` — integer comparisons
+- `CmpEqBool32`, `CmpNEqBool32` — boolean comparisons
+- `CmpEqString32`, `CmpNEqString32` — string comparisons
+
+**String Operations:**
+- `ConcatString` — concatenate two strings
+- `ToString` — convert value to string
+
+**Control Flow:**
+- `JLabel` — label marker
+- `Jump` — unconditional jump
+- `JumpIfFalse` — conditional jump (pops bool)
+
+**I/O:**
+- `PrintString` — output string (used for `say`)
+
+**Structural:**
+- `Nop` — no operation
 
 ---
 
@@ -702,7 +684,7 @@ Strings may be reference-counted or garbage‑collected later; MVP may allocate 
 
 ## 3.5 Global Variables
 
-Because Ambra v0.1 has no functions, all variables are global or block‑scoped.  
+Because Ambra has no functions, all variables are global or block‑scoped.  
 Implementation choices:
 
 - Map identifiers to integer slots
@@ -719,23 +701,15 @@ Runtime errors include:
 - Undefined variable (should not occur if semantic analysis is correct)
 - Illegal operations (divide by zero, etc.)
 
-VM should report line info if available (optional in v0.1).
-
 ---
 
 # 4. Future Extensions
 
 Ambra’s architecture is deliberately flexible.
 
-Planned features that fit naturally:
+Planned features:
 
 - Functions (add call frames, return stack)
-- Arrays and dictionaries
-- Modules and imports
-- Full expression interpolation
-- Classes or records
-- Native functions in the VM
-- JIT compilation (very later)
 
 ---
 
@@ -743,10 +717,8 @@ Planned features that fit naturally:
 
 Ambra’s architecture is classical and educational:
 
-- Lexer → Parser → AST → Semantic Analysis → Bytecode → VM
+- Lexer → Parser → AST → Semantic Analysis → IR Lowering → VM
 - Clean separation of stages
-- Stack-based VM
+- Stack-based VM with direct IR execution (no separate bytecode encoding)
 - Simple constant pool
-- Bytecode format suited for learning and extension
-
-This architecture will remain stable as Ambra grows from v0.1 to future versions.
+- Type-directed instruction selection
