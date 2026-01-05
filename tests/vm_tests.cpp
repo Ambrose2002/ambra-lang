@@ -52,3 +52,22 @@ static std::string runProgram(const std::string& source)
 
     return buffer.str();
 }
+
+
+TEST(VM_Basics, PrintInt)
+{
+    std::string out = runProgram("say 5;");
+    EXPECT_EQ(out, "5");
+}
+
+TEST(VM_Basics, PrintBool)
+{
+    std::string out = runProgram("say affirmative;");
+    EXPECT_EQ(out, "affirmative");
+}
+
+TEST(VM_Basics, PrintString)
+{
+    std::string out = runProgram(R"(say "hello";)");
+    EXPECT_EQ(out, "hello");
+}
