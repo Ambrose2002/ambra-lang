@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <iostream>
 #include <memory>
 #include <tuple>
 #include <unordered_set>
@@ -97,6 +98,8 @@ Token Parser::consume(TokenType t, const std::string& msg)
 // Intended to be called exactly once per detected error.
 void Parser::reportError(const Token& where, const std::string& msg)
 {
+    std::cerr << "Parse error at line " << where.getLocation().line << ", column "
+              << where.getLocation().column << ": " << msg << std::endl;
     hasError = true;
 }
 
