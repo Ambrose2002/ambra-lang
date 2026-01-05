@@ -39,7 +39,11 @@ struct Diagnostic
     std::string message;
     SourceLoc   loc;
 
-    std::string toString() const;
+    std::string toString() const
+    {
+        return message + " at line: " + std::to_string(loc.line) +
+               " col: " + std::to_string(loc.col);
+    };
 };
 
 /**
