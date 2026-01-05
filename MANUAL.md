@@ -1,12 +1,12 @@
-# Ambra Language Manual (v0.1)
+# Ambra Language Manual
 
-Ambra is a small, whimsical programming language designed for learning compilers, exploring language design, and having fun writing expressive programs. It is playful, predictable, and intentionally limited in scope for the MVP so the compiler backend remains achievable and educational.
+Ambra is a small, whimsical programming language designed for learning compilers, exploring language design, and having fun writing expressive programs.
 
 ---
 
 ## 1. Introduction
 
-Ambra embraces a magical, spell‑like personality. Programs read like small incantations, using expressive keywords such as `summon`, `should`, `otherwise`, and `aslongas`.
+Ambra adopts a very simple and easy to read syntax. It uses expressive keywords such as `summon`, `should`, `otherwise`, `say` and `aslongas`.
 
 Ambra compiles to a custom bytecode format and runs on the Ambra Virtual Machine (AVM).
 
@@ -129,6 +129,17 @@ Double‑quoted:
 ```
 
 Strings support escape sequences like `\n` (newline), `\t` (tab), `\\` (backslash), and `\"` (quote).
+
+#### String interpolation
+
+String interpolations are written with the format <{identifier}>.
+
+```
+summon name = Ambrose;
+summon age = 15; </ works with ints
+summon intro = "My name is {name}. I am {age} years old.";
+say intro;
+```
 
 #### Multi‑line strings
 
