@@ -1,9 +1,54 @@
-#include <iostream>
+#include "parser/parser.h"
+#include "sema/analyzer.h"
+#include "vm/vm.h"
 
-int main()
+#include <gtest/gtest.h>
+#include <sstream>
+#include <string>
+
+/*
+ * Helper: full pipeline + VM execution with captured stdout
+ */
+static std::string runProgram(const std::string& source)
 {
-    std::cout << "Running vm tests...\n";
+    // Parse
+    Lexer              lexer(source);
+    std::vector<Token> tokens = lexer.scanTokens();
+    Parser             parser(tokens);
+    Program            program = parser.parseProgram();
+    EXPECT_FALSE(program.hadError());
 
-    // TODO: Add test assertions
-    return 0;
+    // Resolve
+    Resolver       resolver;
+    SemanticResult sema = resolver.resolve(program);
+    EXPECT_FALSE(sema.hadError());
+
+    // Typecheck
+    TypeChecker        checker(sema.resolutionTable, sema.rootScope.get());
+    TypeCheckerResults types = checker.typeCheck(program);
+    EXPECT_FALSE(types.hadError());
+
+    // Lower
+    LoweringContext lowerer{nullptr, nullptr, {}, types.typeTable, sema.resolutionTable};
+
+    IrProgram ir = lowerer.lowerProgram(&program);
+    EXPECT_FALSE(lowerer.hadError);
+
+    // Validate IR
+    IrValidator        validator{ir, ir.main};
+    IrValidatorResults vres = validator.validate();
+    EXPECT_FALSE(vres.hadError());
+
+    // Capture stdout
+    std::stringstream buffer;
+    std::streambuf*   old = std::cout.rdbuf(buffer.rdbuf());
+
+    // Execute
+    VM vm{ir, ir.main};
+    vm.execute();
+
+    // Restore stdout
+    std::cout.rdbuf(old);
+
+    return buffer.str();
 }
