@@ -1,5 +1,4 @@
-# Ambra
-
+<h1 align="center" >Ambra</h1>
 <p align="center">
   <img
     width="768"
