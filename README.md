@@ -1,5 +1,14 @@
 # Ambra
 
+<p align="center">
+  <img
+    width="768"
+    height="512"
+    alt="AmbraImage"
+    src="https://github.com/user-attachments/assets/69026c25-fa6e-4d24-8b70-f59e9f8e95d5"
+  />
+</p>
+
 A whimsical, educational programming language with a magical syntax.
 
 ## Quick Start
