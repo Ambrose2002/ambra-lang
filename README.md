@@ -8,7 +8,7 @@
   />
 </p>
 
-A whimsical, educational programming language with a magical syntax.
+A statically typed, compiled programming language. 
 
 ## Quick Start
 
